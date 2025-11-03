@@ -1,0 +1,1 @@
+enum GameAction: Equatable {}

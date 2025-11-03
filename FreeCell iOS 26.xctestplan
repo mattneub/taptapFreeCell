@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "A6FC16C5-4714-478F-82AB-AF02511EBBC1",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:FreeCell iOS 26.xcodeproj",
+      "identifier" : "3FB3F2AA2EB8E76C00689661",
+      "name" : "FreeCell iOS 26"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:FreeCell iOS 26.xcodeproj",
+        "identifier" : "3FB3F4B02EB8F8E600689661",
+        "name" : "FreeCellTests"
+      }
+    }
+  ],
+  "version" : 1
+}
