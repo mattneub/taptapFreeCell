@@ -3,8 +3,7 @@ import UIKit
 struct CardImage {
     // magic numbers
     static let cardImage: String = "easy-reader.png"
-    static let cardWidth: CGFloat = 224
-    static let cardHeight: CGFloat = 296
+    static let sourceImageSize = CGSize(width: 224, height: 296)
 
     /// Cache for card images.
     static let cardImageCache = NSCache<NSString, UIImage>()
@@ -47,8 +46,8 @@ struct CardImage {
         let offset: CGFloat = 2
         var xOffset: CGFloat = 0
         var yOffset: CGFloat = 0
-        let width = cardWidth
-        let height = cardHeight
+        let width = sourceImageSize.width
+        let height = sourceImageSize.height
         xOffset = CGFloat(cardNumber % 9) // integer modulo
         yOffset = CGFloat(cardNumber / 9) // integer division
         let size = CGSize(width: width, height: height)
