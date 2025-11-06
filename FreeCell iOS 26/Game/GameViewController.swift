@@ -3,6 +3,14 @@ import UIKit
 final class GameViewController: UIViewController, ReceiverPresenter {
     weak var processor: (any Receiver<GameAction>)?
 
+    // Card views
+
+    var foundations: [CardView]!
+
+    var freeCells: [CardView]!
+
+    var columns: [CardView]!
+
     // Helper objects
 
     var gameViewMenuBuilder: (any GameViewMenuBuilderType)? = GameViewMenuBuilder()
@@ -93,7 +101,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
         didInitialLayout = true
         CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: view.bounds.width) ?? .zero
-        gameViewInterfaceConstructor?.constructInterface(in: view)
+        let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view)
+        self.foundations = cardViews?[0]
+        self.freeCells = cardViews?[1]
+        self.columns = cardViews?[2]
     }
 
     func present(_ state: GameState) async {}

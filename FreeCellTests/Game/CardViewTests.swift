@@ -3,16 +3,16 @@ import Testing
 import UIKit
 
 struct CardViewTests {
-    @Test("initialize: view is born with single true, translates set to false")
+    @Test("initialize: view is born with category, translates set to false")
     func initialize() {
-        let subject = CardView()
-        #expect(subject.single == true)
+        let subject = CardView(category: .column)
+        #expect(subject.category == .column)
         #expect(subject.translatesAutoresizingMaskIntoConstraints == false)
     }
 
     @Test("redraw: if no cards, shows empty layer")
     func redrawNoCards() throws {
-        let subject = CardView()
+        let subject = CardView(category: .column)
         CardView.baseSize = .init(width: 100, height: 200)
         subject.redraw()
         let layer = try #require(subject.emptyLayer)

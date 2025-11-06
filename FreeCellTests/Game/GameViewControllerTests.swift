@@ -86,7 +86,7 @@ struct GameViewControllerTests {
     }
 
     @Test("view will layout: first time only, calls card sizer, interface constructor")
-    func viewWillLayout() {
+    func viewWillLayout() throws {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
         subject.viewWillLayoutSubviews()
@@ -95,5 +95,16 @@ struct GameViewControllerTests {
         #expect(CardView.baseSize == CGSize(width: 50, height: 100))
         #expect(constructor.methodsCalled == ["constructInterface(in:)"])
         #expect(constructor.view === subject.view)
+        let foundation = try #require(subject.foundations.first)
+        #expect(foundation.category == .foundation(.spades))
+        let freeCell = try #require(subject.freeCells.first)
+        #expect(freeCell.category == .freeCell)
+        let column = try #require(subject.columns.first)
+        #expect(column.category == .column)
+        sizer.methodsCalled = []
+        constructor.methodsCalled = []
+        subject.viewWillLayoutSubviews()
+        #expect(sizer.methodsCalled.isEmpty)
+        #expect(constructor.methodsCalled.isEmpty)
     }
 }

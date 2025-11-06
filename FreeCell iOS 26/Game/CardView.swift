@@ -6,10 +6,7 @@ import UIKit
 /// stationary; it is the card layers that fly around the interface. Also, a card view is a view,
 /// so it is something that can be tapped; card views are the chief things the user interacts with.
 final class CardView: UIView {
-    /// A `single` card view just sits there like a bump on a log. But a non-`single` card view,
-    /// i.e. representing a column, can grow and shrink vertically to represent the overlapping
-    /// card layers that it contains.
-    let single: Bool
+    let category: Category
 
     /// Card(s) considered to belong to this view. This view's job is to direct the drawing of
     /// its card(s), though (as I've said) it does not actually _do_ the drawing.
@@ -30,8 +27,8 @@ final class CardView: UIView {
     lazy var widthConstraint = widthAnchor.constraint(equalToConstant: 0)
     lazy var heightConstraint = heightAnchor.constraint(equalToConstant: 0)
 
-    init(single: Bool = true) { // unused
-        self.single = single
+    init(category: Category) {
+        self.category = category
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         // self.finishInitialConfiguration()
@@ -65,4 +62,10 @@ final class CardView: UIView {
         }
     }
 
+    /// The layout category represented by this card view.
+    enum Category: Equatable {
+        case column
+        case freeCell
+        case foundation(Suit)
+    }
 }
