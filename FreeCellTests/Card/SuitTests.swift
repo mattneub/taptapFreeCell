@@ -88,6 +88,24 @@ struct SuitTests {
         #expect(result == [.clubs, .diamonds, .hearts, .spades])
     }
 
+    @Test("foundationOrder is correct")
+    func foundationOrder() {
+        let result = Suit.foundationOrder
+        #expect(result == [.spades, .hearts, .clubs, .diamonds])
+    }
+
+    @Test("foundationOrderIndex works correctly")
+    func foundationOrderIndex() {
+        var result = Suit.spades.foundationOrderIndex
+        #expect(result == 0)
+        result = Suit.hearts.foundationOrderIndex
+        #expect(result == 1)
+        result = Suit.clubs.foundationOrderIndex
+        #expect(result == 2)
+        result = Suit.diamonds.foundationOrderIndex
+        #expect(result == 3)
+    }
+
     @Test("description is correct")
     func description() {
         let result = Suit.microsoftCases.map { $0.description }

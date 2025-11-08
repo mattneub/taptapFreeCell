@@ -8,7 +8,8 @@ protocol GameViewInterfaceConstructorType {
 struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
     func constructInterface(in view: UIView) -> [[CardView]] {
         // foundations
-        let foundation1 = CardView(category: .foundation(.diamonds)).applying {
+        var suits = Array(Suit.foundationOrder.reversed())
+        let foundation1 = CardView(category: .foundation(suits.removeFirst())).applying {
             $0.redraw()
             view.addSubview($0)
             $0.widthConstraint.constant = CardView.baseSize.width
@@ -18,7 +19,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         }
         foundation1.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16).isActive = true
         foundation1.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).isActive = true
-        let foundation2 = CardView(category: .foundation(.clubs)).applying {
+        let foundation2 = CardView(category: .foundation(suits.removeFirst())).applying {
             $0.redraw()
             view.addSubview($0)
             $0.widthConstraint.constant = CardView.baseSize.width
@@ -28,7 +29,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         }
         foundation2.topAnchor.constraint(equalTo: foundation1.topAnchor).isActive = true
         foundation2.trailingAnchor.constraint(equalTo: foundation1.leadingAnchor, constant: -10).isActive = true
-        let foundation3 = CardView(category: .foundation(.hearts)).applying {
+        let foundation3 = CardView(category: .foundation(suits.removeFirst())).applying {
             $0.redraw()
             view.addSubview($0)
             $0.widthConstraint.constant = CardView.baseSize.width
@@ -38,7 +39,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         }
         foundation3.topAnchor.constraint(equalTo: foundation1.topAnchor).isActive = true
         foundation3.trailingAnchor.constraint(equalTo: foundation2.leadingAnchor, constant: -10).isActive = true
-        let foundation4 = CardView(category: .foundation(.spades)).applying {
+        let foundation4 = CardView(category: .foundation(suits.removeFirst())).applying {
             $0.redraw()
             view.addSubview($0)
             $0.widthConstraint.constant = CardView.baseSize.width

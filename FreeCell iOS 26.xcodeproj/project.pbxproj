@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F01D77D2EBE3F180075B216 /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F01D77C2EBE3F180075B216 /* WaitWhile */; };
 		3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +65,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */,
+				3F01D77D2EBE3F180075B216 /* WaitWhile in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +134,7 @@
 			name = FreeCellTests;
 			packageProductDependencies = (
 				3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */,
+				3F01D77C2EBE3F180075B216 /* WaitWhile */,
 			);
 			productName = FreeCellTests;
 			productReference = 3FB3F4B12EB8F8E600689661 /* FreeCellTests.xctest */;
@@ -168,6 +171,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3FB3F2AC2EB8E76C00689661 /* Products */;
@@ -492,6 +496,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mattneub/WaitWhile";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
@@ -503,6 +515,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3F01D77C2EBE3F180075B216 /* WaitWhile */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */;
+			productName = WaitWhile;
+		};
 		3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;

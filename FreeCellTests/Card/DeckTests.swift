@@ -8,6 +8,16 @@ struct DeckTests {
         #expect(Set(subject.cards).count == 52)
     }
 
+    @Test("isEmpty: works")
+    func isEmpty() {
+        var subject = Deck()
+        #expect(subject.isEmpty == false)
+        subject.cards = []
+        #expect(subject.isEmpty == true)
+        subject.cards = [.init(rank: .jack, suit: .hearts)]
+        #expect(subject.isEmpty == false)
+    }
+
     @Test("Microsoft deal 1 is correct (and also test dealDescription)")
     func testDeal1() {
         let expected = """
@@ -17,7 +27,7 @@ struct DeckTests {
         4C 5C TS QH 4H AC 4D 7S
         3S TD 4S TH 8H 2C JH 7D
         6D 8S 8D QS 6C 3D 8C TC
-        6S 9C 2H 6H 
+        6S 9C 2H 6H
         """
         let subject = Deck(microsoftDealNumber: 1)
         #expect(subject.dealDescription == expected)
@@ -32,7 +42,7 @@ struct DeckTests {
         KD 5H 9S 3C 8S 7H 4D JS
         4C QS 9C 9H 7C 6H 2C 2S
         4S TS 2H 5D JC 6C JH QH
-        JD KS KC 4H 
+        JD KS KC 4H
         """
         let subject = Deck(microsoftDealNumber: 617)
         #expect(subject.dealDescription == expected)
@@ -47,7 +57,7 @@ struct DeckTests {
         3H 7H 2H 7S JC 5D TD TH
         6S 4S 9C 5C 8C 8S 4C TC
         7C AC KH 2C 5S KS AD 4H
-        QH KC JD 7D 
+        QH KC JD 7D
         """
         let subject = Deck(microsoftDealNumber: 999999)
         #expect(subject.dealDescription == expected)

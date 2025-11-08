@@ -1,7 +1,11 @@
 import Foundation
 
+/// The full deck of cards. The reason this can be a struct is that we only ever deal out _all_
+/// the cards, once, and then we're done with it, so there is no need to keep a master reference.
 struct Deck: CustomStringConvertible, Codable, Equatable {
     var cards = [Card]()
+
+    var isEmpty: Bool { cards.isEmpty }
 
     init() {
         for rank in Rank.allCases {
@@ -37,12 +41,12 @@ struct Deck: CustomStringConvertible, Codable, Equatable {
     }
 
     var dealDescription: String { // as if dealt into 8 columns
-        var s = ""
+        var output = ""
         for (index, card) in cards.enumerated() {
-            s.write(String(describing: card))
-            s.write(index % 8 == 7 ? "\n" : " ")
+            output.write(String(describing: card))
+            output.write(index % 8 == 7 ? "\n" : " ")
         }
-        return s
+        return output.trimmingWhitespacesFromLineEnds // NB this is different from before
     }
 
     mutating func deal() -> Card {

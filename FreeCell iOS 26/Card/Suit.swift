@@ -25,6 +25,19 @@ enum Suit: String, CustomStringConvertible, CaseIterable, Codable {
         [clubs, diamonds, hearts, spades]
     }
 
+    static var foundationOrder: [Suit] {
+        [spades, hearts, clubs, diamonds]
+    }
+
+    var foundationOrderIndex: Int {
+        switch self {
+        case .spades: 0
+        case .hearts: 1
+        case .clubs: 2
+        case .diamonds: 3
+        }
+    }
+
     var description: String {
         return self.rawValue
     }

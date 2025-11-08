@@ -39,10 +39,10 @@ final class CardView: UIView {
     }
 
     func redraw() {
-        // in the case where we have _no_ cards, portray a card-shaped layer to show where the
-        // card view is
         layer.sublayers = nil
         if cards.isEmpty {
+            // in the case where we have _no_ cards, portray a card-shaped layer to show where the
+            // card view is
             let emptyLayer = CALayer().applying {
                 $0.frame = CGRect(
                     origin: .zero,
@@ -59,6 +59,18 @@ final class CardView: UIView {
             }
             self.layer.addSublayer(emptyLayer)
             self.emptyLayer = emptyLayer
+        } else {
+            switch category {
+            case .foundation, .freeCell:
+                if let card = cards.last {
+                    Task {
+                        let cardLayer = await CardLayer(card: card)
+                        self.layer.addSublayer(cardLayer)
+                        cardLayer.opacity = category == .freeCell ? 1 : 0.5
+                    }
+                }
+            default: break
+            }
         }
     }
 
