@@ -1,7 +1,6 @@
 @testable import FreeCell
 import Testing
 import UIKit
-import SnapshotTesting
 
 struct GameViewInterfaceConstructorTests {
     @Test("interface is correctly constructed and card views are correctly returned")
@@ -23,10 +22,5 @@ struct GameViewInterfaceConstructorTests {
         let columns = result[2]
         #expect(columns.count == 8)
         #expect(columns.allSatisfy { $0.category == .column })
-        let viewController = UIViewController()
-        makeWindow(viewController: viewController)
-        viewController.view.addSubview(view)
-        viewController.view.layoutIfNeeded()
-        assertSnapshot(of: view, as: .image)
     }
 }

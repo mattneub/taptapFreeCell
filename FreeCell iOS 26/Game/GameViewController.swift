@@ -105,13 +105,51 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         self.foundations = cardViews?[0]
         self.freeCells = cardViews?[1]
         self.columns = cardViews?[2]
+        Task {
+            for cardView in foundations + freeCells + columns {
+                await cardView.redraw()
+            }
+        }
     }
 
-    func present(_ state: GameState) async {}
+    func present(_ state: GameState) async {
+        // reflect layout into card views, skipping card views that do not change
+        for index in 0..<4 {
+            if foundations[index].cards != state.layout.foundations[index].cards {
+                foundations[index].cards = state.layout.foundations[index].cards
+                await foundations[index].redraw()
+            }
+            let cardArray: [Card] = if let card = state.layout.freeCells[index].card {
+                [card]
+            } else {
+                []
+            }
+            if freeCells[index].cards != cardArray {
+                freeCells[index].cards = cardArray
+                await freeCells[index].redraw()
+            }
+        }
+        for index in 0..<8 {
+            if columns[index].cards != state.layout.columns[index].cards {
+                columns[index].cards = state.layout.columns[index].cards
+                let movableCount = if state.sequences {
+                    state.layout.columns[index].maxMovableSequence.count
+                } else {
+                    0
+                }
+                await columns[index].redraw(movableCount: movableCount)
+            }
+        }
+    }
 
     func receive(_ effect: GameEffect) async {}
 
-    @objc func doDeal() {}
+    @objc func doDeal() {
+        Task {
+            await processor?.receive(.deal)
+        }
+    }
+
     @objc func doUndo() {}
     @objc func doRedo() {}
     @objc func doUndoAll() {}

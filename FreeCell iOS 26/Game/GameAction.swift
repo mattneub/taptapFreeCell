@@ -1,1 +1,3 @@
-enum GameAction: Equatable {}
+enum GameAction: Equatable {
+    case deal
+}

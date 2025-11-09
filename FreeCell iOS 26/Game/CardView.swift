@@ -38,7 +38,7 @@ final class CardView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func redraw() {
+    func redraw(movableCount: Int = 0) async {
         layer.sublayers = nil
         if cards.isEmpty {
             // in the case where we have _no_ cards, portray a card-shaped layer to show where the
@@ -49,8 +49,8 @@ final class CardView: UIView {
                     size: CardView.baseSize
                 )
                 .inset(by: CardView.cardLayerInset)
-                // inset a little further than an actual card would be
-                .inset(by: UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2))
+                .inset(by: CardView.cardLayerInset)
+                .offsetBy(dx: 0, dy: -CardView.cardLayerInset.top) // looks better somehow
                 $0.cornerRadius = 4
                 $0.masksToBounds = true
                 $0.backgroundColor = UIColor.white.cgColor
@@ -63,13 +63,43 @@ final class CardView: UIView {
             switch category {
             case .foundation, .freeCell:
                 if let card = cards.last {
-                    Task {
-                        let cardLayer = await CardLayer(card: card)
-                        self.layer.addSublayer(cardLayer)
-                        cardLayer.opacity = category == .freeCell ? 1 : 0.5
-                    }
+                    let cardLayer = await CardLayer(card: card)
+                    self.layer.addSublayer(cardLayer)
+                    cardLayer.opacity = category == .freeCell ? 1 : 0.5
                 }
-            default: break
+            case .column:
+                // this is the Really Interesting Part
+                heightConstraint.constant = max(
+                    CGFloat(cards.count + 1) * CardView.baseSize.height / 2,
+                    CardView.baseSize.height
+                )
+                for (offset, card) in cards.enumerated() {
+                    let cardLayer = await CardLayer(card: card)
+                    cardLayer.frame.origin.y = (CardView.baseSize.height / 2) * CGFloat(offset)
+                    cardLayer.zPosition = CGFloat(offset)
+                    self.layer.addSublayer(cardLayer)
+                }
+                if movableCount > 0 {
+                    let borderLayer = CALayer()
+                    borderLayer.borderColor = UIColor.blue.cgColor
+                    borderLayer.borderWidth = 2
+                    borderLayer.frame = CGRect(
+                        x: 0,
+                        y: (
+                            CardView.cardLayerInset.top +
+                            CGFloat(cards.count - movableCount) * (CardView.baseSize.height / 2)
+                        ),
+                        width: CardView.baseSize.width,
+                        height: (
+                            CGFloat(movableCount + 1) * (CardView.baseSize.height / 2) -
+                            CardView.cardLayerInset.top -
+                            CardView.cardLayerInset.bottom
+                        )
+                    )
+                    borderLayer.zPosition = CGFloat(cards.count)
+                    borderLayer.cornerRadius = 4
+                    self.layer.addSublayer(borderLayer)
+                }
             }
         }
     }
