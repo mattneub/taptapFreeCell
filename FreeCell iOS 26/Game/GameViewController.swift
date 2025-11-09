@@ -111,6 +111,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         self.columns = cardViews?[2]
         Task {
             for cardView in foundations + freeCells + columns {
+                cardView.processor = self.processor
                 await cardView.redraw()
             }
         }

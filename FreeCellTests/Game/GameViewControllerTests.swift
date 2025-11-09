@@ -113,7 +113,7 @@ struct GameViewControllerTests {
         #expect(constructor.methodsCalled.isEmpty)
     }
 
-    @Test("view will layout: configures all card views as empty")
+    @Test("view will layout: configures all card views as empty, sets processor; card views category and index are right")
     func viewWillLayoutRedraw() async throws {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
@@ -121,12 +121,25 @@ struct GameViewControllerTests {
         subject.viewWillLayoutSubviews()
         await #while(subject.columns[7].emptyLayer == nil)
         #expect(subject.foundations.count == 4)
+        #expect(subject.foundations.enumerated().allSatisfy { offset, foundation in
+            foundation.index == offset &&
+            foundation.category == .foundation(Suit.foundationOrder[offset])
+        })
         #expect(subject.freeCells.count == 4)
+        #expect(subject.freeCells.enumerated().allSatisfy { offset, freeCell in
+            freeCell.index == offset &&
+            freeCell.category == .freeCell
+        })
         #expect(subject.columns.count == 8)
+        #expect(subject.columns.enumerated().allSatisfy { offset, column in
+            column.index == offset &&
+            column.category == .column
+        })
         let allCards = subject.view.subviews(ofType: CardView.self)
         #expect(allCards.count == 16)
         #expect(allCards.allSatisfy { $0.cards.isEmpty })
         #expect(allCards.allSatisfy { $0.emptyLayer?.superlayer != nil })
+        #expect(allCards.allSatisfy { $0.processor === processor })
     }
 
     @Test("present: distributes state layout cards into card views, tells them to redraw")

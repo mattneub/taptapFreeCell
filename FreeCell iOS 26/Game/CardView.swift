@@ -6,7 +6,15 @@ import UIKit
 /// stationary; it is the card layers that fly around the interface. Also, a card view is a view,
 /// so it is something that can be tapped; card views are the chief things the user interacts with.
 final class CardView: UIView {
+    /// Which of the three types of card view this is.
     let category: Category
+
+    /// The index of this card view within the sequence of its category fellows. The view needs
+    /// to know this so that it can report taps in a helpful way.
+    let index: Int
+
+    /// Reference to the processor.
+    weak var processor: (any Receiver<GameAction>)?
 
     /// Card(s) considered to belong to this view. This view's job is to direct the drawing of
     /// its card(s), though (as I've said) it does not actually _do_ the drawing.
@@ -27,10 +35,13 @@ final class CardView: UIView {
     lazy var widthConstraint = widthAnchor.constraint(equalToConstant: 0)
     lazy var heightConstraint = heightAnchor.constraint(equalToConstant: 0)
 
-    init(category: Category) {
+    init(category: Category, index: Int) {
         self.category = category
+        self.index = index
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
+        let tapper = MyTapGestureRecognizer(target: self, action: #selector(tapped))
+        self.addGestureRecognizer(tapper)
         // self.finishInitialConfiguration()
     }
     
@@ -104,6 +115,12 @@ final class CardView: UIView {
                     self.layer.addSublayer(borderLayer)
                 }
             }
+        }
+    }
+
+    @objc func tapped() {
+        Task {
+            await processor?.receive(.tapped(category: category, index: index))
         }
     }
 

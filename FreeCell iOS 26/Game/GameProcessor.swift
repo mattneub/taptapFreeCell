@@ -16,6 +16,8 @@ final class GameProcessor: Processor {
             deck.shuffle()
             state.layout.deal(deck)
             await presenter?.present(state)
+        case .tapped(let category, let index):
+            print("tap!", category, index)
         }
     }
 

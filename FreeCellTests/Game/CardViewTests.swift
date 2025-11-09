@@ -1,18 +1,23 @@
 @testable import FreeCell
 import Testing
 import UIKit
+import WaitWhile
 
 struct CardViewTests {
-    @Test("initialize: view is born with category, translates set to false")
-    func initialize() {
-        let subject = CardView(category: .column)
+    @Test("initialize: view is born with category, translates set to false, tapper")
+    func initialize() throws {
+        let subject = CardView(category: .column, index: 0)
         #expect(subject.category == .column)
+        #expect(subject.index == 0)
         #expect(subject.translatesAutoresizingMaskIntoConstraints == false)
+        let tapper = try #require(subject.gestureRecognizers?.first as? MyTapGestureRecognizer)
+        #expect(tapper.target === subject)
+        #expect(tapper.action == #selector(subject.tapped))
     }
 
     @Test("redraw: if no cards, shows empty layer with opacity 0.5")
     func redrawNoCards() async throws {
-        let subject = CardView(category: .column)
+        let subject = CardView(category: .column, index: 0)
         CardView.baseSize = .init(width: 100, height: 200)
         await subject.redraw()
         let layer = try #require(subject.emptyLayer)
@@ -28,7 +33,7 @@ struct CardViewTests {
     @Test("redraw: if no cards, shows empty layer with opacity 0.5, slightly different frame if not column")
     func redrawNoCardsFreeCell() async throws {
         do {
-            let subject = CardView(category: .freeCell)
+            let subject = CardView(category: .freeCell, index: 0)
             CardView.baseSize = .init(width: 100, height: 200)
             await subject.redraw()
             let layer = try #require(subject.emptyLayer)
@@ -41,7 +46,7 @@ struct CardViewTests {
             #expect(layer.opacity == 0.5)
         }
         do {
-            let subject = CardView(category: .foundation(.hearts))
+            let subject = CardView(category: .foundation(.hearts), index: 0)
             CardView.baseSize = .init(width: 100, height: 200)
             await subject.redraw()
             let layer = try #require(subject.emptyLayer)
@@ -57,7 +62,7 @@ struct CardViewTests {
 
     @Test("redraw: if freecell with card, shows card layer with opacity 1")
     func redrawFreecell() async throws {
-        let subject = CardView(category: .freeCell)
+        let subject = CardView(category: .freeCell, index: 0)
         CardView.baseSize = .init(width: 100, height: 200)
         subject.cards = [.init(rank: .jack, suit: .hearts)]
         await subject.redraw()
@@ -69,7 +74,7 @@ struct CardViewTests {
 
     @Test("redraw: if foundation with card, shows card layer with opacity 0.5")
     func redrawFoundation() async throws {
-        let subject = CardView(category: .foundation(.hearts))
+        let subject = CardView(category: .foundation(.hearts), index: 0)
         CardView.baseSize = .init(width: 100, height: 200)
         subject.cards = [.init(rank: .jack, suit: .hearts)]
         await subject.redraw()
@@ -81,7 +86,7 @@ struct CardViewTests {
 
     @Test("redraw: if column with cards, shows card layers")
     func redrawColumn() async throws {
-        let subject = CardView(category: .column)
+        let subject = CardView(category: .column, index: 0)
         CardView.baseSize = .init(width: 100, height: 200)
         subject.cards = [
             .init(rank: .jack, suit: .hearts),
@@ -104,7 +109,7 @@ struct CardViewTests {
 
     @Test("redraw: column with movableCount draws border layer")
     func redrawColumnMovableCount() async throws {
-        let subject = CardView(category: .column)
+        let subject = CardView(category: .column, index: 0)
         CardView.baseSize = .init(width: 100, height: 200)
         subject.cards = [
             .init(rank: .jack, suit: .hearts),
@@ -118,5 +123,15 @@ struct CardViewTests {
         #expect(border.frame == CGRect(x: 0, y: 102, width: 100, height: 296))
         #expect(border.zPosition == 3)
         #expect(border.cornerRadius == 4)
+    }
+
+    @Test("tapped: sends tapped to processor")
+    func tapped() async {
+        let processor = MockReceiver<GameAction>()
+        let subject = CardView(category: .column, index: 0)
+        subject.processor = processor
+        subject.tapped()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.tapped(category: .column, index: 0)])
     }
 }
