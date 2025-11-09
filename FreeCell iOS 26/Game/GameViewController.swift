@@ -92,6 +92,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         imageView.frame = self.view.bounds
         self.view.insertSubview(imageView, at: 0)
         imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+        let doubleTapper = MyTapGestureRecognizer(target: self, action: #selector(doubleTap))
+        doubleTapper.numberOfTapsRequired = 2
+        view.addGestureRecognizer(doubleTapper)
     }
 
     var didInitialLayout = false
@@ -154,4 +158,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     @objc func doRedo() {}
     @objc func doUndoAll() {}
     @objc func doRedoAll() {}
+
+    @objc func doubleTap() {
+        Task {
+            await processor?.receive(.autoplay)
+        }
+    }
 }

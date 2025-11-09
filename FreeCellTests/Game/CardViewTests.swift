@@ -25,6 +25,36 @@ struct CardViewTests {
         #expect(layer.opacity == 0.5)
     }
 
+    @Test("redraw: if no cards, shows empty layer with opacity 0.5, slightly different frame if not column")
+    func redrawNoCardsFreeCell() async throws {
+        do {
+            let subject = CardView(category: .freeCell)
+            CardView.baseSize = .init(width: 100, height: 200)
+            await subject.redraw()
+            let layer = try #require(subject.emptyLayer)
+            #expect(layer.superlayer === subject.layer)
+            #expect(layer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
+            #expect(layer.cornerRadius == 4)
+            #expect(layer.masksToBounds == true)
+            #expect(layer.backgroundColor == UIColor.white.cgColor)
+            #expect(layer.zPosition == -1)
+            #expect(layer.opacity == 0.5)
+        }
+        do {
+            let subject = CardView(category: .foundation(.hearts))
+            CardView.baseSize = .init(width: 100, height: 200)
+            await subject.redraw()
+            let layer = try #require(subject.emptyLayer)
+            #expect(layer.superlayer === subject.layer)
+            #expect(layer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
+            #expect(layer.cornerRadius == 4)
+            #expect(layer.masksToBounds == true)
+            #expect(layer.backgroundColor == UIColor.white.cgColor)
+            #expect(layer.zPosition == -1)
+            #expect(layer.opacity == 0.5)
+        }
+    }
+
     @Test("redraw: if freecell with card, shows card layer with opacity 1")
     func redrawFreecell() async throws {
         let subject = CardView(category: .freeCell)

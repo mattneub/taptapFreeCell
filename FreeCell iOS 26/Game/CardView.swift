@@ -50,7 +50,10 @@ final class CardView: UIView {
                 )
                 .inset(by: CardView.cardLayerInset)
                 .inset(by: CardView.cardLayerInset)
-                .offsetBy(dx: 0, dy: -CardView.cardLayerInset.top) // looks better somehow
+                if category == .column {
+                    $0.frame = $0.frame.offsetBy(dx: 0, dy: -CardView.cardLayerInset.top)
+                    // looks better somehow, but only for columns
+                }
                 $0.cornerRadius = 4
                 $0.masksToBounds = true
                 $0.backgroundColor = UIColor.white.cgColor

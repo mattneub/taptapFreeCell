@@ -35,6 +35,19 @@ extension Card {
     }
 }
 
+/// Extension that lets an _array_ of foundations accept a card (into the right foundation).
+/// In practice this makes it a lot easier to throw a card at the layout foundations.
+extension Array where Element == Foundation {
+    mutating func accept(card: Card) {
+        self.modifyEach { foundation in
+            if card.canGoOn(foundation) {
+                foundation.accept(card: card)
+                return
+            }
+        }
+    }
+}
+
 /// Trick to satisfy behind-the-scenes mumbo-jumbo.
 /// If this causes the app not to work, we will have to rename the Foundation struct. :(
 extension Foundation {

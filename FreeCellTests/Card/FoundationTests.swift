@@ -48,4 +48,23 @@ struct FoundationTests {
         #expect(Card(rank: .two, suit: .spades).canGoOn(subject) == true)
         #expect(Card(rank: .three, suit: .spades).canGoOn(subject) == false)
     }
+
+    @Test("accept: foundation array works correctly")
+    func acceptArray() {
+        var subject = [Foundation(suit: .hearts), Foundation(suit: .spades), Foundation(suit: .clubs)]
+        subject.accept(card: .init(rank: .ace, suit: .diamonds))
+        #expect(subject.allSatisfy { $0.isEmpty }) // didn't go on any of them
+        subject.accept(card: .init(rank: .ace, suit: .spades))
+        #expect(subject[0].isEmpty)
+        #expect(subject[1].cards == [.init(rank: .ace, suit: .spades)])
+        #expect(subject[2].isEmpty)
+        subject.accept(card: .init(rank: .two, suit: .spades))
+        #expect(subject[0].isEmpty)
+        #expect(subject[1].cards == [.init(rank: .ace, suit: .spades), .init(rank: .two, suit: .spades)])
+        #expect(subject[2].isEmpty)
+        subject.accept(card: .init(rank: .two, suit: .clubs))
+        #expect(subject[0].isEmpty)
+        #expect(subject[1].cards == [.init(rank: .ace, suit: .spades), .init(rank: .two, suit: .spades)])
+        #expect(subject[2].isEmpty)
+    }
 }
