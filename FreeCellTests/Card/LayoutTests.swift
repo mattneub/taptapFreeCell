@@ -28,6 +28,19 @@ struct LayoutTests {
         #expect(subject.foundations[result].suit == .diamonds)
     }
 
+    @Test("foundationForSuit is correct")
+    func foundationForSuit() {
+        let subject = Layout()
+        var result = subject.foundation(for: .spades)
+        #expect(result.suit == .spades)
+        result = subject.foundation(for: .hearts)
+        #expect(result.suit == .hearts)
+        result = subject.foundation(for: .clubs)
+        #expect(result.suit == .clubs)
+        result = subject.foundation(for: .diamonds)
+        #expect(result.suit == .diamonds)
+    }
+
     @Test("empty free cells works correctly")
     func emptyFreeCells() {
         var subject = Layout()
@@ -62,6 +75,31 @@ struct LayoutTests {
             .init(rank: .queen, suit: .hearts),
         ]
         #expect(subject.numberOfCardsRemaining == 5)
+    }
+
+    @Test("cardForTap: works correctly")
+    func cardForTap() {
+        var subject = Layout()
+        subject.freeCells[0].card = .init(rank: .jack, suit: .hearts)
+        subject.columns[0].cards = [.init(rank: .ten, suit: .hearts)]
+        subject.foundations[0].cards = [.init(rank: .nine, suit: .spades)]
+        #expect(subject.card(for: .init(category: .freeCell, index: 0)) == .init(rank: .jack, suit: .hearts))
+        #expect(subject.card(for: .init(category: .freeCell, index: 1)) == nil)
+        #expect(subject.card(for: .init(category: .column, index: 0)) == .init(rank: .ten, suit: .hearts))
+        #expect(subject.card(for: .init(category: .column, index: 1)) == nil)
+        #expect(subject.card(for: .init(category: .foundation(.spades), index: 0)) == .init(rank: .nine, suit: .spades))
+        #expect(subject.card(for: .init(category: .foundation(.spades), index: 1)) == nil)
+    }
+
+    @Test("surrenderCardForTap: works correctly")
+    func surrenderCardForTap() {
+        var subject = Layout()
+        subject.freeCells[0].card = .init(rank: .ten, suit: .hearts)
+        subject.columns[0].cards = [.init(rank: .nine, suit: .spades)]
+        #expect(subject.surrenderCard(for: .init(category: .freeCell, index: 0)) == .init(rank: .ten, suit: .hearts))
+        #expect(subject.freeCells[0].card == nil)
+        #expect(subject.surrenderCard(for: .init(category: .column, index: 0)) == .init(rank: .nine, suit: .spades))
+        #expect(subject.columns[0].cards.isEmpty)
     }
 
     @Test("deal deals correctly")
@@ -202,8 +240,8 @@ struct LayoutTests {
             .init(rank: .jack, suit: .clubs)
         ]
         var result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: false,
             supermoves: true
         )
@@ -214,8 +252,8 @@ struct LayoutTests {
             .init(rank: .jack, suit: .clubs)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: false,
             supermoves: true
         )
@@ -228,8 +266,8 @@ struct LayoutTests {
         subject.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
         subject.columns[1].cards = [.init(rank: .jack, suit: .clubs)]
         var result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -237,8 +275,8 @@ struct LayoutTests {
         subject.columns[0].cards = [.init(rank: .king, suit: .spades)]
         subject.columns[1].cards = [.init(rank: .jack, suit: .clubs)]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -254,8 +292,8 @@ struct LayoutTests {
             .init(rank: .jack, suit: .clubs)
         ]
         var result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -266,8 +304,8 @@ struct LayoutTests {
             .init(rank: .ten, suit: .hearts)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -287,8 +325,8 @@ struct LayoutTests {
             .init(rank: .two, suit: .hearts)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -308,8 +346,8 @@ struct LayoutTests {
             .init(rank: .two, suit: .clubs) // haha
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -330,16 +368,16 @@ struct LayoutTests {
         ]
         subject.freeCells[0].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
         #expect(result == 10)
         subject.freeCells[1].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -348,8 +386,8 @@ struct LayoutTests {
         subject.freeCells[1].card = nil
         subject.columns[7].cards = [.init(rank: .two, suit: .clubs)]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -364,8 +402,8 @@ struct LayoutTests {
             .init(rank: .jack, suit: .clubs)
         ]
         var result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -376,8 +414,8 @@ struct LayoutTests {
             .init(rank: .ten, suit: .hearts)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -397,8 +435,8 @@ struct LayoutTests {
             .init(rank: .two, suit: .hearts),
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -418,8 +456,8 @@ struct LayoutTests {
             .init(rank: .two, suit: .clubs) // haha
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -440,16 +478,16 @@ struct LayoutTests {
         ]
         subject.freeCells[0].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
         #expect(result == 10)
         subject.freeCells[1].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -458,16 +496,16 @@ struct LayoutTests {
         subject.freeCells[1].card = nil
         subject.columns[7].cards = [.init(rank: .two, suit: .clubs)]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
         #expect(result == 9)
         subject.columns[6].cards = [.init(rank: .two, suit: .clubs)]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -477,8 +515,8 @@ struct LayoutTests {
         subject.columns[3].cards = [.init(rank: .two, suit: .clubs)]
         subject.columns[2].cards = [.init(rank: .two, suit: .clubs)]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -486,16 +524,16 @@ struct LayoutTests {
         subject.freeCells[1].card = .init(rank: .two, suit: .clubs)
         subject.freeCells[2].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
         #expect(result == 2)
         subject.freeCells[3].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: false
         )
@@ -523,16 +561,16 @@ struct LayoutTests {
             .init(rank: .nine, suit: .clubs)
         ]
         var result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
         #expect(result == 0) // cannot free up the jack
         subject.freeCells[2].card = nil
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -542,8 +580,8 @@ struct LayoutTests {
         subject.columns[7].cards = []
         subject.freeCells[2].card = .init(rank: .two, suit: .clubs)
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -557,8 +595,8 @@ struct LayoutTests {
             .init(rank: .eight, suit: .hearts)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -572,16 +610,16 @@ struct LayoutTests {
             .init(rank: .seven, suit: .clubs)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
         #expect(result == 0) // we hit a wall - but now let's free up another column...
         subject.columns[6].cards = []
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -599,8 +637,8 @@ struct LayoutTests {
             .init(rank: .four, suit: .hearts)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -618,8 +656,8 @@ struct LayoutTests {
             .init(rank: .three, suit: .clubs)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -634,8 +672,8 @@ struct LayoutTests {
             .init(rank: .jack, suit: .clubs)
         ]
         var result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -646,8 +684,8 @@ struct LayoutTests {
             .init(rank: .ten, suit: .hearts)
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -667,8 +705,8 @@ struct LayoutTests {
             .init(rank: .two, suit: .hearts),
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -688,8 +726,8 @@ struct LayoutTests {
             .init(rank: .two, suit: .clubs) // haha
         ]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -716,8 +754,8 @@ struct LayoutTests {
         subject.columns[5].cards = [.init(rank: .two, suit: .clubs)]
         subject.columns[6].cards = [.init(rank: .two, suit: .clubs)]
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )
@@ -728,8 +766,8 @@ struct LayoutTests {
         subject.freeCells[2].card = .init(rank: .two, suit: .clubs)
         subject.columns[6].cards = []
         result = subject.howManyCardsCanMove(
-            from: subject.columns[1],
-            to: subject.columns[0],
+            from: 1,
+            to: 0,
             sequenceMoves: true,
             supermoves: true
         )

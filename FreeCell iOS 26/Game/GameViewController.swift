@@ -96,6 +96,9 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         let doubleTapper = MyTapGestureRecognizer(target: self, action: #selector(doubleTap))
         doubleTapper.numberOfTapsRequired = 2
         view.addGestureRecognizer(doubleTapper)
+        let singleTapper = MyTapGestureRecognizer(target: self, action: #selector(singleTap))
+        singleTapper.numberOfTapsRequired = 1
+        view.addGestureRecognizer(singleTapper)
     }
 
     var didInitialLayout = false
@@ -159,6 +162,12 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     @objc func doRedo() {}
     @objc func doUndoAll() {}
     @objc func doRedoAll() {}
+
+    @objc func singleTap() {
+        Task {
+            await processor?.receive(.tapBackground)
+        }
+    }
 
     @objc func doubleTap() {
         Task {

@@ -6,8 +6,14 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
 
     var foundations: [Foundation] = Suit.foundationOrder.map { Foundation(suit: $0) }
 
+    // TODO: eliminate if not using
     func indexOfFoundation(for suit: Suit) -> Int {
         return Suit.foundationOrder.firstIndex(of: suit) ?? -1
+    }
+
+    // TODO: eliminate if not using
+    func foundation(for suit: Suit) -> Foundation {
+        return foundations[indexOfFoundation(for: suit)]
     }
 
     var columns = [Column](repeating: Column(), count: 8)
@@ -32,6 +38,37 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
 
     var numberOfCardsRemaining: Int { // i.e. remaining in play — not in the foundations
         (freeCells.count - numberOfEmptyFreeCells) + columns.reduce(0) { $0 + $1.cards.count }
+    }
+    
+    /// Convert from a first tap on a card view to the corresponding source card,
+    /// e.g. the card that would move from here to a foundation if possible.
+    /// - Parameter tap: The "location" in the layout represented by the tapped card view.
+    /// - Returns: The card, or `nil` if the location is empty.
+    func card(for tap: Tap) -> Card? {
+        switch tap.category {
+        case .foundation:
+            foundations[tap.index].top
+        case .freeCell:
+            freeCells[tap.index].card
+        case .column:
+            columns[tap.index].bottom
+        }
+    }
+
+    /// Convert from a first tap on a card view to the corresponding source card,
+    /// e.g. the card that would move from here to a foundation if possible, and
+    /// remove that card as well as returning it.
+    /// - Parameter tap: The "location" in the layout represented by the tapped card view.
+    /// - Returns: The card, or `nil` if the location is empty.
+    mutating func surrenderCard(for tap: Tap) -> Card {
+        switch tap.category {
+        case .foundation:
+            fatalError("not a source") // cannot surrender from a foundation
+        case .freeCell:
+            freeCells[tap.index].surrenderCard()
+        case .column:
+            columns[tap.index].surrenderCard()
+        }
     }
 
     mutating func deal(_ deck: Deck) {
@@ -115,17 +152,17 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
     /// the surrounding environment (i.e. the number of empty cells). Then we apply that as a
     /// maximum to the _actual_ movable sequence at the bottom of the source.
     func howManyCardsCanMove(
-        from source: Column,
-        to destination: Column,
+        from source: Int,
+        to destination: Int,
         sequenceMoves: Bool,
         supermoves: Bool
     ) -> Int {
         // simplest case: where there is just one card in play
-        if !sequenceMoves || source.maxMovableSequence.count < 2 {
-            return (source.bottom?.canGoOn(destination) ?? false) ? 1 : 0 // and that's that
+        if !sequenceMoves || columns[source].maxMovableSequence.count < 2 {
+            return (columns[source].bottom?.canGoOn(columns[destination]) ?? false) ? 1 : 0 // and that's that
         }
         // sequence moves are allowed; right answer depends on whether supermoves are also allowed
-        let numberOfEmptyNonDestinationColumns = numberOfEmptyColumns - (destination.isEmpty ? 1 : 0)
+        let numberOfEmptyNonDestinationColumns = numberOfEmptyColumns - (columns[destination].isEmpty ? 1 : 0)
         let theoreticalMaximum: Int = if supermoves && numberOfEmptyNonDestinationColumns > 0 {
             // if there is an empty column, we can move maximum of 2 * (free cell spaces + 1) —
             // and it doubles _again_ for every additional extra column! shlomi fish writes:
@@ -136,10 +173,10 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
         }
         // sequence is in reverse order (bottom to top), so reverse it and extract last max cards
         // look for _first_ of those that can go on the actual column we're being asked to move to
-        var sequence = Array(source.maxMovableSequence.reversed().suffix(theoreticalMaximum))
-        while !sequence.isEmpty {
-            if sequence.removeFirst().canGoOn(destination) {
-                return sequence.count + 1 // because you just removed it
+        let walk = columns[source].maxMovableSequence.reversed().suffix(theoreticalMaximum)
+        for (index, card) in walk.enumerated() {
+            if card.canGoOn(columns[destination]) {
+                return walk.count - index
             }
         }
         return 0

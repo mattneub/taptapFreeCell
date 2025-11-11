@@ -120,7 +120,7 @@ struct CardViewTests {
         let border = try #require(subject.layer.sublayers?.last)
         #expect(border.borderColor == UIColor.blue.cgColor)
         #expect(border.borderWidth == 2)
-        #expect(border.frame == CGRect(x: 0, y: 102, width: 100, height: 296))
+        #expect(border.frame == CGRect(x: 0, y: 101, width: 100, height: 298))
         #expect(border.zPosition == 3)
         #expect(border.cornerRadius == 4)
     }
@@ -132,6 +132,6 @@ struct CardViewTests {
         subject.processor = processor
         subject.tapped()
         await #while(processor.thingsReceived.isEmpty)
-        #expect(processor.thingsReceived == [.tapped(category: .column, index: 0)])
+        #expect(processor.thingsReceived == [.tapped(.init(category: .column, index: 0))])
     }
 }

@@ -39,7 +39,7 @@ struct GameViewControllerTests {
         #expect(label.frame.midY.rounded() == glass.bounds.midY)
     }
 
-    @Test("viewDidLoad: configures bar button items, adds image view, tap gesture recognizer")
+    @Test("viewDidLoad: configures bar button items, adds image view, tap gesture recognizers")
     func viewDidLoad() throws {
         subject.loadViewIfNeeded()
         let lefts = try #require(subject.navigationItem.leftBarButtonItems)
@@ -88,6 +88,10 @@ struct GameViewControllerTests {
         #expect(tapper.numberOfTapsRequired == 2)
         #expect(tapper.target === subject)
         #expect(tapper.action == #selector(subject.doubleTap))
+        let tapper2 = try #require(subject.view.gestureRecognizers?.last as? MyTapGestureRecognizer)
+        #expect(tapper2.numberOfTapsRequired == 1)
+        #expect(tapper2.target === subject)
+        #expect(tapper2.action == #selector(subject.singleTap))
     }
 
     @Test("view will layout: first time only, calls card sizer, interface constructor")
@@ -267,6 +271,13 @@ struct GameViewControllerTests {
         subject.doDeal()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.deal])
+    }
+
+    @Test("singleTap: sends tapBackground")
+    func singleTap() async {
+        subject.singleTap()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.tapBackground])
     }
 
     @Test("doubleTap: sends autoplay")

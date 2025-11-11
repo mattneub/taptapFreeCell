@@ -97,18 +97,12 @@ final class CardView: UIView {
                     let borderLayer = CALayer()
                     borderLayer.borderColor = UIColor.blue.cgColor
                     borderLayer.borderWidth = 2
+                    // magic numbers adjust so that drawn border occupies card layer inset
                     borderLayer.frame = CGRect(
                         x: 0,
-                        y: (
-                            CardView.cardLayerInset.top +
-                            CGFloat(cards.count - movableCount) * (CardView.baseSize.height / 2)
-                        ),
+                        y: 1 + CGFloat(cards.count - movableCount) * (CardView.baseSize.height / 2),
                         width: CardView.baseSize.width,
-                        height: (
-                            CGFloat(movableCount + 1) * (CardView.baseSize.height / 2) -
-                            CardView.cardLayerInset.top -
-                            CardView.cardLayerInset.bottom
-                        )
+                        height: CGFloat(movableCount + 1) * (CardView.baseSize.height / 2) - 2
                     )
                     borderLayer.zPosition = CGFloat(cards.count)
                     borderLayer.cornerRadius = 4
@@ -120,7 +114,7 @@ final class CardView: UIView {
 
     @objc func tapped() {
         Task {
-            await processor?.receive(.tapped(category: category, index: index))
+            await processor?.receive(.tapped(.init(category: category, index: index)))
         }
     }
 
