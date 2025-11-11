@@ -13,9 +13,7 @@ struct GameViewInterfaceConstructorTests {
         #expect(result.count == 3)
         let foundations = result[0]
         #expect(foundations.count == 4)
-        #expect(foundations.map { $0.category } == [
-            .foundation(.spades), .foundation(.hearts), .foundation(.clubs), .foundation(.diamonds)
-        ])
+        #expect(foundations.allSatisfy { $0.category == .foundation })
         #expect(foundations.map { $0.index } == [0, 1, 2, 3])
         let freeCells = result[1]
         #expect(freeCells.count == 4)

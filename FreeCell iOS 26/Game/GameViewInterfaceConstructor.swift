@@ -8,9 +8,8 @@ protocol GameViewInterfaceConstructorType {
 struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
     func constructInterface(in view: UIView) -> [[CardView]] {
         // foundations
-        var suits = Array(Suit.foundationOrder.reversed())
         let foundation1 = CardView(
-            category: .foundation(suits.removeFirst()),
+            category: .foundation,
             index: 3
         ).applying {
             view.addSubview($0)
@@ -22,7 +21,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         foundation1.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16).isActive = true
         foundation1.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).isActive = true
         let foundation2 = CardView(
-            category: .foundation(suits.removeFirst()),
+            category: .foundation,
             index: 2
         ).applying {
             view.addSubview($0)
@@ -34,7 +33,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         foundation2.topAnchor.constraint(equalTo: foundation1.topAnchor).isActive = true
         foundation2.trailingAnchor.constraint(equalTo: foundation1.leadingAnchor, constant: -10).isActive = true
         let foundation3 = CardView(
-            category: .foundation(suits.removeFirst()),
+            category: .foundation,
             index: 1
         ).applying {
             view.addSubview($0)
@@ -46,7 +45,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         foundation3.topAnchor.constraint(equalTo: foundation1.topAnchor).isActive = true
         foundation3.trailingAnchor.constraint(equalTo: foundation2.leadingAnchor, constant: -10).isActive = true
         let foundation4 = CardView(
-            category: .foundation(suits.removeFirst()),
+            category: .foundation,
             index: 0
         ).applying {
             view.addSubview($0)

@@ -8,8 +8,9 @@ struct GameState: Equatable {
     var supermoves = true
 
     /// The game is always in one of two states: either the user has just performed the first
-    /// tap of a two-tap sequence, or not. If so, and only if so, this is non-`nil`.
-    var firstTap: Tap? = nil
+    /// tap of a two-tap sequence, or not. If so, and only if so, this is non-`nil`, and tells
+    /// where the first tap was.
+    var firstTapLocation: Location? = nil
 
     var gameIsOver: Bool {
         layout.numberOfCardsRemaining == 0

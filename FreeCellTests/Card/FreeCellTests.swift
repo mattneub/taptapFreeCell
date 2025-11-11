@@ -2,19 +2,21 @@
 import Testing
 
 struct FreeCellTests {
-    @Test("isEmpty works")
-    func isEmpty() {
+    @Test("card and isEmpty work")
+    func cardAndIsEmpty() {
         var subject = FreeCell()
         #expect(subject.isEmpty == true)
-        subject.card = .init(rank: .jack, suit: .hearts)
+        #expect(subject.card == nil)
+        subject.cards = [.init(rank: .jack, suit: .hearts)]
         #expect(subject.isEmpty == false)
+        #expect(subject.card == .init(rank: .jack, suit: .hearts))
     }
 
     @Test("description works")
     func description() {
         var subject = FreeCell()
         #expect(subject.description == "XX")
-        subject.card = .init(rank: .jack, suit: .hearts)
+        subject.cards = [.init(rank: .jack, suit: .hearts)]
         #expect(subject.description == "JH")
     }
 
@@ -28,7 +30,7 @@ struct FreeCellTests {
     @Test("surrender works")
     func surrender() {
         var subject = FreeCell()
-        subject.card = .init(rank: .jack, suit: .hearts)
+        subject.cards = [.init(rank: .jack, suit: .hearts)]
         let result = subject.surrenderCard()
         #expect(subject.card == nil)
         #expect(result == .init(rank: .jack, suit: .hearts))

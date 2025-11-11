@@ -46,7 +46,7 @@ struct CardViewTests {
             #expect(layer.opacity == 0.5)
         }
         do {
-            let subject = CardView(category: .foundation(.hearts), index: 0)
+            let subject = CardView(category: .foundation, index: 0)
             CardView.baseSize = .init(width: 100, height: 200)
             await subject.redraw()
             let layer = try #require(subject.emptyLayer)
@@ -74,7 +74,7 @@ struct CardViewTests {
 
     @Test("redraw: if foundation with card, shows card layer with opacity 0.5")
     func redrawFoundation() async throws {
-        let subject = CardView(category: .foundation(.hearts), index: 0)
+        let subject = CardView(category: .foundation, index: 0)
         CardView.baseSize = .init(width: 100, height: 200)
         subject.cards = [.init(rank: .jack, suit: .hearts)]
         await subject.redraw()

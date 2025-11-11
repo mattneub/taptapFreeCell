@@ -105,7 +105,7 @@ struct GameViewControllerTests {
         #expect(constructor.methodsCalled == ["constructInterface(in:)"])
         #expect(constructor.view === subject.view)
         let foundation = try #require(subject.foundations.first)
-        #expect(foundation.category == .foundation(.spades))
+        #expect(foundation.category == .foundation)
         let freeCell = try #require(subject.freeCells.first)
         #expect(freeCell.category == .freeCell)
         let column = try #require(subject.columns.first)
@@ -127,7 +127,7 @@ struct GameViewControllerTests {
         #expect(subject.foundations.count == 4)
         #expect(subject.foundations.enumerated().allSatisfy { offset, foundation in
             foundation.index == offset &&
-            foundation.category == .foundation(Suit.foundationOrder[offset])
+            foundation.category == .foundation
         })
         #expect(subject.freeCells.count == 4)
         #expect(subject.freeCells.enumerated().allSatisfy { offset, freeCell in
@@ -155,7 +155,7 @@ struct GameViewControllerTests {
         await #while(subject.columns[7].emptyLayer == nil)
         var layout = Layout()
         layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [.init(rank: .ace, suit: .hearts)]
-        layout.freeCells[3].card = .init(rank: .king, suit: .hearts)
+        layout.freeCells[3].cards = [.init(rank: .king, suit: .hearts)]
         layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
         layout.columns[6].cards = [
             .init(rank: .jack, suit: .hearts),
@@ -213,7 +213,7 @@ struct GameViewControllerTests {
         await #while(subject.columns[7].emptyLayer == nil)
         var layout = Layout()
         layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [.init(rank: .ace, suit: .hearts)]
-        layout.freeCells[3].card = .init(rank: .king, suit: .hearts)
+        layout.freeCells[3].cards = [.init(rank: .king, suit: .hearts)]
         layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
         layout.columns[6].cards = [
             .init(rank: .jack, suit: .hearts),

@@ -127,13 +127,8 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                 foundations[index].cards = state.layout.foundations[index].cards
                 await foundations[index].redraw()
             }
-            let cardArray: [Card] = if let card = state.layout.freeCells[index].card {
-                [card]
-            } else {
-                []
-            }
-            if freeCells[index].cards != cardArray {
-                freeCells[index].cards = cardArray
+            if freeCells[index].cards != state.layout.freeCells[index].cards {
+                freeCells[index].cards = state.layout.freeCells[index].cards
                 await freeCells[index].redraw()
             }
         }

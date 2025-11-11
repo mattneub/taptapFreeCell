@@ -2,5 +2,5 @@ enum GameAction: Equatable {
     case autoplay
     case deal
     case tapBackground
-    case tapped(Tap)
+    case tapped(Location)
 }

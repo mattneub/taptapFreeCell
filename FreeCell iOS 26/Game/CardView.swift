@@ -7,7 +7,7 @@ import UIKit
 /// so it is something that can be tapped; card views are the chief things the user interacts with.
 final class CardView: UIView {
     /// Which of the three types of card view this is.
-    let category: Category
+    let category: Location.Category
 
     /// The index of this card view within the sequence of its category fellows. The view needs
     /// to know this so that it can report taps in a helpful way.
@@ -35,7 +35,7 @@ final class CardView: UIView {
     lazy var widthConstraint = widthAnchor.constraint(equalToConstant: 0)
     lazy var heightConstraint = heightAnchor.constraint(equalToConstant: 0)
 
-    init(category: Category, index: Int) {
+    init(category: Location.Category, index: Int) {
         self.category = category
         self.index = index
         super.init(frame: .zero)
@@ -116,12 +116,5 @@ final class CardView: UIView {
         Task {
             await processor?.receive(.tapped(.init(category: category, index: index)))
         }
-    }
-
-    /// The layout category represented by this card view.
-    enum Category: Equatable {
-        case column
-        case freeCell
-        case foundation(Suit)
     }
 }

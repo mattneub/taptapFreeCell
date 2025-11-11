@@ -2,14 +2,14 @@
 import Testing
 
 struct FoundationTests {
-    @Test("top and isEmpty work correctly")
-    func topIsEmpty() {
+    @Test("card and isEmpty work correctly")
+    func cardAndIsEmpty() {
         var subject = Foundation(suit: .hearts)
         #expect(subject.isEmpty == true)
-        #expect(subject.top == nil)
+        #expect(subject.card == nil)
         subject.cards = [.init(rank: .ace, suit: .hearts), .init(rank: .two, suit: .hearts)]
         #expect(subject.isEmpty == false)
-        #expect(subject.top == .init(rank: .two, suit: .hearts))
+        #expect(subject.card == .init(rank: .two, suit: .hearts))
     }
 
     @Test("accept: appends to cards")

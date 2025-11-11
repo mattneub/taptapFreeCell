@@ -2,18 +2,18 @@
 import Testing
 
 struct ColumnTests {
-    @Test("isEmpty and bottom are correct")
-    func isEmptyBottom() {
+    @Test("isEmpty and card are correct")
+    func isEmptyAndCard() {
         var subject = Column()
         #expect(subject.isEmpty)
-        #expect(subject.bottom == nil)
+        #expect(subject.card == nil)
         subject.cards = [
             .init(rank: .king, suit: .hearts),
             .init(rank: .ten, suit: .hearts),
             .init(rank: .nine, suit: .clubs)
         ]
         #expect(!subject.isEmpty)
-        #expect(subject.bottom == .init(rank: .nine, suit: .clubs))
+        #expect(subject.card == .init(rank: .nine, suit: .clubs))
     }
 
     @Test("maxMovableSequence: gives the right answer")

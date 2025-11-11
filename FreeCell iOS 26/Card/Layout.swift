@@ -37,37 +37,34 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
     }
 
     var numberOfCardsRemaining: Int { // i.e. remaining in play — not in the foundations
-        (freeCells.count - numberOfEmptyFreeCells) + columns.reduce(0) { $0 + $1.cards.count }
+        (freeCells as [Source] + columns as [Source]).reduce(0) { $0 + $1.cards.count }
     }
     
-    /// Convert from a first tap on a card view to the corresponding source card,
-    /// e.g. the card that would move from here to a foundation if possible.
-    /// - Parameter tap: The "location" in the layout represented by the tapped card view.
+    /// Convert from a location to its corresponding `card`.
+    /// - Parameter location: The location in the layout.
     /// - Returns: The card, or `nil` if the location is empty.
-    func card(for tap: Tap) -> Card? {
-        switch tap.category {
-        case .foundation:
-            foundations[tap.index].top
-        case .freeCell:
-            freeCells[tap.index].card
-        case .column:
-            columns[tap.index].bottom
+    func card(at location: Location) -> Card? {
+        let group: [Destination] = switch location.category {
+        case .foundation: foundations
+        case .freeCell: freeCells
+        case .column: columns
         }
+        return group[location.index].card
     }
 
-    /// Convert from a first tap on a card view to the corresponding source card,
+    /// Convert from a location to its corresponding source card,
     /// e.g. the card that would move from here to a foundation if possible, and
-    /// remove that card as well as returning it.
-    /// - Parameter tap: The "location" in the layout represented by the tapped card view.
+    /// _remove_ that card as well as returning it.
+    /// - Parameter location: The location in the layout.
     /// - Returns: The card, or `nil` if the location is empty.
-    mutating func surrenderCard(for tap: Tap) -> Card {
-        switch tap.category {
-        case .foundation:
-            fatalError("not a source") // cannot surrender from a foundation
-        case .freeCell:
-            freeCells[tap.index].surrenderCard()
-        case .column:
-            columns[tap.index].surrenderCard()
+    mutating func surrenderCard(from location: Location) -> Card {
+        func surrender<T: Source>(from sources: inout [T]) -> Card {
+            sources[location.index].surrenderCard()
+        }
+        return switch location.category {
+        case .foundation: fatalError("not a source")
+        case .freeCell: surrender(from: &freeCells)
+        case .column: surrender(from: &columns)
         }
     }
 
@@ -80,7 +77,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
             $0.cards = []
         }
         freeCells.modifyEach {
-            $0.card = nil
+            $0.cards = []
         }
         self.microsoftDealNumber = nil
         while !deck.isEmpty {
@@ -119,7 +116,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
             foundations[$0.foundationOrderIndex]
         }
         if oppositeFoundations.allSatisfy ({
-            ($0.top?.rank.rawValue ?? 0) >= card.rank.rawValue - 1
+            ($0.card?.rank.rawValue ?? 0) >= card.rank.rawValue - 1
         }) {
             return false
         }
@@ -137,9 +134,9 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
         // and the same color opposite suit foundation is within three ranks
         let partnerFoundation = foundations[card.suit.otherSuitOfSameColor.foundationOrderIndex]
         if oppositeFoundations.allSatisfy ({
-            ($0.top?.rank.rawValue ?? 0) >= card.rank.rawValue - 2
+            ($0.card?.rank.rawValue ?? 0) >= card.rank.rawValue - 2
         }) && (
-            (partnerFoundation.top?.rank.rawValue ?? 0) >= card.rank.rawValue - 3
+            (partnerFoundation.card?.rank.rawValue ?? 0) >= card.rank.rawValue - 3
         ) {
             return false
         }
@@ -159,7 +156,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
     ) -> Int {
         // simplest case: where there is just one card in play
         if !sequenceMoves || columns[source].maxMovableSequence.count < 2 {
-            return (columns[source].bottom?.canGoOn(columns[destination]) ?? false) ? 1 : 0 // and that's that
+            return (columns[source].card?.canGoOn(columns[destination]) ?? false) ? 1 : 0 // and that's that
         }
         // sequence moves are allowed; right answer depends on whether supermoves are also allowed
         let numberOfEmptyNonDestinationColumns = numberOfEmptyColumns - (columns[destination].isEmpty ? 1 : 0)
@@ -273,7 +270,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
         var output = ""
         output.write("FOUNDATIONS: ")
         for f in self.foundations {
-            output.write(f.top?.description ?? "XX")
+            output.write(f.card?.description ?? "XX")
             output.write(" ")
         }
         output.write("\n")

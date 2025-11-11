@@ -1,9 +1,13 @@
 /// A freecell can hold at most one card.
 struct FreeCell : Source, Destination, CustomStringConvertible, Codable {
-    var card: Card?
+    var cards = [Card]()
+
+    var card: Card? {
+        cards.first
+    }
 
     var isEmpty: Bool {
-        self.card == nil
+        self.cards.isEmpty
     }
 
     var description: String {
@@ -16,13 +20,13 @@ struct FreeCell : Source, Destination, CustomStringConvertible, Codable {
 
     mutating func accept(card: Card) {
         assert(self.isEmpty)
-        self.card = card
+        self.cards = [card]
     }
 
     mutating func surrenderCard() -> Card {
         assert(!self.isEmpty)
         let card = self.card
-        self.card = nil
+        self.cards = []
         return if let card {
             card
         } else {

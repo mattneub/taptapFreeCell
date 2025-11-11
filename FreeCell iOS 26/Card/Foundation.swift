@@ -3,11 +3,11 @@
 struct Foundation: Destination, Codable {
     var cards = [Card]()
 
-    let suit : Suit
-
-    var top: Card? {
+    var card: Card? {
         cards.last
     }
+
+    let suit : Suit
 
     var isEmpty: Bool {
         cards.isEmpty
@@ -25,7 +25,7 @@ extension Card {
         suit == foundation.suit && (
             (
                 foundation.isEmpty && rank == .ace ||
-                foundation.top?.rank.rawValue == rank.rawValue - 1
+                foundation.card?.rank.rawValue == rank.rawValue - 1
             )
         )
     }

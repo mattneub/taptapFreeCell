@@ -5,7 +5,7 @@ struct Column: Source, Destination, Codable {
 
     var isEmpty: Bool { cards.isEmpty }
 
-    var bottom: Card? { cards.last }
+    var card: Card? { cards.last }
 
     /// Build and return a copy of the maximum sequence starting at the bottom of the column
     /// and walking up the column.
@@ -26,7 +26,7 @@ struct Column: Source, Destination, Codable {
     }
 
     mutating func accept(card: Card) {
-        assert(isEmpty || card.canGoOn(bottom!))
+        assert(isEmpty || card.canGoOn(self.card!))
         self.cards.append(card)
     }
 
@@ -39,9 +39,9 @@ struct Column: Source, Destination, Codable {
 extension Card {
     /// Whether a card can go on a column.
     func canGoOn(_ column: Column) -> Bool {
-        guard let bottom = column.bottom else {
+        guard let card = column.card else {
             return true // the column is empty
         }
-        return canGoOn(bottom)
+        return canGoOn(card)
     }
 }
