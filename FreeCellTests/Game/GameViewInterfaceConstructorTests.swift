@@ -13,15 +13,15 @@ struct GameViewInterfaceConstructorTests {
         #expect(result.count == 3)
         let foundations = result[0]
         #expect(foundations.count == 4)
-        #expect(foundations.allSatisfy { $0.category == .foundation })
-        #expect(foundations.map { $0.index } == [0, 1, 2, 3])
+        #expect(foundations.allSatisfy { $0.location.category == .foundation })
+        #expect(foundations.map { $0.location.index } == [0, 1, 2, 3])
         let freeCells = result[1]
         #expect(freeCells.count == 4)
-        #expect(freeCells.allSatisfy { $0.category == .freeCell })
-        #expect(freeCells.map { $0.index } == [0, 1, 2, 3])
+        #expect(freeCells.allSatisfy { $0.location.category == .freeCell })
+        #expect(freeCells.map { $0.location.index } == [0, 1, 2, 3])
         let columns = result[2]
         #expect(columns.count == 8)
-        #expect(columns.allSatisfy { $0.category == .column })
-        #expect(columns.map { $0.index } == [0, 1, 2, 3, 4, 5, 6, 7])
+        #expect(columns.allSatisfy { $0.location.category == .column })
+        #expect(columns.map { $0.location.index } == [0, 1, 2, 3, 4, 5, 6, 7])
     }
 }

@@ -84,7 +84,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
-            #expect(presenter.statesPresented == [])
+            #expect(presenter.statesPresented == [subject.state])
         }
     }
 
@@ -219,6 +219,22 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented == [subject.state])
         }
+    }
+
+    @Test("tapped: if firstTapLocation is column, if second location is column, if move would move all, do nothing")
+    func tapSecondColumnFromColumnAll() async {
+        subject.state.layout.columns[0].cards = []
+        subject.state.layout.columns[1].cards = [
+            .init(rank: .six, suit: .diamonds),
+            .init(rank: .five, suit: .clubs),
+            .init(rank: .four, suit: .diamonds)
+        ]
+        subject.state.firstTapLocation = Location(category: .column, index: 1)
+        let oldLayout = subject.state.layout
+        await subject.receive(.tapped(.init(category: .column, index: 0)))
+        #expect(subject.state.layout == oldLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(presenter.statesPresented == [subject.state])
     }
 
 }

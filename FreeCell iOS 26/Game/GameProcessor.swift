@@ -77,7 +77,7 @@ final class GameProcessor: Processor {
             return
         }
         state.firstTapLocation = location
-        // TODO: highlighting should happen here
+        await presenter?.present(state) // to cause highlighting
     }
 
     func handleSecondTap(_ secondTapLocation: Location) async {
@@ -119,6 +119,11 @@ final class GameProcessor: Processor {
                     sequenceMoves: state.sequenceMoves,
                     supermoves: state.supermoves
                 )
+                if state.layout.columns[secondTapLocation.index].isEmpty {
+                    if state.layout.columns[firstTapLocation.index].cards.count == movableCount {
+                        break // meaningless to move all the cards from a column to an empty column
+                    }
+                }
                 if movableCount > 0 {
                     state.layout.columns[firstTapLocation.index].cards.suffix(movableCount).forEach {
                         state.layout.columns[secondTapLocation.index].accept(card: $0)
@@ -128,7 +133,6 @@ final class GameProcessor: Processor {
             }
         }
         state.firstTapLocation = nil
-        // TODO: unhighlighting should happen here
         await presenter?.present(state)
     }
 }

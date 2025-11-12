@@ -105,11 +105,11 @@ struct GameViewControllerTests {
         #expect(constructor.methodsCalled == ["constructInterface(in:)"])
         #expect(constructor.view === subject.view)
         let foundation = try #require(subject.foundations.first)
-        #expect(foundation.category == .foundation)
+        #expect(foundation.location.category == .foundation)
         let freeCell = try #require(subject.freeCells.first)
-        #expect(freeCell.category == .freeCell)
+        #expect(freeCell.location.category == .freeCell)
         let column = try #require(subject.columns.first)
-        #expect(column.category == .column)
+        #expect(column.location.category == .column)
         sizer.methodsCalled = []
         constructor.methodsCalled = []
         subject.viewWillLayoutSubviews()
@@ -126,18 +126,18 @@ struct GameViewControllerTests {
         await #while(subject.columns[7].emptyLayer == nil)
         #expect(subject.foundations.count == 4)
         #expect(subject.foundations.enumerated().allSatisfy { offset, foundation in
-            foundation.index == offset &&
-            foundation.category == .foundation
+            foundation.location.index == offset &&
+            foundation.location.category == .foundation
         })
         #expect(subject.freeCells.count == 4)
         #expect(subject.freeCells.enumerated().allSatisfy { offset, freeCell in
-            freeCell.index == offset &&
-            freeCell.category == .freeCell
+            freeCell.location.index == offset &&
+            freeCell.location.category == .freeCell
         })
         #expect(subject.columns.count == 8)
         #expect(subject.columns.enumerated().allSatisfy { offset, column in
-            column.index == offset &&
-            column.category == .column
+            column.location.index == offset &&
+            column.location.category == .column
         })
         let allCards = subject.view.subviews(ofType: CardView.self)
         #expect(allCards.count == 16)
@@ -264,6 +264,30 @@ struct GameViewControllerTests {
         #expect(borderLayer2.borderColor == UIColor.blue.cgColor)
         #expect(subject.columns[7].cards == [])
         #expect(subject.columns[7].emptyLayer?.superlayer != nil)
+    }
+
+    @Test("present: if highlightOn false, removes and nilifies highlightLayer")
+    func presentHighlightOnFalse() async {
+        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
+        subject.viewWillLayoutSubviews()
+        let layer = CALayer()
+        subject.view.layer.addSublayer(layer)
+        subject.highlightLayer = layer
+        await subject.present(GameState())
+        #expect(subject.highlightLayer == nil)
+        #expect(layer.superlayer == nil)
+    }
+
+    @Test("present: if highlightOn true, adds and configures highlightLayer")
+    func presentHighlightOnTrue() async throws {
+        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
+        subject.viewWillLayoutSubviews()
+        await subject.present(GameState(firstTapLocation: .init(category: .column, index: 0)))
+        let layer = try #require(subject.highlightLayer)
+        #expect(layer.superlayer === subject.columns[0].layer.superlayer)
+        #expect(layer.frame == subject.columns[0].layer.frame)
+        #expect(layer.zPosition == 2000)
+        // could check transform etc. but not worth worrying about it
     }
 
     @Test("doDeal: sends deal")

@@ -5,11 +5,15 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     // Card views
 
-    var foundations: [CardView]!
+    var foundations = [CardView]()
 
-    var freeCells: [CardView]!
+    var freeCells = [CardView]()
 
-    var columns: [CardView]!
+    var columns = [CardView]()
+
+    // Highlight layer
+
+    var highlightLayer: CALayer?
 
     // Helper objects
 
@@ -108,10 +112,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
         didInitialLayout = true
         CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: view.bounds.width) ?? .zero
-        let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view)
-        self.foundations = cardViews?[0]
-        self.freeCells = cardViews?[1]
-        self.columns = cardViews?[2]
+        if let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view) {
+            foundations = cardViews[0]
+            freeCells = cardViews[1]
+            columns = cardViews[2]
+        }
         Task {
             for cardView in foundations + freeCells + columns {
                 cardView.processor = self.processor
@@ -143,6 +148,12 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                 await columns[index].redraw(movableCount: movableCount)
             }
         }
+        if state.highlightOn, let location = state.firstTapLocation {
+            await highlight(location, tint: state.tintTapped, grow: state.growTapped)
+        } else {
+            highlightLayer?.removeFromSuperlayer()
+            highlightLayer = nil
+        }
     }
 
     func receive(_ effect: GameEffect) async {}
@@ -168,5 +179,43 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         Task {
             await processor?.receive(.autoplay)
         }
+    }
+
+    func groupFor(_ location: Location) -> [CardView] {
+        switch location.category {
+        case .foundation: foundations
+        case .freeCell: freeCells
+        case .column: columns
+        }
+    }
+
+    func highlight(_ location: Location, tint: Bool, grow: Bool) async {
+        let cardView = groupFor(location)[location.index]
+        let highlightLayer = CALayer()
+        highlightLayer.contentsScale = self.traitCollection.displayScale + 1
+        highlightLayer.isOpaque = true
+        highlightLayer.frame = cardView.frame
+        let size = highlightLayer.bounds.size
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = highlightLayer.contentsScale
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        let image = renderer.image { context in
+            cardView.layer.render(in: context.cgContext)
+            if tint {
+                UIColor.highlightColor.setFill()
+                context.fill(CGRect(origin: .zero, size: size), blendMode: .multiply)
+            }
+        }
+        highlightLayer.contents = image.cgImage
+        highlightLayer.zPosition = 2000
+        cardView.superview?.layer.addSublayer(highlightLayer)
+        CATransaction.flush()
+        if grow {
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0.1)
+            highlightLayer.transform = CATransform3DMakeScale(1.15, 1.15, 1)
+            CATransaction.commit()
+        }
+        self.highlightLayer = highlightLayer
     }
 }

@@ -9,9 +9,9 @@ final class MockGameViewInterfaceConstructor: GameViewInterfaceConstructorType {
         methodsCalled.append(#function)
         self.view = view
         return [
-            [CardView(category: .foundation, index: 0)],
-            [CardView(category: .freeCell, index: 0)],
-            [CardView(category: .column, index: 0)]
+            [CardView(location: .init(category: .foundation, index: 0))],
+            [CardView(location: .init(category: .freeCell, index: 0))],
+            [CardView(location: .init(category: .column, index: 0))]
         ]
     }
 

@@ -6,12 +6,8 @@ import UIKit
 /// stationary; it is the card layers that fly around the interface. Also, a card view is a view,
 /// so it is something that can be tapped; card views are the chief things the user interacts with.
 final class CardView: UIView {
-    /// Which of the three types of card view this is.
-    let category: Location.Category
-
-    /// The index of this card view within the sequence of its category fellows. The view needs
-    /// to know this so that it can report taps in a helpful way.
-    let index: Int
+    /// Layout location represented by this card view.
+    let location: Location
 
     /// Reference to the processor.
     weak var processor: (any Receiver<GameAction>)?
@@ -35,9 +31,8 @@ final class CardView: UIView {
     lazy var widthConstraint = widthAnchor.constraint(equalToConstant: 0)
     lazy var heightConstraint = heightAnchor.constraint(equalToConstant: 0)
 
-    init(category: Location.Category, index: Int) {
-        self.category = category
-        self.index = index
+    init(location: Location) {
+        self.location = location
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
         let tapper = MyTapGestureRecognizer(target: self, action: #selector(tapped))
@@ -61,7 +56,7 @@ final class CardView: UIView {
                 )
                 .inset(by: CardView.cardLayerInset)
                 .inset(by: CardView.cardLayerInset)
-                if category == .column {
+                if location.category == .column {
                     $0.frame = $0.frame.offsetBy(dx: 0, dy: -CardView.cardLayerInset.top)
                     // looks better somehow, but only for columns
                 }
@@ -74,12 +69,12 @@ final class CardView: UIView {
             self.layer.addSublayer(emptyLayer)
             self.emptyLayer = emptyLayer
         } else {
-            switch category {
+            switch location.category {
             case .foundation, .freeCell:
                 if let card = cards.last {
                     let cardLayer = await CardLayer(card: card)
                     self.layer.addSublayer(cardLayer)
-                    cardLayer.opacity = category == .freeCell ? 1 : 0.5
+                    cardLayer.opacity = location.category == .freeCell ? 1 : 0.5
                 }
             case .column:
                 // this is the Really Interesting Part
@@ -114,7 +109,7 @@ final class CardView: UIView {
 
     @objc func tapped() {
         Task {
-            await processor?.receive(.tapped(.init(category: category, index: index)))
+            await processor?.receive(.tapped(location))
         }
     }
 }
