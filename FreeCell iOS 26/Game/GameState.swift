@@ -9,6 +9,7 @@ struct GameState: Equatable {
     var tintTapped = false
     var growTapped = true
     var showDestinations = true
+    var autoplay = true
 
     /// The game is always in one of two states: either the user has just performed the first
     /// tap of a two-tap sequence, or not. If so, and only if so, this is non-`nil`, and tells

@@ -148,7 +148,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
     /// how many cards could move _in theory_ from the source to the destination, given simply
     /// the surrounding environment (i.e. the number of empty cells). Then we apply that as a
     /// maximum to the _actual_ movable sequence at the bottom of the source.
-    func howManyCardsCanMove(
+    private func howManyCardsCanMove(
         from source: Int,
         to destination: Int,
         sequenceMoves: Bool,
@@ -177,6 +177,31 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
             }
         }
         return 0
+    }
+
+    /// Just like (and calls) the previous method, but adding the following proviso: it is not legal
+    /// to move _all_ the cards from one column to an empty column (because this would result in
+    /// the very same topology and thus would be pointless).
+    func howManyCardsCanMoveLegally(
+        from source: Int,
+        to destination: Int,
+        sequenceMoves: Bool,
+        supermoves: Bool
+    ) -> Int {
+        let number = howManyCardsCanMove(
+            from: source,
+            to: destination,
+            sequenceMoves: sequenceMoves,
+            supermoves: supermoves
+        )
+        return if number > 0 && !(
+            // cannot move an entire column to an empty column
+            columns[source].cards.count == number && columns[destination].isEmpty
+        ) {
+            number
+        } else {
+            0
+        }
     }
 
     /// Vertical portrait of the columns, just like the way the game itself looks.

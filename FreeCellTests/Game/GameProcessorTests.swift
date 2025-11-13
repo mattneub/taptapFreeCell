@@ -202,6 +202,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             subject.state.layout.foundations[1].cards = [.init(rank: .four, suit: .hearts)]
             let oldLayout = subject.state.layout
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .foundation, index: 0)))
             // can't put the four on the six, do nothing, end of tap-tap
             #expect(subject.state.firstTapLocation == nil)
@@ -214,6 +215,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             subject.state.layout.foundations[1].cards = [.init(rank: .five, suit: .hearts)]
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .foundation, index: 0)))
             // doesn't matter _which_ foundation the user taps on
             #expect(subject.state.firstTapLocation == nil)
@@ -235,6 +237,7 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[0].cards = [.init(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             let oldLayout = subject.state.layout
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .freeCell, index: 3)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.firstTapLocation == nil)
@@ -246,6 +249,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.freeCells[0].cards = [.init(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .freeCell, index: 3)))
             // doesn't matter which free cell is tapped second
             #expect(subject.state.layout.freeCells[1].card == .init(rank: .six, suit: .hearts))
@@ -264,6 +268,7 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[0].cards = [.init(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             let oldLayout = subject.state.layout
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.firstTapLocation == nil)
@@ -275,6 +280,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
             subject.state.layout.freeCells[0].cards = [.init(rank: .five, suit: .clubs)]
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.layout.freeCells[0].card == nil)
             #expect(subject.state.layout.columns[0].cards == [
@@ -295,6 +301,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[1].cards = [.init(rank: .five, suit: .hearts)]
             subject.state.firstTapLocation = Location(category: .column, index: 1)
             let oldLayout = subject.state.layout
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.firstTapLocation == nil)
@@ -310,6 +317,7 @@ struct GameProcessorTests {
                 .init(rank: .four, suit: .diamonds)
             ]
             subject.state.firstTapLocation = Location(category: .column, index: 1)
+            subject.state.autoplay = false
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.layout.columns[1].cards == [.init(rank: .six, suit: .diamonds)])
             #expect(subject.state.layout.columns[0].cards == [
@@ -333,6 +341,7 @@ struct GameProcessorTests {
         ]
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         let oldLayout = subject.state.layout
+        subject.state.autoplay = false
         await subject.receive(.tapped(.init(category: .column, index: 0)))
         #expect(subject.state.layout == oldLayout)
         #expect(subject.state.firstTapLocation == nil)
@@ -340,4 +349,69 @@ struct GameProcessorTests {
         #expect(presenter.statesPresented == [subject.state])
     }
 
+    @Test("if autoplay is on, second tap is followed by a round of autoplay")
+    func autoplayAfterSecondTap() async {
+        do {
+            subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [
+                .init(rank: .six, suit: .diamonds),
+                .init(rank: .five, suit: .clubs),
+                .init(rank: .four, suit: .diamonds)
+            ]
+            subject.state.layout.columns[2].cards = [.init(rank: .two, suit: .spades)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .three, suit: .spades)]
+            subject.state.layout.foundations[0].cards = [.init(rank: .ace, suit: .spades)]
+            subject.state.firstTapLocation = Location(category: .column, index: 1)
+            subject.state.autoplay = false // *
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.layout.columns[1].cards == [.init(rank: .six, suit: .diamonds)])
+            #expect(subject.state.layout.columns[0].cards == [
+                .init(rank: .six, suit: .hearts),
+                .init(rank: .five, suit: .clubs),
+                .init(rank: .four, suit: .diamonds),
+            ])
+            #expect(subject.state.layout.columns[2].cards == [.init(rank: .two, suit: .spades)])
+            #expect(subject.state.layout.freeCells[0].cards == [.init(rank: .three, suit: .spades)])
+            #expect(subject.state.layout.foundations[0].cards == [.init(rank: .ace, suit: .spades)])
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(presenter.statesPresented == [subject.state])
+        }
+        presenter.statesPresented = []
+        do {
+            subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [
+                .init(rank: .six, suit: .diamonds),
+                .init(rank: .five, suit: .clubs),
+                .init(rank: .four, suit: .diamonds)
+            ]
+            subject.state.layout.columns[2].cards = [.init(rank: .two, suit: .spades)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .three, suit: .spades)]
+            subject.state.layout.foundations[0].cards = [.init(rank: .ace, suit: .spades)]
+            subject.state.layout.foundations[1].cards = [.init(rank: .ace, suit: .hearts)]
+            subject.state.layout.foundations[3].cards = [.init(rank: .ace, suit: .diamonds)]
+            subject.state.firstTapLocation = Location(category: .column, index: 1)
+            subject.state.autoplay = true // *
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.layout.columns[1].cards == [.init(rank: .six, suit: .diamonds)])
+            #expect(subject.state.layout.columns[0].cards == [
+                .init(rank: .six, suit: .hearts),
+                .init(rank: .five, suit: .clubs),
+                .init(rank: .four, suit: .diamonds),
+            ])
+            #expect(subject.state.layout.columns[2].cards == [])
+            #expect(subject.state.layout.freeCells[0].cards == [])
+            #expect(subject.state.layout.foundations[0].cards == [
+                .init(rank: .ace, suit: .spades),
+                .init(rank: .two, suit: .spades),
+                .init(rank: .three, suit: .spades),
+            ])
+            #expect(subject.state.layout.foundations[1].cards == [.init(rank: .ace, suit: .hearts)])
+            #expect(subject.state.layout.foundations[3].cards == [.init(rank: .ace, suit: .diamonds)])
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(presenter.statesPresented.count == 2)
+            #expect(presenter.statesPresented.last == subject.state)
+        }
+    }
 }

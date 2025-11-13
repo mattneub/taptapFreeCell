@@ -73,7 +73,7 @@ final class GameProcessor: Processor {
             // tap on a safe autoplayable just plays it
             !playToFoundationIfSafeAndPossible(location: location)
         else {
-            // in all those cases, return a neutral situation, waiting for first tap
+            // in all those cases, return to a neutral situation, waiting for first tap
             state.firstTapLocation = nil
             state.enablements = state.baseEnablements
             await presenter?.present(state)
@@ -98,38 +98,34 @@ final class GameProcessor: Processor {
         case .foundation:
             fatalError("this cannot happen")
         case .freeCell:
-            if card.canGoOn(state.layout.foundations) {
+            if card.canGoOn(state.layout.foundations) { // if can go on _any_ foundation, illuminate _all_
                 (0..<4).forEach {
                     result[.init(category: .foundation, index: $0)] = .enabled
                 }
             }
-            (0..<8).forEach {
+            (0..<8).forEach { // if can go on a column, illuminate that one
                 if card.canGoOn(state.layout.columns[$0]) {
                     result[.init(category: .column, index: $0)] = .enabled
                 }
             }
         case .column:
-            if state.layout.numberOfEmptyFreeCells > 0 {
+            if state.layout.numberOfEmptyFreeCells > 0 { // if can go on _any_ freecell, illuminate _all_
                 (0..<4).forEach {
                     result[.init(category: .freeCell, index: $0)] = .enabled
                 }
             }
-            if card.canGoOn(state.layout.foundations) {
+            if card.canGoOn(state.layout.foundations) { // if can go on _any_ foundation, illuminate _all_
                 (0..<4).forEach {
                     result[.init(category: .foundation, index: $0)] = .enabled
                 }
             }
-            (0..<8).forEach {
-                let number = state.layout.howManyCardsCanMove(
+            (0..<8).forEach { // if can be moved to a column, illuminate that one
+                if state.layout.howManyCardsCanMoveLegally(
                     from: location.index,
                     to: $0,
                     sequenceMoves: state.sequenceMoves,
                     supermoves: state.supermoves
-                )
-                if number > 0 && !(
-                    state.layout.columns[location.index].cards.count == number &&
-                    state.layout.columns[$0].isEmpty
-                ) {
+                ) > 0 {
                     result[.init(category: .column, index: $0)] = .enabled
                 }
             }
@@ -170,27 +166,25 @@ final class GameProcessor: Processor {
                     state.layout.columns[secondTapLocation.index].accept(card: card)
                 }
             case .column:
-                let movableCount = state.layout.howManyCardsCanMove(
+                let number = state.layout.howManyCardsCanMoveLegally(
                     from: firstTapLocation.index,
                     to: secondTapLocation.index,
                     sequenceMoves: state.sequenceMoves,
                     supermoves: state.supermoves
                 )
-                if state.layout.columns[secondTapLocation.index].isEmpty {
-                    if state.layout.columns[firstTapLocation.index].cards.count == movableCount {
-                        break // meaningless to move all the cards from a column to an empty column
-                    }
-                }
-                if movableCount > 0 {
-                    state.layout.columns[firstTapLocation.index].cards.suffix(movableCount).forEach {
+                if number > 0 {
+                    state.layout.columns[firstTapLocation.index].cards.suffix(number).forEach {
                         state.layout.columns[secondTapLocation.index].accept(card: $0)
                     }
-                    state.layout.columns[firstTapLocation.index].cards.removeLast(movableCount)
+                    state.layout.columns[firstTapLocation.index].cards.removeLast(number)
                 }
             }
         }
         state.firstTapLocation = nil
         state.enablements = state.baseEnablements
         await presenter?.present(state)
+        if state.autoplay {
+            await autoplay()
+        }
     }
 }
