@@ -15,52 +15,50 @@ struct CardViewTests {
         #expect(tapper.action == #selector(subject.tapped))
     }
 
-    @Test("redraw: if no cards, shows empty layer with opacity 0.5")
+    @Test("redraw: if no cards, shows empty layer and has alpha 0.5")
     func redrawNoCards() async throws {
         let subject = CardView(location: .init(category: .column, index: 0))
         CardView.baseSize = .init(width: 100, height: 200)
         await subject.redraw()
-        let layer = try #require(subject.emptyLayer)
-        #expect(layer.superlayer === subject.layer)
+        let layer = try #require(subject.layer.sublayers?.first)
         #expect(layer.frame == CGRect(x: 4, y: 2, width: 92, height: 192))
         #expect(layer.cornerRadius == 4)
         #expect(layer.masksToBounds == true)
         #expect(layer.backgroundColor == UIColor.white.cgColor)
         #expect(layer.zPosition == -1)
-        #expect(layer.opacity == 0.5)
+        #expect(subject.alpha == 0.5)
     }
 
-    @Test("redraw: if no cards, shows empty layer with opacity 0.5, slightly different frame if not column")
+    @Test("redraw: if no cards, shows empty layer and has alpha 0.5, slightly different frame if not column")
     func redrawNoCardsFreeCell() async throws {
         do {
             let subject = CardView(location: .init(category: .freeCell, index: 0))
             CardView.baseSize = .init(width: 100, height: 200)
             await subject.redraw()
-            let layer = try #require(subject.emptyLayer)
-            #expect(layer.superlayer === subject.layer)
+            let layer = try #require(subject.layer.sublayers?.first)
             #expect(layer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
             #expect(layer.cornerRadius == 4)
             #expect(layer.masksToBounds == true)
             #expect(layer.backgroundColor == UIColor.white.cgColor)
             #expect(layer.zPosition == -1)
-            #expect(layer.opacity == 0.5)
+            #expect(subject.alpha == 0.5)
         }
         do {
             let subject = CardView(location: .init(category: .foundation, index: 0))
             CardView.baseSize = .init(width: 100, height: 200)
             await subject.redraw()
-            let layer = try #require(subject.emptyLayer)
+            let layer = try #require(subject.layer.sublayers?.first)
             #expect(layer.superlayer === subject.layer)
             #expect(layer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
             #expect(layer.cornerRadius == 4)
             #expect(layer.masksToBounds == true)
             #expect(layer.backgroundColor == UIColor.white.cgColor)
             #expect(layer.zPosition == -1)
-            #expect(layer.opacity == 0.5)
+            #expect(subject.alpha == 0.5)
         }
     }
 
-    @Test("redraw: if freecell with card, shows card layer with opacity 1")
+    @Test("redraw: if freecell with card, shows card layer and has alpha 1")
     func redrawFreecell() async throws {
         let subject = CardView(location: .init(category: .freeCell, index: 0))
         CardView.baseSize = .init(width: 100, height: 200)
@@ -69,10 +67,10 @@ struct CardViewTests {
         let layer = try #require(subject.layer.sublayers?.first as? CardLayer)
         #expect(layer.card == .init(rank: .jack, suit: .hearts))
         #expect(layer.frame == CGRect(x: 0, y: 0, width: 100, height: 200))
-        #expect(layer.opacity == 1)
+        #expect(subject.alpha == 1)
     }
 
-    @Test("redraw: if foundation with card, shows card layer with opacity 0.5")
+    @Test("redraw: if foundation with card, shows card layer and has alpha 0.4")
     func redrawFoundation() async throws {
         let subject = CardView(location: .init(category: .foundation, index: 0))
         CardView.baseSize = .init(width: 100, height: 200)
@@ -81,7 +79,7 @@ struct CardViewTests {
         let layer = try #require(subject.layer.sublayers?.first as? CardLayer)
         #expect(layer.card == .init(rank: .jack, suit: .hearts))
         #expect(layer.frame == CGRect(x: 0, y: 0, width: 100, height: 200))
-        #expect(layer.opacity == 0.5)
+        #expect(subject.alpha == 0.5)
     }
 
     @Test("redraw: if column with cards, shows card layers")
@@ -123,6 +121,67 @@ struct CardViewTests {
         #expect(border.frame == CGRect(x: 0, y: 101, width: 100, height: 298))
         #expect(border.zPosition == 3)
         #expect(border.cornerRadius == 4)
+    }
+
+    @Test("setEnablement: sets alpha as expected")
+    func enablement() {
+        do {
+            let subject = CardView(location: .init(category: .foundation, index: 0))
+            subject.setEnablement(.disabled)
+            #expect(subject.alpha == 0.5)
+            subject.setEnablement(.enabled)
+            #expect(subject.alpha == 1)
+            subject.setEnablement(.normal)
+            #expect(subject.alpha == 0.5)
+        }
+        do {
+            let subject = CardView(location: .init(category: .foundation, index: 0))
+            subject.cards = [.init(rank: .queen, suit: .hearts)]
+            subject.setEnablement(.disabled)
+            #expect(subject.alpha == 0.5)
+            subject.setEnablement(.enabled)
+            #expect(subject.alpha == 1)
+            subject.setEnablement(.normal)
+            #expect(subject.alpha == 0.5)
+        }
+        do {
+            let subject = CardView(location: .init(category: .freeCell, index: 0))
+            subject.setEnablement(.disabled)
+            #expect(subject.alpha == 0.5)
+            subject.setEnablement(.enabled)
+            #expect(subject.alpha == 1)
+            subject.setEnablement(.normal)
+            #expect(subject.alpha == 0.5)
+        }
+        do {
+            let subject = CardView(location: .init(category: .freeCell, index: 0))
+            subject.cards = [.init(rank: .queen, suit: .hearts)]
+            subject.setEnablement(.disabled)
+            #expect(subject.alpha == 0.5)
+            subject.setEnablement(.enabled)
+            #expect(subject.alpha == 1)
+            subject.setEnablement(.normal)
+            #expect(subject.alpha == 1)
+        }
+        do {
+            let subject = CardView(location: .init(category: .column, index: 0))
+            subject.setEnablement(.disabled)
+            #expect(subject.alpha == 0.5)
+            subject.setEnablement(.enabled)
+            #expect(subject.alpha == 1)
+            subject.setEnablement(.normal)
+            #expect(subject.alpha == 0.5)
+        }
+        do {
+            let subject = CardView(location: .init(category: .column, index: 0))
+            subject.cards = [.init(rank: .queen, suit: .hearts)]
+            subject.setEnablement(.disabled)
+            #expect(subject.alpha == 0.5)
+            subject.setEnablement(.enabled)
+            #expect(subject.alpha == 1)
+            subject.setEnablement(.normal)
+            #expect(subject.alpha == 1)
+        }
     }
 
     @Test("tapped: sends tapped to processor")

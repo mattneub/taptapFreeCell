@@ -154,6 +154,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             highlightLayer?.removeFromSuperlayer()
             highlightLayer = nil
         }
+        for (location, enablement) in state.enablements {
+            let cardView = groupFor(location)[location.index]
+            cardView.setEnablement(enablement)
+        }
     }
 
     func receive(_ effect: GameEffect) async {}
@@ -210,7 +214,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         highlightLayer.zPosition = 2000
         cardView.superview?.layer.addSublayer(highlightLayer)
         CATransaction.flush()
-        if grow {
+        if grow { // deliberately do not await this because that delays enablement
             CATransaction.begin()
             CATransaction.setAnimationDuration(0.1)
             highlightLayer.transform = CATransform3DMakeScale(1.15, 1.15, 1)
@@ -218,4 +222,5 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
         self.highlightLayer = highlightLayer
     }
+
 }

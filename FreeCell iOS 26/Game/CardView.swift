@@ -16,9 +16,6 @@ final class CardView: UIView {
     /// its card(s), though (as I've said) it does not actually _do_ the drawing.
     var cards = [Card]()
 
-    /// Layer that represents that no cards are present.
-    weak var emptyLayer: CALayer?
-
     static var baseSize: CGSize = .zero // will be set when view controller knows view size
     static let cardLayerBorder: CGFloat = 2
     static let cardLayerInset = UIEdgeInsets(
@@ -39,7 +36,7 @@ final class CardView: UIView {
         self.addGestureRecognizer(tapper)
         // self.finishInitialConfiguration()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -64,17 +61,16 @@ final class CardView: UIView {
                 $0.masksToBounds = true
                 $0.backgroundColor = UIColor.white.cgColor
                 $0.zPosition = -1
-                $0.opacity = 0.5
             }
+            alpha = 0.5
             self.layer.addSublayer(emptyLayer)
-            self.emptyLayer = emptyLayer
         } else {
             switch location.category {
             case .foundation, .freeCell:
                 if let card = cards.last {
                     let cardLayer = await CardLayer(card: card)
                     self.layer.addSublayer(cardLayer)
-                    cardLayer.opacity = location.category == .freeCell ? 1 : 0.5
+                    alpha = location.category == .freeCell ? 1 : 0.5
                 }
             case .column:
                 // this is the Really Interesting Part
@@ -103,6 +99,22 @@ final class CardView: UIView {
                     borderLayer.cornerRadius = 4
                     self.layer.addSublayer(borderLayer)
                 }
+                alpha = 1
+            }
+        }
+    }
+
+    func setEnablement(_ enablement: GameState.Enablement) {
+        switch enablement {
+        case .disabled:
+            alpha = 0.5
+        case .enabled:
+            alpha = 1.0
+        case .normal:
+            if cards.isEmpty {
+                alpha = 0.5
+            } else {
+                alpha = location.category == .foundation ? 0.5 : 1
             }
         }
     }
@@ -112,4 +124,5 @@ final class CardView: UIView {
             await processor?.receive(.tapped(location))
         }
     }
+
 }

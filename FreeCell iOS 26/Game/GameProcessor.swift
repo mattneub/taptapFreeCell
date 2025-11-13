@@ -16,11 +16,11 @@ final class GameProcessor: Processor {
             deck.shuffle()
             state.layout.deal(deck)
             state.firstTapLocation = nil
-            // TODO: unhighlight as needed
+            state.enablements = state.baseEnablements
             await presenter?.present(state)
         case .tapBackground:
             state.firstTapLocation = nil
-            // TODO: unhighlight as needed
+            state.enablements = state.baseEnablements
             await presenter?.present(state)
         case .tapped(let tap):
             if state.firstTapLocation == nil {
@@ -59,25 +59,82 @@ final class GameProcessor: Processor {
             }
         } while moved
         state.firstTapLocation = nil
-        // TODO: unhighlight as needed
+        state.enablements = state.baseEnablements
         await presenter?.present(state)
     }
 
     func handleFirstTap(_ location: Location) async {
-        guard state.layout.card(at: location) != nil else {
-            return // first tap can never be on an empty
-        }
-        guard location.category != .foundation else {
-            return // first tap can never be on a foundation
-        }
-        // if card can be autoplayed, autoplay it immediately
-        // TODO: should probably make this a separate pref
-        if playToFoundationIfSafeAndPossible(location: location) {
+        guard
+            // tap on an empty card is not a valid first tap
+            state.layout.card(at: location) != nil,
+            // tap on a foundation is not a valid first tap
+            location.category != .foundation,
+            // TODO: should probably make this a separate pref
+            // tap on a safe autoplayable just plays it
+            !playToFoundationIfSafeAndPossible(location: location)
+        else {
+            // in all those cases, return a neutral situation, waiting for first tap
+            state.firstTapLocation = nil
+            state.enablements = state.baseEnablements
             await presenter?.present(state)
             return
         }
+        // otherwise, this _is_ a first tap! store it, and respond by highlighting / enabling
         state.firstTapLocation = location
-        await presenter?.present(state) // to cause highlighting
+        state.enablements = enablements(for: location)
+        await presenter?.present(state)
+    }
+
+    func enablements(for location: Location) -> [Location: GameState.Enablement] {
+        guard state.showDestinations, let card = state.layout.card(at: location) else {
+            return state.baseEnablements
+        }
+        // okay, we _are_ showing destinations
+        // TODO: Okay, this is repetitious but let's fix only after we've written the tests
+        // begin by _assuming_ that all slots are disabled
+        var result = state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+        // now enable those that should be enabled
+        switch location.category {
+        case .foundation:
+            fatalError("this cannot happen")
+        case .freeCell:
+            if card.canGoOn(state.layout.foundations) {
+                (0..<4).forEach {
+                    result[.init(category: .foundation, index: $0)] = .enabled
+                }
+            }
+            (0..<8).forEach {
+                if card.canGoOn(state.layout.columns[$0]) {
+                    result[.init(category: .column, index: $0)] = .enabled
+                }
+            }
+        case .column:
+            if state.layout.numberOfEmptyFreeCells > 0 {
+                (0..<4).forEach {
+                    result[.init(category: .freeCell, index: $0)] = .enabled
+                }
+            }
+            if card.canGoOn(state.layout.foundations) {
+                (0..<4).forEach {
+                    result[.init(category: .foundation, index: $0)] = .enabled
+                }
+            }
+            (0..<8).forEach {
+                let number = state.layout.howManyCardsCanMove(
+                    from: location.index,
+                    to: $0,
+                    sequenceMoves: state.sequenceMoves,
+                    supermoves: state.supermoves
+                )
+                if number > 0 && !(
+                    state.layout.columns[location.index].cards.count == number &&
+                    state.layout.columns[$0].isEmpty
+                ) {
+                    result[.init(category: .column, index: $0)] = .enabled
+                }
+            }
+        }
+        return result
     }
 
     func handleSecondTap(_ secondTapLocation: Location) async {
@@ -133,6 +190,7 @@ final class GameProcessor: Processor {
             }
         }
         state.firstTapLocation = nil
+        state.enablements = state.baseEnablements
         await presenter?.present(state)
     }
 }

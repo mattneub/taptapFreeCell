@@ -123,7 +123,6 @@ struct GameViewControllerTests {
         subject.view.bounds.size.width = 400
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
-        await #while(subject.columns[7].emptyLayer == nil)
         #expect(subject.foundations.count == 4)
         #expect(subject.foundations.enumerated().allSatisfy { offset, foundation in
             foundation.location.index == offset &&
@@ -142,8 +141,10 @@ struct GameViewControllerTests {
         let allCards = subject.view.subviews(ofType: CardView.self)
         #expect(allCards.count == 16)
         #expect(allCards.allSatisfy { $0.cards.isEmpty })
-        #expect(allCards.allSatisfy { $0.emptyLayer?.superlayer != nil })
+        await #while(!(allCards.allSatisfy { $0.processor === processor }))
         #expect(allCards.allSatisfy { $0.processor === processor })
+        #expect(allCards.allSatisfy { $0.layer.sublayers?.first != nil })
+        #expect(allCards.allSatisfy { $0.alpha == 0.5 })
     }
 
     @Test("present: distributes state layout cards into card views, tells them to redraw")
@@ -152,7 +153,6 @@ struct GameViewControllerTests {
         subject.view.bounds.size.width = 400
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
-        await #while(subject.columns[7].emptyLayer == nil)
         var layout = Layout()
         layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [.init(rank: .ace, suit: .hearts)]
         layout.freeCells[3].cards = [.init(rank: .king, suit: .hearts)]
@@ -165,34 +165,23 @@ struct GameViewControllerTests {
         await subject.present(.init(layout: layout, sequences: false))
         // what we want to know is not just that the cards were dealt out but that they _appear_
         #expect(subject.foundations[0].cards == [])
-        #expect(subject.foundations[0].emptyLayer?.superlayer != nil)
         #expect(subject.foundations[1].cards == [.init(rank: .ace, suit: .hearts)])
         #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .ace, suit: .hearts))
         #expect(subject.foundations[2].cards == [])
-        #expect(subject.foundations[2].emptyLayer?.superlayer != nil)
         #expect(subject.foundations[3].cards == [])
-        #expect(subject.foundations[3].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[0].cards == [])
-        #expect(subject.freeCells[0].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[1].cards == [])
-        #expect(subject.freeCells[1].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[2].cards == [])
-        #expect(subject.freeCells[2].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[3].cards == [.init(rank: .king, suit: .hearts)])
         #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .king, suit: .hearts))
         #expect(subject.columns[0].cards == [.init(rank: .queen, suit: .hearts)])
         #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .queen, suit: .hearts))
         #expect((subject.columns[0].layer.sublayers?.count == 1)) // and that's all there are
         #expect(subject.columns[1].cards == [])
-        #expect(subject.columns[1].emptyLayer?.superlayer != nil)
         #expect(subject.columns[2].cards == [])
-        #expect(subject.columns[2].emptyLayer?.superlayer != nil)
         #expect(subject.columns[3].cards == [])
-        #expect(subject.columns[3].emptyLayer?.superlayer != nil)
         #expect(subject.columns[4].cards == [])
-        #expect(subject.columns[4].emptyLayer?.superlayer != nil)
         #expect(subject.columns[5].cards == [])
-        #expect(subject.columns[5].emptyLayer?.superlayer != nil)
         #expect(subject.columns[6].cards == [
             .init(rank: .jack, suit: .hearts),
             .init(rank: .ten, suit: .clubs)
@@ -201,7 +190,6 @@ struct GameViewControllerTests {
         #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == .init(rank: .ten, suit: .clubs))
         #expect((subject.columns[6].layer.sublayers?.count == 2)) // and that's all there are
         #expect(subject.columns[7].cards == [])
-        #expect(subject.columns[7].emptyLayer?.superlayer != nil)
     }
 
     @Test("present: distributes state layout cards into card views, tells them to redraw with borders")
@@ -210,7 +198,6 @@ struct GameViewControllerTests {
         subject.view.bounds.size.width = 400
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
-        await #while(subject.columns[7].emptyLayer == nil)
         var layout = Layout()
         layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [.init(rank: .ace, suit: .hearts)]
         layout.freeCells[3].cards = [.init(rank: .king, suit: .hearts)]
@@ -223,19 +210,13 @@ struct GameViewControllerTests {
         await subject.present(.init(layout: layout, sequences: true)) // *
         // what we want to know is not just that the cards were dealt out but that they _appear_
         #expect(subject.foundations[0].cards == [])
-        #expect(subject.foundations[0].emptyLayer?.superlayer != nil)
         #expect(subject.foundations[1].cards == [.init(rank: .ace, suit: .hearts)])
         #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .ace, suit: .hearts))
         #expect(subject.foundations[2].cards == [])
-        #expect(subject.foundations[2].emptyLayer?.superlayer != nil)
         #expect(subject.foundations[3].cards == [])
-        #expect(subject.foundations[3].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[0].cards == [])
-        #expect(subject.freeCells[0].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[1].cards == [])
-        #expect(subject.freeCells[1].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[2].cards == [])
-        #expect(subject.freeCells[2].emptyLayer?.superlayer != nil)
         #expect(subject.freeCells[3].cards == [.init(rank: .king, suit: .hearts)])
         #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .king, suit: .hearts))
         #expect(subject.columns[0].cards == [.init(rank: .queen, suit: .hearts)])
@@ -244,15 +225,10 @@ struct GameViewControllerTests {
         let borderLayer = try #require(subject.columns[0].layer.sublayers?.last)
         #expect(borderLayer.borderColor == UIColor.blue.cgColor)
         #expect(subject.columns[1].cards == [])
-        #expect(subject.columns[1].emptyLayer?.superlayer != nil)
         #expect(subject.columns[2].cards == [])
-        #expect(subject.columns[2].emptyLayer?.superlayer != nil)
         #expect(subject.columns[3].cards == [])
-        #expect(subject.columns[3].emptyLayer?.superlayer != nil)
         #expect(subject.columns[4].cards == [])
-        #expect(subject.columns[4].emptyLayer?.superlayer != nil)
         #expect(subject.columns[5].cards == [])
-        #expect(subject.columns[5].emptyLayer?.superlayer != nil)
         #expect(subject.columns[6].cards == [
             .init(rank: .jack, suit: .hearts),
             .init(rank: .ten, suit: .clubs)
@@ -263,7 +239,6 @@ struct GameViewControllerTests {
         let borderLayer2 = try #require(subject.columns[6].layer.sublayers?.last)
         #expect(borderLayer2.borderColor == UIColor.blue.cgColor)
         #expect(subject.columns[7].cards == [])
-        #expect(subject.columns[7].emptyLayer?.superlayer != nil)
     }
 
     @Test("present: if highlightOn false, removes and nilifies highlightLayer")
@@ -288,6 +263,20 @@ struct GameViewControllerTests {
         #expect(layer.frame == subject.columns[0].layer.frame)
         #expect(layer.zPosition == 2000)
         // could check transform etc. but not worth worrying about it
+    }
+
+    @Test("present: sets card view enablements")
+    func presentEnablements() async throws {
+        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
+        subject.viewWillLayoutSubviews()
+        let allCardViews = subject.view.subviews.compactMap { $0 as? CardView }
+        allCardViews.forEach { $0.cards = [.init(rank: .two, suit: .clubs)] }
+        allCardViews.forEach { $0.setEnablement(.enabled) }
+        #expect(allCardViews.allSatisfy { $0.alpha == 1 })
+        var state = GameState()
+        state.enablements = state.baseEnablements
+        await subject.present(state)
+        #expect(allCardViews.allSatisfy { $0.alpha == 0.5 })
     }
 
     @Test("doDeal: sends deal")
