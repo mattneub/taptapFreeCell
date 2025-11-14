@@ -83,7 +83,14 @@ final class GameProcessor: Processor {
             await presenter?.present(state)
             return
         }
-        // otherwise, this _is_ a first tap! store it, and respond by highlighting / enabling
+        // only one move is possible and pref is on
+        if state.unambiguousMove {
+            if let _ = try? await unambiguousMove(location: location) {
+                return // we have made the move completely, all done
+            }
+        }
+        // this is a first tap and we must wait for the second tap, so
+        // store it, and respond by highlighting / enabling
         state.firstTapLocation = location
         state.enablements = firstTapEnablements(for: location)
         await presenter?.present(state)
@@ -178,6 +185,82 @@ final class GameProcessor: Processor {
             }
         }
         return result
+    }
+
+    func unambiguousMove(location: Location) async throws {
+        // look for all possible move destinations for location; if there is exactly one,
+        // make that move, else throw
+        var destination: Location?
+        // gateway so that an attempt to set an already set `destination` will throw
+        var oncer = Oncer {
+            destination = $0
+        }
+        // now all we have to do is call `oncer.doYourThing()` and never set `destination` directly
+        switch location.category {
+        case .foundation:
+            fatalError("this cannot happen")
+        case .freeCell:
+            if let card = state.layout.card(at: location) {
+                if card.canGoOn(state.layout.foundations) {
+                    try oncer.doYourThing(
+                        .init(
+                            category: .foundation,
+                            index: state.layout.indexOfFoundation(for: card.suit)
+                        )
+                    )
+                }
+                for index in 0..<8 {
+                    if card.canGoOn(state.layout.columns[index]) {
+                        try oncer.doYourThing(
+                            .init(
+                                category: .column,
+                                index: index
+                            )
+                        )
+                    }
+                }
+            }
+        case .column:
+            if let card = state.layout.card(at: location) {
+                if card.canGoOn(state.layout.foundations) {
+                    try oncer.doYourThing(
+                        .init(
+                            category: .foundation,
+                            index: state.layout.indexOfFoundation(for: card.suit)
+                        )
+                    )
+                }
+                if let index = state.layout.indexOfFirstEmptyFreeCell {
+                    try oncer.doYourThing(
+                        .init(
+                            category: .freeCell,
+                            index: index
+                        )
+                    )
+                }
+                for index in (0..<8) {
+                    if index != location.index && state.layout.howManyCardsCanMoveLegally(
+                        from: location.index,
+                        to: index,
+                        sequenceMoves: state.sequenceMoves,
+                        supermoves: state.supermoves
+                    ) > 0 {
+                        try oncer.doYourThing(
+                            .init(
+                                category: .column,
+                                index: index
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        guard let destination else {
+            throw OnceError.notEnough // we didn't find _any_ moves!
+        }
+        // Pretend that `location` was the first tap and `destination` is the second!
+        state.firstTapLocation = location
+        await handleSecondTap(destination)
     }
 
     func handleSecondTap(_ secondTapLocation: Location) async {

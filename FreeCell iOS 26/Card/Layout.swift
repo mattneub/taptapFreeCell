@@ -6,7 +6,6 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
 
     var foundations: [Foundation] = Suit.foundationOrder.map { Foundation(suit: $0) }
 
-    // TODO: eliminate if not using
     func indexOfFoundation(for suit: Suit) -> Int {
         return Suit.foundationOrder.firstIndex(of: suit) ?? -1
     }

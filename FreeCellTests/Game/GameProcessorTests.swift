@@ -10,7 +10,7 @@ struct GameProcessorTests {
         subject.presenter = presenter
     }
 
-    @Test("receive autoplay: play all can-go non-needed from columns and freecells to foundations")
+    @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations")
     func autoplay() async {
         var layout = Layout()
         layout.foundations[0].cards = [
@@ -104,6 +104,7 @@ struct GameProcessorTests {
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.foundations[0].cards = [.init(rank: .ace, suit: .spades)]
             let oldLayout = subject.state.layout
@@ -115,8 +116,10 @@ struct GameProcessorTests {
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.unambiguousMove = false
             let oldLayout = subject.state.layout
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
@@ -148,16 +151,19 @@ struct GameProcessorTests {
             subject.state.showDestinations = false
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
             subject.state.showDestinations = true // default
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.enablements != subject.state.baseEnablements)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
         }
     }
@@ -172,8 +178,12 @@ struct GameProcessorTests {
             expected[.init(category: .column, index: 1)] = .enabled
             (0..<4).forEach { expected[.init(category: .freeCell, index: $0)] = .enabled }
             #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
         }
         subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -187,6 +197,8 @@ struct GameProcessorTests {
             expected[.init(category: .column, index: 1)] = .enabled
             (0..<4).forEach { expected[.init(category: .foundation, index: $0)] = .enabled }
             #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
         }
     }
 
@@ -201,8 +213,12 @@ struct GameProcessorTests {
             (0..<8).forEach { expected[.init(category: .column, index: $0)] = .enabled }
             expected[.init(category: .column, index: 2)] = .disabled
             #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
         }
         subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -214,6 +230,271 @@ struct GameProcessorTests {
             (0..<8).forEach { expected[.init(category: .column, index: $0)] = .enabled }
             expected[.init(category: .column, index: 2)] = .disabled
             #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
+        }
+    }
+
+    @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if no unambiguous move, acts normally")
+    func tapFirstUnambiguousNone() async {
+        do {
+            subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = true
+            let oldLayout = subject.state.layout
+            await subject.receive(.tapped(.init(category: .freeCell, index: 0)))
+            #expect(subject.state.layout == oldLayout)
+            var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+            (0..<8).forEach { expected[.init(category: .column, index: $0)] = .enabled }
+            expected[.init(category: .column, index: 2)] = .disabled
+            #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
+            subject.state.unambiguousMove = true
+            let oldLayout = subject.state.layout
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.layout == oldLayout)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
+            var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+            expected[.init(category: .column, index: 1)] = .enabled
+            (0..<4).forEach { expected[.init(category: .freeCell, index: $0)] = .enabled }
+            #expect(subject.state.enablements == expected)
+            #expect(presenter.statesPresented == [subject.state])
+        }
+    }
+
+    @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if unambiguous move, makes it")
+    func tapFirstUnambiguousYesFreeCell() async {
+        do {
+            subject.state.layout.foundations[1].cards = [.init(rank: .jack, suit: .hearts)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = false
+            let oldLayout = subject.state.layout
+            await subject.receive(.tapped(.init(category: .freeCell, index: 0)))
+            var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+            expected[.init(category: .foundation, index: 0)] = .enabled
+            expected[.init(category: .foundation, index: 1)] = .enabled
+            expected[.init(category: .foundation, index: 2)] = .enabled
+            expected[.init(category: .foundation, index: 3)] = .enabled
+            #expect(subject.state.layout == oldLayout)
+            #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.foundations[1].cards = [.init(rank: .jack, suit: .hearts)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = true // *
+            await subject.receive(.tapped(.init(category: .freeCell, index: 0)))
+            #expect(subject.state.layout.foundations[1].cards == [
+                .init(rank: .jack, suit: .hearts),
+                .init(rank: .queen, suit: .hearts),
+            ])
+            #expect(subject.state.layout.freeCells[0].isEmpty)
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(presenter.statesPresented.last == subject.state)
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = false
+            let oldLayout = subject.state.layout
+            await subject.receive(.tapped(.init(category: .freeCell, index: 0)))
+            var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+            expected[.init(category: .column, index: 1)] = .enabled
+            #expect(subject.state.layout == oldLayout)
+            #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = true // *
+            await subject.receive(.tapped(.init(category: .freeCell, index: 0)))
+            #expect(subject.state.layout.freeCells[0].isEmpty)
+            #expect(subject.state.layout.columns[1].cards == [
+                .init(rank: .king, suit: .clubs),
+                .init(rank: .queen, suit: .hearts),
+            ])
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(presenter.statesPresented.last == subject.state)
+        }
+    }
+
+    // same idea as preceding except that the tap is a column instead of a freecell
+    @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if unambiguous move, makes it")
+    func tapFirstUnambiguousYesColumn() async {
+        do {
+            subject.state.layout.foundations[1].cards = [.init(rank: .jack, suit: .hearts)]
+            subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = false
+            let oldLayout = subject.state.layout
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+            expected[.init(category: .foundation, index: 0)] = .enabled
+            expected[.init(category: .foundation, index: 1)] = .enabled
+            expected[.init(category: .foundation, index: 2)] = .enabled
+            expected[.init(category: .foundation, index: 3)] = .enabled
+            #expect(subject.state.layout == oldLayout)
+            #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.foundations[1].cards = [.init(rank: .jack, suit: .hearts)]
+            subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = true
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.layout.foundations[1].cards == [
+                .init(rank: .jack, suit: .hearts),
+                .init(rank: .queen, suit: .hearts)
+            ])
+            #expect(subject.state.layout.columns[0].cards == [])
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(presenter.statesPresented.last == subject.state)
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = false
+            let oldLayout = subject.state.layout
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+            expected[.init(category: .column, index: 1)] = .enabled
+            #expect(subject.state.layout == oldLayout)
+            #expect(subject.state.enablements == expected)
+            #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
+            #expect(presenter.statesPresented == [subject.state])
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
+            subject.state.layout.columns[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[4].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[5].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[6].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.columns[7].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[0].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[1].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[2].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.layout.freeCells[3].cards = [.init(rank: .king, suit: .diamonds)]
+            subject.state.unambiguousMove = true // *
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.layout.columns[0].isEmpty)
+            #expect(subject.state.layout.columns[1].cards == [
+                .init(rank: .king, suit: .clubs),
+                .init(rank: .queen, suit: .hearts),
+            ])
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(presenter.statesPresented.last == subject.state)
+        }
+        subject.state.firstTapLocation = nil
+        presenter.statesPresented = []
+        subject.state.layout = Layout()
+        do {
+            // much simpler example!
+            subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+            subject.state.unambiguousMove = true
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.layout.columns[0].cards.isEmpty)
+            #expect(subject.state.layout.freeCells[0].cards == [.init(rank: .queen, suit: .hearts)])
+            #expect(subject.state.firstTapLocation == nil)
+            #expect(subject.state.enablements == subject.state.baseEnablements)
+            #expect(presenter.statesPresented.last == subject.state)
         }
     }
 
@@ -232,7 +513,9 @@ struct GameProcessorTests {
             #expect(subject.state.layout == oldLayout)
             #expect(presenter.statesPresented == [subject.state])
         }
+        subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
@@ -266,7 +549,9 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
         }
+        subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.freeCells[0].cards = [.init(rank: .two, suit: .clubs)]
@@ -297,7 +582,9 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
         }
+        subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
             subject.state.layout.freeCells[0].cards = [.init(rank: .five, suit: .clubs)]
@@ -330,7 +617,9 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
         }
+        subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             subject.state.layout.columns[1].cards = [
@@ -399,7 +688,9 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
         }
+        subject.state.firstTapLocation = nil
         presenter.statesPresented = []
+        subject.state.layout = Layout()
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             subject.state.layout.columns[1].cards = [

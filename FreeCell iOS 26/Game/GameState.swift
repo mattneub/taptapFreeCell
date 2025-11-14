@@ -10,6 +10,7 @@ struct GameState: Equatable {
     var growTapped = true
     var showDestinations = true
     var autoplay = true
+    var unambiguousMove = true
 
     /// The game is always in one of two states: either the user has just performed the first
     /// tap of a two-tap sequence, or not. If so, and only if so, this is non-`nil`, and tells
