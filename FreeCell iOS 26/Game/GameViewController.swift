@@ -103,6 +103,9 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         let singleTapper = MyTapGestureRecognizer(target: self, action: #selector(singleTap))
         singleTapper.numberOfTapsRequired = 1
         view.addGestureRecognizer(singleTapper)
+        let twoTapper = MyTapGestureRecognizer(target: self, action: #selector(twoFingerTap))
+        twoTapper.numberOfTouchesRequired = 2
+        view.addGestureRecognizer(twoTapper)
     }
 
     var didInitialLayout = false
@@ -182,6 +185,12 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     @objc func doubleTap() {
         Task {
             await processor?.receive(.autoplay)
+        }
+    }
+
+    @objc func twoFingerTap() {
+        Task {
+            await processor?.receive(.hint)
         }
     }
 

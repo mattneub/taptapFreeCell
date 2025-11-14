@@ -84,14 +84,21 @@ struct GameViewControllerTests {
         #expect(imageView.frame == subject.view.bounds)
         #expect(imageView.superview === subject.view)
         #expect(imageView.autoresizingMask == [.flexibleWidth, .flexibleHeight])
-        let tapper = try #require(subject.view.gestureRecognizers?.first as? MyTapGestureRecognizer)
+        let tapper = try #require(subject.view.gestureRecognizers?[0] as? MyTapGestureRecognizer)
         #expect(tapper.numberOfTapsRequired == 2)
+        #expect(tapper.numberOfTouchesRequired == 1)
         #expect(tapper.target === subject)
         #expect(tapper.action == #selector(subject.doubleTap))
-        let tapper2 = try #require(subject.view.gestureRecognizers?.last as? MyTapGestureRecognizer)
+        let tapper2 = try #require(subject.view.gestureRecognizers?[1] as? MyTapGestureRecognizer)
         #expect(tapper2.numberOfTapsRequired == 1)
+        #expect(tapper2.numberOfTouchesRequired == 1)
         #expect(tapper2.target === subject)
         #expect(tapper2.action == #selector(subject.singleTap))
+        let tapper3 = try #require(subject.view.gestureRecognizers?[2] as? MyTapGestureRecognizer)
+        #expect(tapper3.numberOfTapsRequired == 1)
+        #expect(tapper3.numberOfTouchesRequired == 2)
+        #expect(tapper3.target === subject)
+        #expect(tapper3.action == #selector(subject.twoFingerTap))
     }
 
     @Test("view will layout: first time only, calls card sizer, interface constructor")
@@ -298,5 +305,12 @@ struct GameViewControllerTests {
         subject.doubleTap()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.autoplay])
+    }
+
+    @Test("twoFingerTap: sends hint")
+    func twoFingerTap() async {
+        subject.twoFingerTap()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.hint])
     }
 }

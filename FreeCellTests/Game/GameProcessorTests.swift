@@ -10,27 +10,6 @@ struct GameProcessorTests {
         subject.presenter = presenter
     }
 
-    @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it")
-    func deal() async {
-        subject.state.firstTapLocation = .init(category: .column, index: 0)
-        #expect(subject.state.layout == Layout())
-        await subject.receive(.deal)
-        let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
-        #expect(tableau.count == 104) // fifty two cards
-        #expect(subject.state.firstTapLocation == nil)
-        #expect(subject.state.enablements == subject.state.baseEnablements)
-        #expect(presenter.statesPresented == [subject.state])
-    }
-
-    @Test("receive tapBackground: erases existing first tap")
-    func tapBackground() async {
-        subject.state.firstTapLocation = .init(category: .column, index: 0)
-        await subject.receive(.tapBackground)
-        #expect(subject.state.firstTapLocation == nil)
-        #expect(subject.state.enablements == subject.state.baseEnablements)
-        #expect(presenter.statesPresented == [subject.state])
-    }
-
     @Test("receive autoplay: play all can-go non-needed from columns and freecells to foundations")
     func autoplay() async {
         var layout = Layout()
@@ -68,6 +47,49 @@ struct GameProcessorTests {
         #expect(subject.state.layout.freeCells.allSatisfy { $0.card == nil })
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
+    }
+
+    @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it")
+    func deal() async {
+        subject.state.firstTapLocation = .init(category: .column, index: 0)
+        #expect(subject.state.layout == Layout())
+        await subject.receive(.deal)
+        let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
+        #expect(tableau.count == 104) // fifty two cards
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+    }
+
+    @Test("receive hint: enables freecells and columns that can move nontrivially")
+    func hint() async {
+        subject.state.layout.foundations[0].cards = [.init(rank: .six, suit: .spades)]
+        subject.state.layout.freeCells[0].cards = [.init(rank: .seven, suit: .spades)]
+        subject.state.layout.freeCells[1].cards = [.init(rank: .two, suit: .clubs)]
+        subject.state.layout.freeCells[2].cards = [.init(rank: .king, suit: .hearts)]
+        subject.state.layout.columns[0].cards = [.init(rank: .eight, suit: .hearts), .init(rank: .seven, suit: .spades)]
+        subject.state.layout.columns[1].cards = [.init(rank: .six, suit: .hearts)]
+        subject.state.layout.columns[2].cards = [.init(rank: .three, suit: .hearts)]
+        subject.state.layout.columns[3].cards = [.init(rank: .five, suit: .diamonds), .init(rank: .four, suit: .spades)]
+        var expected = subject.state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+        expected[.init(category: .freeCell, index: 0)] = .enabled // seven can go on six in foundations
+        expected[.init(category: .freeCell, index: 1)] = .enabled // two can go on three in column 2
+        expected[.init(category: .column, index: 0)] = .enabled // seven can go on six in foundations
+        expected[.init(category: .column, index: 1)] = .enabled // six can go on seven in column 0
+        expected[.init(category: .column, index: 2)] = .enabled // three can go on four in column 3
+        await subject.receive(.hint)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == expected)
+        #expect(presenter.statesPresented == [subject.state])
+    }
+
+    @Test("receive tapBackground: erases existing first tap, returns to neutrality")
+    func tapBackground() async {
+        subject.state.firstTapLocation = .init(category: .column, index: 0)
+        await subject.receive(.tapBackground)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
     }
 
     @Test("tapped: if firstTapLocation is nil, tapped location becomes firstTapLocation if not empty source, not foundation")

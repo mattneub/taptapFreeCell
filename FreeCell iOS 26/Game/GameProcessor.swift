@@ -18,6 +18,10 @@ final class GameProcessor: Processor {
             state.firstTapLocation = nil
             state.enablements = state.baseEnablements
             await presenter?.present(state)
+        case .hint:
+            state.firstTapLocation = nil
+            state.enablements = hintEnablements()
+            await presenter?.present(state)
         case .tapBackground:
             state.firstTapLocation = nil
             state.enablements = state.baseEnablements
@@ -81,16 +85,15 @@ final class GameProcessor: Processor {
         }
         // otherwise, this _is_ a first tap! store it, and respond by highlighting / enabling
         state.firstTapLocation = location
-        state.enablements = enablements(for: location)
+        state.enablements = firstTapEnablements(for: location)
         await presenter?.present(state)
     }
 
-    func enablements(for location: Location) -> [Location: GameState.Enablement] {
+    func firstTapEnablements(for location: Location) -> [Location: GameState.Enablement] {
         guard state.showDestinations, let card = state.layout.card(at: location) else {
             return state.baseEnablements
         }
         // okay, we _are_ showing destinations
-        // TODO: Okay, this is repetitious but let's fix only after we've written the tests
         // begin by _assuming_ that all slots are disabled
         var result = state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
         // now enable those that should be enabled
@@ -127,6 +130,50 @@ final class GameProcessor: Processor {
                     supermoves: state.supermoves
                 ) > 0 {
                     result[.init(category: .column, index: $0)] = .enabled
+                }
+            }
+        }
+        return result
+    }
+
+    func hintEnablements() -> [Location: GameState.Enablement] {
+        var result = state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
+        // enable all free cells and columns that can go on a _nonempty_ foundation or column
+    freecells:
+        for source in (0..<4) {
+        thisFreeCell:
+            if let card = state.layout.freeCells[source].card {
+                if card.canGoOn(state.layout.foundations) {
+                    result[.init(category: .freeCell, index: source)] = .enabled
+                    continue freecells
+                }
+                for dest in (0..<8) {
+                    if card.canGoOn(state.layout.columns[dest]) && !state.layout.columns[dest].isEmpty {
+                        result[.init(category: .freeCell, index: source)] = .enabled
+                        continue freecells
+                    }
+                }
+            }
+        }
+    columns:
+        for source in (0..<8) {
+            if let card = state.layout.columns[source].card {
+                if card.canGoOn(state.layout.foundations) {
+                    result[.init(category: .column, index: source)] = .enabled
+                    continue columns
+                }
+            }
+            for dest in (0..<8) {
+                if dest != source && !state.layout.columns[dest].isEmpty {
+                    if state.layout.howManyCardsCanMoveLegally(
+                        from: source,
+                        to: dest,
+                        sequenceMoves: state.sequenceMoves,
+                        supermoves: state.supermoves
+                    ) > 0 {
+                        result[.init(category: .column, index: source)] = .enabled
+                        continue columns
+                    }
                 }
             }
         }
