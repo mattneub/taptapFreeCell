@@ -313,4 +313,32 @@ struct GameViewControllerTests {
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.hint])
     }
+
+    @Test("doUndo: sends undo")
+    func undo() async {
+        subject.doUndo()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.undo])
+    }
+
+    @Test("doRedo: sends redo")
+    func redo() async {
+        subject.doRedo()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.redo])
+    }
+
+    @Test("doUndoAll: sends undoAll")
+    func undoAll() async {
+        subject.doUndoAll()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.undoAll])
+    }
+
+    @Test("doRedoAll: sends redoAll")
+    func redoAll() async {
+        subject.doRedoAll()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.redoAll])
+    }
 }

@@ -15,26 +15,69 @@ final class GameProcessor: Processor {
             var deck = Deck()
             deck.shuffle()
             state.layout.deal(deck)
-            state.firstTapLocation = nil
-            state.enablements = state.baseEnablements
-            await presenter?.present(state)
+            state.undoStack = []
+            state.redoStack = []
+            await ensureNeutralState()
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()
             await presenter?.present(state)
+        case .redo:
+            if state.redoStack.count > 0 {
+                state.undoStack.append(state.layout)
+                state.layout = state.redoStack.removeLast()
+                await ensureNeutralState()
+            }
+        case .redoAll:
+            if state.redoStack.count > 0 {
+                state.undoStack.append(state.layout)
+                while !state.redoStack.isEmpty {
+                    state.undoStack.append(state.redoStack.removeLast())
+                }
+                state.layout = state.undoStack.removeLast()
+                await ensureNeutralState()
+            }
         case .tapBackground:
-            state.firstTapLocation = nil
-            state.enablements = state.baseEnablements
-            await presenter?.present(state)
+            // user can always tap the background to get out of any "mode"
+            await ensureNeutralState()
         case .tapped(let tap):
             if state.firstTapLocation == nil {
                 await handleFirstTap(tap)
             } else {
                 await handleSecondTap(tap)
             }
+        case .undo:
+            if state.undoStack.count > 0 {
+                state.redoStack.append(state.layout)
+                state.layout = state.undoStack.removeLast()
+                await ensureNeutralState()
+            }
+        case .undoAll:
+            if state.undoStack.count > 0 {
+                state.redoStack.append(state.layout)
+                while !state.undoStack.isEmpty {
+                    state.redoStack.append(state.undoStack.removeLast())
+                }
+                state.layout = state.redoStack.removeLast()
+                await ensureNeutralState()
+            }
         }
     }
 
+    /// This is something we do pretty often. The "neutral" state is that the game is completely
+    /// paused, waiting for the user to make a move. No first tap is registered and no card views
+    /// are highlighted.
+    func ensureNeutralState() async {
+        state.firstTapLocation = nil
+        state.enablements = state.baseEnablements
+        await presenter?.present(state)
+    }
+    
+    /// If you can make a safe move from the given location to the foundations, make it and
+    /// return true; otherwise, return false.
+    /// - Parameter location: The location from which to try to move safely to a foundation.
+    /// - Returns: Whether the move was safe and possible. If we return `true`, the move has
+    /// been made — the layout has been altered. If we return `false`, nothing has happened at all.
     func playToFoundationIfSafeAndPossible(location: Location) -> Bool {
         if let card = state.layout.card(at: location) {
             if card.canGoOn(state.layout.foundations) {
@@ -48,7 +91,15 @@ final class GameProcessor: Processor {
         return false
     }
 
+    /// Do a complete round of autoplay to foundations, i.e. make every possible safe move to
+    /// the foundations. This call should be made only from a neutral state, and it constitutes
+    /// a complete self-contained move in and of itself, returning to a neutral state afterwards.
+    ///
+    /// Observe that we do _not_ check the `state.autoplay` preference setting. This is deliberate!
+    /// The user can _force_ us to autoplay (using double tap on the background). Therefore it is
+    /// the job _of the caller_ to check `state.autoplay` before making this call, if needed.
     func autoplay() async {
+        let oldLayout = state.layout
         var moved = false
         let locations: [Location] = (
             (0..<8).map { Location(category: .column, index: $0) } +
@@ -62,45 +113,65 @@ final class GameProcessor: Processor {
                 }
             }
         } while moved
-        state.firstTapLocation = nil
-        state.enablements = state.baseEnablements
-        await presenter?.present(state)
+        if state.layout != oldLayout {
+            state.undoStack.append(oldLayout)
+            state.redoStack = []
+        }
+        await ensureNeutralState()
     }
-
+    
+    /// The user has tapped a card view when there is no recorded first tap. Therefore _this_ is
+    /// the first tap. Respond appropriately.
+    /// - Parameter location: The location of the card view the user tapped.
     func handleFirstTap(_ location: Location) async {
-        guard
-            // tap on an empty card is not a valid first tap
-            state.layout.card(at: location) != nil,
-            // tap on a foundation is not a valid first tap
-            location.category != .foundation,
-            // TODO: should probably make this a separate pref
-            // tap on a safe autoplayable just plays it
-            !playToFoundationIfSafeAndPossible(location: location)
-        else {
-            // in all those cases, return to a neutral situation, waiting for first tap
-            state.firstTapLocation = nil
-            state.enablements = state.baseEnablements
-            await presenter?.present(state)
+        // Bad taps, return to neutral and stop.
+        guard state.layout.card(at: location) != nil, location.category != .foundation else {
+            await ensureNeutralState() // hints might be showing
             return
         }
-        // only one move is possible and pref is on
+
+        // Tap on a safe autoplayable: just play it! This is a complete move of itself, so we
+        // respond just like the completion of a second tap.
+        let oldLayout = state.layout
+        if playToFoundationIfSafeAndPossible(location: location) { // TODO: check a pref here?
+            state.undoStack.append(oldLayout)
+            state.redoStack = []
+            await ensureNeutralState()
+            if state.autoplay {
+                await autoplay()
+            }
+            return
+        }
+
+        // Only one move is even possible, and the "unambiguous" pref is on; make the move!
         if state.unambiguousMove {
             if let _ = try? await unambiguousMove(location: location) {
-                return // we have made the move completely, all done
+                return // We have made the move _completely_, including neutrality and autoplay.
             }
         }
-        // this is a first tap and we must wait for the second tap, so
-        // store it, and respond by highlighting / enabling
+
+        // The most usual response: this is a first tap and we must wait for the second tap, so
+        // we store the tap and perform all highlighting / enabling as appropriate. Thus we
+        // _must_ do a presentation, to give the presenter a chance to adjust the interface.
         state.firstTapLocation = location
-        state.enablements = firstTapEnablements(for: location)
+        state.enablements = if state.showDestinations {
+            firstTapEnablements(for: location)
+        } else {
+            state.baseEnablements
+        }
         await presenter?.present(state)
     }
-
+    
+    /// Given the location of the first tap, construct and return a dictionary where the keys are
+    /// _all_ the locations of the layout and whose values state whether each location should be
+    /// "lit up" (to indicate that one can play from the first tap location to here) or not
+    /// (to indicate that one cannot).
+    /// - Parameter location: The location of the first tap.
+    /// - Returns: The dictionary of locations and enablements.
     func firstTapEnablements(for location: Location) -> [Location: GameState.Enablement] {
-        guard state.showDestinations, let card = state.layout.card(at: location) else {
+        guard let card = state.layout.card(at: location) else {
             return state.baseEnablements
         }
-        // okay, we _are_ showing destinations
         // begin by _assuming_ that all slots are disabled
         var result = state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
         // now enable those that should be enabled
@@ -142,7 +213,11 @@ final class GameProcessor: Processor {
         }
         return result
     }
-
+    
+    /// The user has asked for a hint: what locations can be the source of a legal move? Construct
+    /// and return a dictionary of _all_ the locations of the layout, where the enablement answers
+    /// the question, yes or no, whether each location can be the source of a legal move.
+    /// - Returns: The dictionary of locations and enablements.
     func hintEnablements() -> [Location: GameState.Enablement] {
         var result = state.baseEnablements.mapValues { _ in GameState.Enablement.disabled }
         // enable all free cells and columns that can go on a _nonempty_ foundation or column
@@ -186,16 +261,39 @@ final class GameProcessor: Processor {
         }
         return result
     }
-
+    
+    /// Given a source location, look for the possible move destination locations. If there is
+    /// _exactly one_ possible move, _make it_ — and if not, throw.
+    /// - Parameter location: The source location.
+    /// - Throws: If there are _no_ possible move destinations, or if there are _multiple_
+    /// possible move destinations. If we throw, we did not move; if we _don't_ throw, we _did_ move.
+    ///
+    /// If we make a move, it is a _complete_ move, exactly as if the user had tapped the source
+    /// and then the one possible destination. We are back in the neutral state.
     func unambiguousMove(location: Location) async throws {
-        // look for all possible move destinations for location; if there is exactly one,
-        // make that move, else throw
         var destination: Location?
-        // gateway so that an attempt to set an already set `destination` will throw
+        // gateway so that an attempt to set an already set `destination` will throw;
+        // call `oncer.doYourThing()`, and _never_ set `destination` directly
         var oncer = Oncer {
             destination = $0
         }
-        // now all we have to do is call `oncer.doYourThing()` and never set `destination` directly
+        // utility I'm going to need later on; edge case where `destination` and some other
+        // prospective location are both empty columns
+        func emptyColumns(_ location1: Location?, _ location2: Location?) -> Bool {
+            if let location1, let location2 {
+                if state.layout.card(at: location1) == nil {
+                    if state.layout.card(at: location2) == nil {
+                        if location1.category == .column {
+                            if location2.category == .column {
+                                return true
+                            }
+                        }
+                    }
+                }
+            }
+            return false
+        }
+        // okay, here we go
         switch location.category {
         case .foundation:
             fatalError("this cannot happen")
@@ -211,6 +309,9 @@ final class GameProcessor: Processor {
                 }
                 for index in 0..<8 {
                     if card.canGoOn(state.layout.columns[index]) {
+                        if emptyColumns(destination, .init(category: .column, index: index)) {
+                            continue
+                        }
                         try oncer.doYourThing(
                             .init(
                                 category: .column,
@@ -245,6 +346,9 @@ final class GameProcessor: Processor {
                         sequenceMoves: state.sequenceMoves,
                         supermoves: state.supermoves
                     ) > 0 {
+                        if emptyColumns(destination, .init(category: .column, index: index)) {
+                            continue
+                        }
                         try oncer.doYourThing(
                             .init(
                                 category: .column,
@@ -258,11 +362,17 @@ final class GameProcessor: Processor {
         guard let destination else {
             throw OnceError.notEnough // we didn't find _any_ moves!
         }
-        // Pretend that `location` was the first tap and `destination` is the second!
+        // We found exactly one move, so make it — by pretending that `location` was the first tap
+        // and `destination` is the second!
         state.firstTapLocation = location
         await handleSecondTap(destination)
     }
-
+    
+    /// The user has tapped when there was a stored first tap location. Therefore this is the
+    /// _second_ tap location. So if possible move from the first location to the second and
+    /// return to a neutral state, followed by a round of autoplay.
+    /// - Parameter secondTapLocation: The second tap location (the first tap location is stored
+    /// in the `state` as the `firstTapLocation`).
     func handleSecondTap(_ secondTapLocation: Location) async {
         guard let firstTapLocation = state.firstTapLocation else {
             return // shouldn't happen
@@ -270,6 +380,7 @@ final class GameProcessor: Processor {
         guard let card = state.layout.card(at: firstTapLocation) else {
             return // shouldn't happen
         }
+        let oldLayout = state.layout
         switch secondTapLocation.category {
         case .foundation:
             // doesn't matter which foundation was tapped; if it can move, move it
@@ -310,9 +421,11 @@ final class GameProcessor: Processor {
                 }
             }
         }
-        state.firstTapLocation = nil
-        state.enablements = state.baseEnablements
-        await presenter?.present(state)
+        if state.layout != oldLayout {
+            state.undoStack.append(oldLayout)
+            state.redoStack = []
+        }
+        await ensureNeutralState()
         if state.autoplay {
             await autoplay()
         }

@@ -171,10 +171,29 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
-    @objc func doUndo() {}
-    @objc func doRedo() {}
-    @objc func doUndoAll() {}
-    @objc func doRedoAll() {}
+    @objc func doUndo() {
+        Task {
+            await processor?.receive(.undo)
+        }
+    }
+
+    @objc func doRedo() {
+        Task {
+            await processor?.receive(.redo)
+        }
+    }
+
+    @objc func doUndoAll() {
+        Task {
+            await processor?.receive(.undoAll)
+        }
+    }
+
+    @objc func doRedoAll() {
+        Task {
+            await processor?.receive(.redoAll)
+        }
+    }
 
     @objc func singleTap() {
         Task {

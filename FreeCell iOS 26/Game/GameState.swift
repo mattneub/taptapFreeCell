@@ -2,6 +2,9 @@ struct GameState: Equatable {
     /// Source of truth for the game layout.
     var layout = Layout()
 
+    var undoStack = [Layout]()
+    var redoStack = [Layout]()
+
     /// Preferences
     var sequences = true
     var sequenceMoves = true
