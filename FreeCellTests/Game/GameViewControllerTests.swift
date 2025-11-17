@@ -341,4 +341,131 @@ struct GameViewControllerTests {
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.redoAll])
     }
+
+    @Test("receive confetti: sets confetti, adds emitter, sets cancellable task")
+    func confetti() async {
+        subject.loadViewIfNeeded()
+        Task {
+            await subject.receive(.confetti)
+        }
+        await #while(subject.confetti == nil)
+        #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 1)
+        #expect(subject.confettiTask != nil)
+        #expect(subject.confettiTime == 10)
+        subject.confettiTask?.cancel()
+    }
+
+    @Test("receive confetti: if not cancelled, cancels after `confettiTime`")
+    func confettiExpires() async {
+        subject.loadViewIfNeeded()
+        subject.confettiTime = 0.2
+        Task {
+            await subject.receive(.confetti)
+        }
+        await #while(subject.confetti == nil)
+        #expect(subject.confetti != nil)
+        await #while(subject.confetti != nil)
+        #expect(subject.confetti == nil)
+        #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+        #expect(subject.confettiTask?.isCancelled == true)
+    }
+
+    @Test("every message to processor removes confetti if present")
+    func confettiRemovedWhenProcessorMessage() async {
+        subject.loadViewIfNeeded()
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.doDeal()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.doUndo()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.doRedo()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.doUndoAll()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.doRedoAll()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.singleTap()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.doubleTap()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+        try? await Task.sleep(for: .seconds(0.1))
+        do {
+            Task {
+                await subject.receive(.confetti)
+            }
+            await #while(subject.confetti == nil)
+            subject.twoFingerTap()
+            #expect(subject.confetti == nil)
+            #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+            #expect(subject.confettiTask?.isCancelled == true)
+        }
+    }
+
+    @Test("receive updateStopwatch: sets label with formatted string")
+    func updateStopwatch() async {
+        subject.loadViewIfNeeded()
+        await subject.receive(.updateStopwatch(1))
+        #expect(subject.timerLabel.text == "00:00:01")
+    }
 }

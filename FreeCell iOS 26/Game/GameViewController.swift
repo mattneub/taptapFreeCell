@@ -1,4 +1,5 @@
 import UIKit
+import Confetti
 
 final class GameViewController: UIViewController, ReceiverPresenter {
     weak var processor: (any Receiver<GameAction>)?
@@ -22,6 +23,14 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     var gameViewInterfaceConstructor: (any GameViewInterfaceConstructorType)? = GameViewInterfaceConstructor()
 
     var gameViewCardSizer: (any GameViewCardSizerType)? = GameViewCardSizer()
+
+    // Confetti
+
+    var confetti: ConfettiDropper?
+
+    var confettiTime: Double = 10 // so we can inject a shorter time for testing
+
+    var confettiTask: Task<(), Error>?
 
     /// Label that shows the elapsed time of the game.
     lazy var timerLabel = UILabel().applying {
@@ -163,51 +172,80 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
-    func receive(_ effect: GameEffect) async {}
+    func receive(_ effect: GameEffect) async {
+        switch effect {
+        case .confetti:
+            self.confetti = ConfettiDropper(displayScale: traitCollection.displayScale)
+            confetti?.addEmitter(to: view)
+            self.confettiTask = Task { // in case user doesn't stop the confetti manually
+                try await Task.sleep(for: .seconds(confettiTime))
+            }
+            try? await confettiTask?.value
+            ensureNoConfetti()
+        case .updateStopwatch(let timeInterval):
+            if let string = Stopwatch.timeTakenFormatter.string(from: timeInterval) {
+                timerLabel.text = string
+            }
+        }
+    }
+
+    func ensureNoConfetti() {
+        self.confettiTask?.cancel()
+        self.confetti?.removeEmitter()
+        self.confetti = nil
+    }
 
     @objc func doDeal() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.deal)
         }
     }
 
     @objc func doUndo() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.undo)
         }
     }
 
     @objc func doRedo() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.redo)
         }
     }
 
     @objc func doUndoAll() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.undoAll)
         }
     }
 
     @objc func doRedoAll() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.redoAll)
         }
     }
 
     @objc func singleTap() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.tapBackground)
         }
     }
 
     @objc func doubleTap() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.autoplay)
         }
     }
 
     @objc func twoFingerTap() {
+        ensureNoConfetti()
         Task {
             await processor?.receive(.hint)
         }

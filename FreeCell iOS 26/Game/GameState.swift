@@ -20,6 +20,12 @@ struct GameState: Equatable {
     /// where the first tap was.
     var firstTapLocation: Location? = nil
 
+    /// We need to know, when the game is over, whether this is the _first_ time we have
+    /// discovered that it was over. So this variable lets us record that we already
+    /// knew that the game was over; if the game is underway we set it to true, and when
+    /// we learn that the game is over we set it to false.
+    var gameInProgress = false
+
     var gameIsOver: Bool {
         layout.numberOfCardsRemaining == 0
     }

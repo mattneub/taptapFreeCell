@@ -8,10 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		3F01D77D2EBE3F180075B216 /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F01D77C2EBE3F180075B216 /* WaitWhile */; };
+		3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; };
+		3F3604412ECA267400487EF9 /* Confetti.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		3F36043E2ECA267400487EF9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3FB3F2A32EB8E76C00689661 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F3604392ECA267400487EF9;
+			remoteInfo = Confetti;
+		};
 		3FB3F4B52EB8F8E600689661 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3FB3F2A32EB8E76C00689661 /* Project object */;
@@ -21,7 +30,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		3F3604452ECA267400487EF9 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				3F3604412ECA267400487EF9 /* Confetti.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		3F36043A2ECA267400487EF9 /* Confetti.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Confetti.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FreeCell iOS 26.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FB3F4B12EB8F8E600689661 /* FreeCellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FreeCellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -37,6 +61,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3F36043B2ECA267400487EF9 /* Confetti */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Confetti;
+			sourceTree = "<group>";
+		};
 		3FB3F2AD2EB8E76C00689661 /* FreeCell iOS 26 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -53,10 +82,18 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3F3604372ECA267400487EF9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FB3F2A82EB8E76C00689661 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +114,7 @@
 			children = (
 				3FB3F2AD2EB8E76C00689661 /* FreeCell iOS 26 */,
 				3FB3F4B22EB8F8E600689661 /* FreeCellTests */,
+				3F36043B2ECA267400487EF9 /* Confetti */,
 				3FB3F2AC2EB8E76C00689661 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -86,13 +124,47 @@
 			children = (
 				3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */,
 				3FB3F4B12EB8F8E600689661 /* FreeCellTests.xctest */,
+				3F36043A2ECA267400487EF9 /* Confetti.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		3F3604352ECA267400487EF9 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		3F3604392ECA267400487EF9 /* Confetti */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F3604422ECA267400487EF9 /* Build configuration list for PBXNativeTarget "Confetti" */;
+			buildPhases = (
+				3F3604352ECA267400487EF9 /* Headers */,
+				3F3604362ECA267400487EF9 /* Sources */,
+				3F3604372ECA267400487EF9 /* Frameworks */,
+				3F3604382ECA267400487EF9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3F36043B2ECA267400487EF9 /* Confetti */,
+			);
+			name = Confetti;
+			packageProductDependencies = (
+			);
+			productName = Confetti;
+			productReference = 3F36043A2ECA267400487EF9 /* Confetti.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		3FB3F2AA2EB8E76C00689661 /* FreeCell iOS 26 */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3FB3F2BE2EB8E76D00689661 /* Build configuration list for PBXNativeTarget "FreeCell iOS 26" */;
@@ -100,10 +172,12 @@
 				3FB3F2A72EB8E76C00689661 /* Sources */,
 				3FB3F2A82EB8E76C00689661 /* Frameworks */,
 				3FB3F2A92EB8E76C00689661 /* Resources */,
+				3F3604452ECA267400487EF9 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				3F36043F2ECA267400487EF9 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3FB3F2AD2EB8E76C00689661 /* FreeCell iOS 26 */,
@@ -150,6 +224,9 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					3F3604392ECA267400487EF9 = {
+						CreatedOnToolsVersion = 26.1;
+					};
 					3FB3F2AA2EB8E76C00689661 = {
 						CreatedOnToolsVersion = 26.1;
 					};
@@ -180,11 +257,19 @@
 			targets = (
 				3FB3F2AA2EB8E76C00689661 /* FreeCell iOS 26 */,
 				3FB3F4B02EB8F8E600689661 /* FreeCellTests */,
+				3F3604392ECA267400487EF9 /* Confetti */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3F3604382ECA267400487EF9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FB3F2A92EB8E76C00689661 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -202,6 +287,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3F3604362ECA267400487EF9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3FB3F2A72EB8E76C00689661 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -219,6 +311,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		3F36043F2ECA267400487EF9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F3604392ECA267400487EF9 /* Confetti */;
+			targetProxy = 3F36043E2ECA267400487EF9 /* PBXContainerItemProxy */;
+		};
 		3FB3F4B62EB8F8E600689661 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 3FB3F2AA2EB8E76C00689661 /* FreeCell iOS 26 */;
@@ -227,6 +324,90 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		3F3604432ECA267400487EF9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W3LHX5RGV2;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.neuburg.matt.Confetti;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		3F3604442ECA267400487EF9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = W3LHX5RGV2;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.neuburg.matt.Confetti;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		3FB3F2BF2EB8E76D00689661 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -425,6 +606,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W3LHX5RGV2;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neuburg.matt.FreeCellTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -449,6 +631,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W3LHX5RGV2;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neuburg.matt.FreeCellTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -466,6 +649,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3F3604422ECA267400487EF9 /* Build configuration list for PBXNativeTarget "Confetti" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F3604432ECA267400487EF9 /* Debug */,
+				3F3604442ECA267400487EF9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		3FB3F2A62EB8E76C00689661 /* Build configuration list for PBXProject "FreeCell iOS 26" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

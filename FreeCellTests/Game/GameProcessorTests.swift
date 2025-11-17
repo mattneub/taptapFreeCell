@@ -5,9 +5,11 @@ import Foundation
 struct GameProcessorTests {
     let subject = GameProcessor()
     let presenter = MockReceiverPresenter<GameEffect, GameState>()
+    let stopwatch = MockStopwatch()
 
     init() {
         subject.presenter = presenter
+        subject.stopwatch = stopwatch
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -51,10 +53,12 @@ struct GameProcessorTests {
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(subject.state.undoStack.last == oldLayout)
         #expect(subject.state.redoStack.isEmpty)
+        #expect(stopwatch.methodsCalled == ["advance()"])
     }
 
     @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it, empties undo/redo")
     func deal() async {
+        subject.state.gameInProgress = false
         subject.state.firstTapLocation = .init(category: .column, index: 0)
         subject.state.undoStack = [Layout(), Layout()]
         subject.state.redoStack = [Layout(), Layout()]
@@ -67,6 +71,8 @@ struct GameProcessorTests {
         #expect(presenter.statesPresented == [subject.state])
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.gameInProgress == true)
+        #expect(stopwatch.methodsCalled == ["reset()"])
     }
 
     @Test("receive hint: enables freecells and columns that can move nontrivially")
@@ -89,6 +95,7 @@ struct GameProcessorTests {
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == expected)
         #expect(presenter.statesPresented == [subject.state])
+        #expect(stopwatch.methodsCalled == ["advance()"])
     }
 
     @Test("receive redo: if redo stack not empty, move one redo layout to layout and layout to undo")
@@ -101,7 +108,9 @@ struct GameProcessorTests {
             #expect(subject.state == oldState)
             #expect(subject.state.undoStack.isEmpty)
             #expect(presenter.statesPresented.isEmpty)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = .init(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -121,6 +130,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -134,7 +144,9 @@ struct GameProcessorTests {
             #expect(subject.state == oldState)
             #expect(subject.state.undoStack.isEmpty)
             #expect(presenter.statesPresented.isEmpty)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = .init(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -155,21 +167,25 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
     @Test("receive tapBackground: erases existing first tap, returns to neutrality")
     func tapBackground() async {
         subject.state.firstTapLocation = .init(category: .column, index: 0)
+        subject.state.layout.columns[0].cards = [.init(rank: .five, suit: .hearts)]
         await subject.receive(.tapBackground)
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])
+        #expect(stopwatch.methodsCalled == ["advance()"])
     }
 
     @Test("tapped: if firstTapLocation is nil, tapped location becomes firstTapLocation if not empty source, not foundation")
     func tappedFirst() async {
         do {
+            subject.state.layout.columns[7].cards = [.init(rank: .five, suit: .hearts)]
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -180,11 +196,14 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
+            subject.state.layout.columns[7].cards = [.init(rank: .five, suit: .hearts)]
             subject.state.layout.foundations[0].cards = [.init(rank: .ace, suit: .spades)]
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
@@ -196,10 +215,12 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.unambiguousMove = false
@@ -213,6 +234,7 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -236,15 +258,18 @@ struct GameProcessorTests {
                 .init(rank: .ace, suit: .clubs),
             ])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [
                 .init(rank: .two, suit: .clubs),
                 .init(rank: .ace, suit: .clubs),
             ]
+            subject.state.layout.columns[7].cards = [.init(rank: .seven, suit: .clubs)]
             subject.state.autoplay = true // we will play and then autoplay
             subject.state.redoStack = [Layout]()
             await subject.receive(.tapped(.init(category: .column, index: 0)))
@@ -267,6 +292,7 @@ struct GameProcessorTests {
                 .init(rank: .ace, suit: .clubs)
             ])
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -280,10 +306,12 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -292,6 +320,7 @@ struct GameProcessorTests {
             #expect(subject.state.enablements != subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -307,10 +336,12 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == expected)
             #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -326,6 +357,7 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == expected)
             #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -342,10 +374,12 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == expected)
             #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -359,6 +393,7 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == expected)
             #expect(subject.state.firstTapLocation == .init(category: .freeCell, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -382,10 +417,12 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -403,6 +440,7 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -435,11 +473,13 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.foundations[1].cards = [.init(rank: .jack, suit: .hearts)]
             subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -468,10 +508,12 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -495,11 +537,13 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -527,6 +571,7 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack.first == oldLayout)
             #expect(subject.state.undoStack.last?.columns[7].cards == [.init(rank: .ace, suit: .diamonds)])
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -563,11 +608,13 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.foundations[1].cards = [.init(rank: .jack, suit: .hearts)]
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -599,11 +646,13 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -630,11 +679,13 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == expected)
             #expect(subject.state.firstTapLocation == .init(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [.init(rank: .king, suit: .clubs)]
@@ -665,11 +716,13 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             // much simpler example!
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -680,6 +733,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -691,10 +745,12 @@ struct GameProcessorTests {
             await subject.receive(.tapped(.init(category: .freeCell, index: 0)))
             #expect(subject.state.layout.freeCells[0].isEmpty)
             #expect(subject.state.layout.columns[0].cards == [.init(rank: .queen, suit: .hearts)])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.freeCells[0].cards = [.init(rank: .queen, suit: .hearts)]
             subject.state.layout.freeCells[1].cards = [.init(rank: .queen, suit: .hearts)]
@@ -708,6 +764,7 @@ struct GameProcessorTests {
             await subject.receive(.tapped(.init(category: .column, index: 7)))
             #expect(subject.state.layout.columns[7].cards == [.init(rank: .three, suit: .clubs)])
             #expect(subject.state.layout.columns[0].cards == [.init(rank: .three, suit: .hearts)])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -729,14 +786,17 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
+            subject.state.layout.columns[7].cards = [.init(rank: .six, suit: .clubs)]
             subject.state.layout.foundations[1].cards = [.init(rank: .five, suit: .hearts)]
             subject.state.autoplay = false
             let oldLayout = subject.state.layout
@@ -753,6 +813,7 @@ struct GameProcessorTests {
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.last == oldLayout)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -774,11 +835,13 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.freeCells[0].cards = [.init(rank: .two, suit: .clubs)]
@@ -795,6 +858,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -816,11 +880,13 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
             subject.state.layout.freeCells[0].cards = [.init(rank: .five, suit: .clubs)]
@@ -839,6 +905,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -860,11 +927,13 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             subject.state.layout.columns[1].cards = [
@@ -888,6 +957,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -911,6 +981,7 @@ struct GameProcessorTests {
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])
+        #expect(stopwatch.methodsCalled == ["advance()"])
     }
 
     @Test("tapped: if autoplay is on, second tap is followed by a round of autoplay")
@@ -944,11 +1015,13 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
         presenter.statesPresented = []
         subject.state.layout = Layout()
         subject.state.undoStack = []
+        stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [.init(rank: .six, suit: .hearts)]
             subject.state.layout.columns[1].cards = [
@@ -988,6 +1061,7 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented.count == 2)
             #expect(presenter.statesPresented.last == subject.state)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -1001,7 +1075,9 @@ struct GameProcessorTests {
             #expect(subject.state == oldState)
             #expect(subject.state.redoStack.isEmpty)
             #expect(presenter.statesPresented.isEmpty)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = .init(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -1021,6 +1097,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
@@ -1034,7 +1111,9 @@ struct GameProcessorTests {
             #expect(subject.state == oldState)
             #expect(subject.state.redoStack.isEmpty)
             #expect(presenter.statesPresented.isEmpty)
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
+        stopwatch.methodsCalled = []
         do {
             subject.state.firstTapLocation = .init(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
@@ -1055,7 +1134,291 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
+            #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
+    @Test("every `receive`, if the layout is empty of freecell / column cards, declares the game over")
+    func receiveWhenGameOver() async {
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.autoplay)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.hint)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.redo)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.redoAll)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.tapBackground)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.undo)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
+            await subject.receive(.undoAll)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.confetti])
+        }
+    }
+
+    @Test("every `receive`, if the layout is empty, but game not in progress, no confetti")
+    func receiveWhenGameOverGameNotInProgress() async {
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.autoplay)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.hint)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.redo)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.redoAll)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.tapBackground)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.undo)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
+            await subject.receive(.undoAll)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [])
+        }
+    }
+
+    @Test("every `receive`, if game in progress and stopwatch stopped, start")
+    func receiveWhenGameOverGameInProgressStopped() async {
+        stopwatch.state = .stopped
+        subject.state.gameInProgress = true
+        subject.state.layout.columns[7].cards = [.init(rank: .six, suit: .clubs)]
+        do {
+            await subject.receive(.autoplay)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.hint)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.redo)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.redoAll)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.tapBackground)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.undo)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.undoAll)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+    }
+
+    @Test("every `receive`, if game in progress and stopwatch paused, resume")
+    func receiveWhenGameOverGameInProgressPaused() async {
+        stopwatch.state = .paused
+        subject.state.gameInProgress = true
+        subject.state.layout.columns[7].cards = [.init(rank: .six, suit: .clubs)]
+        do {
+            await subject.receive(.autoplay)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.hint)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.redo)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.redoAll)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.tapBackground)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.tapped(.init(category: .column, index: 0)))
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.undo)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.undoAll)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+    }
+
+    @Test("stopwatchDidUpdate: passes updateStopwatch to presenter")
+    func stopwatchDidUpdate() async {
+        await subject.stopwatchDidUpdate(32)
+        #expect(presenter.thingsReceived == [.updateStopwatch(32)])
+    }
 }

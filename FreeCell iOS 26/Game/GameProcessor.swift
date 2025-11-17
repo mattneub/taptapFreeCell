@@ -5,29 +5,36 @@ final class GameProcessor: Processor {
 
     weak var presenter: (any ReceiverPresenter<GameEffect, GameState>)?
 
+    lazy var stopwatch: StopwatchType = Stopwatch(delegate: self)
+
     var state = GameState()
 
     func receive(_ action: GameAction) async {
         switch action {
         case .autoplay:
             await autoplay()
+            await checkTheStopwatch()
         case .deal:
             var deck = Deck()
             deck.shuffle()
             state.layout.deal(deck)
             state.undoStack = []
             state.redoStack = []
+            state.gameInProgress = true
             await ensureNeutralState()
+            await stopwatch.reset()
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()
             await presenter?.present(state)
+            await checkTheStopwatch()
         case .redo:
             if state.redoStack.count > 0 {
                 state.undoStack.append(state.layout)
                 state.layout = state.redoStack.removeLast()
                 await ensureNeutralState()
             }
+            await checkTheStopwatch()
         case .redoAll:
             if state.redoStack.count > 0 {
                 state.undoStack.append(state.layout)
@@ -37,21 +44,25 @@ final class GameProcessor: Processor {
                 state.layout = state.undoStack.removeLast()
                 await ensureNeutralState()
             }
+            await checkTheStopwatch()
         case .tapBackground:
             // user can always tap the background to get out of any "mode"
             await ensureNeutralState()
+            await checkTheStopwatch()
         case .tapped(let tap):
             if state.firstTapLocation == nil {
                 await handleFirstTap(tap)
             } else {
                 await handleSecondTap(tap)
             }
+            await checkTheStopwatch()
         case .undo:
             if state.undoStack.count > 0 {
                 state.redoStack.append(state.layout)
                 state.layout = state.undoStack.removeLast()
                 await ensureNeutralState()
             }
+            await checkTheStopwatch()
         case .undoAll:
             if state.undoStack.count > 0 {
                 state.redoStack.append(state.layout)
@@ -61,6 +72,7 @@ final class GameProcessor: Processor {
                 state.layout = state.redoStack.removeLast()
                 await ensureNeutralState()
             }
+            await checkTheStopwatch()
         }
     }
 
@@ -429,5 +441,30 @@ final class GameProcessor: Processor {
         if state.autoplay {
             await autoplay()
         }
+    }
+
+    func checkTheStopwatch() async {
+        if state.gameIsOver {
+            await stopwatch.stop()
+            if state.gameInProgress {
+                state.gameInProgress = false
+                await presenter?.receive(.confetti)
+            }
+            return
+        }
+        switch stopwatch.state {
+        case .paused:
+            await stopwatch.resumeIfPaused()
+        case .running:
+            await stopwatch.advance()
+        case .stopped:
+            await stopwatch.start()
+        }
+    }
+}
+
+extension GameProcessor: StopwatchDelegate {
+    func stopwatchDidUpdate(_ timeInterval: TimeInterval) async {
+        await presenter?.receive(.updateStopwatch(timeInterval))
     }
 }
