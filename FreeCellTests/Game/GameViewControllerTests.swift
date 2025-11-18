@@ -126,131 +126,102 @@ struct GameViewControllerTests {
 
     @Test("view will layout: configures all card views as empty, sets processor; card views category and index are right")
     func viewWillLayoutRedraw() async throws {
-        sizer.sizeToReturn = CGSize(width: 50, height: 100)
-        subject.view.bounds.size.width = 400
-        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
+        constructor.cardViews =  [
+            [
+                MockCardView(location: Location(category: .foundation, index: 0)),
+                MockCardView(location: Location(category: .foundation, index: 1)),
+            ],
+            [
+                MockCardView(location: Location(category: .freeCell, index: 0)),
+                MockCardView(location: Location(category: .freeCell, index: 1)),
+            ],
+            [
+                MockCardView(location: Location(category: .column, index: 0)),
+                MockCardView(location: Location(category: .column, index: 1)),
+            ]
+        ]
         subject.viewWillLayoutSubviews()
-        #expect(subject.foundations.count == 4)
+        #expect(subject.foundations.count == 2)
         #expect(subject.foundations.enumerated().allSatisfy { offset, foundation in
             foundation.location.index == offset &&
             foundation.location.category == .foundation
         })
-        #expect(subject.freeCells.count == 4)
+        #expect(subject.freeCells.count == 2)
         #expect(subject.freeCells.enumerated().allSatisfy { offset, freeCell in
             freeCell.location.index == offset &&
             freeCell.location.category == .freeCell
         })
-        #expect(subject.columns.count == 8)
+        #expect(subject.columns.count == 2)
         #expect(subject.columns.enumerated().allSatisfy { offset, column in
             column.location.index == offset &&
             column.location.category == .column
         })
-        let allCards = subject.view.subviews(ofType: CardView.self)
-        #expect(allCards.count == 16)
+        let allCards = try #require((subject.foundations + subject.freeCells + subject.columns) as? [MockCardView])
         #expect(allCards.allSatisfy { $0.cards.isEmpty })
         await #while(!(allCards.allSatisfy { $0.processor === processor }))
         #expect(allCards.allSatisfy { $0.processor === processor })
-        #expect(allCards.allSatisfy { $0.layer.sublayers?.first != nil })
-        #expect(allCards.allSatisfy { $0.alpha == 0.5 })
+        #expect(allCards.allSatisfy { $0.methodsCalled == ["redraw(movableCount:)"] })
+        #expect(allCards.allSatisfy { $0.movableCount == 0 })
     }
 
     @Test("present: distributes state layout cards into card views, tells them to redraw")
-    func present() async {
-        sizer.sizeToReturn = CGSize(width: 50, height: 100)
-        subject.view.bounds.size.width = 400
-        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
-        subject.viewWillLayoutSubviews()
+    func present() async throws {
         var layout = Layout()
-        layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [Card(rank: .ace, suit: .hearts)]
-        layout.freeCells[3].cards = [Card(rank: .king, suit: .hearts)]
-        layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
-        layout.columns[6].cards = [
+        layout.foundations[0].cards = [Card(rank: .ace, suit: .spades)]
+        layout.freeCells[0].cards = [Card(rank: .king, suit: .hearts)]
+        layout.columns[0].cards = [
             Card(rank: .jack, suit: .hearts),
             Card(rank: .ten, suit: .clubs)
         ]
-        // that was prep, here comes the test
+        subject.viewWillLayoutSubviews()
         await subject.present(GameState(layout: layout, sequences: false))
-        // what we want to know is not just that the cards were dealt out but that they _appear_
-        #expect(subject.foundations[0].cards == [])
-        #expect(subject.foundations[1].cards == [Card(rank: .ace, suit: .hearts)])
-        #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .ace, suit: .hearts))
-        #expect(subject.foundations[2].cards == [])
-        #expect(subject.foundations[3].cards == [])
-        #expect(subject.freeCells[0].cards == [])
-        #expect(subject.freeCells[1].cards == [])
-        #expect(subject.freeCells[2].cards == [])
-        #expect(subject.freeCells[3].cards == [Card(rank: .king, suit: .hearts)])
-        #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .king, suit: .hearts))
-        #expect(subject.columns[0].cards == [Card(rank: .queen, suit: .hearts)])
-        #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .queen, suit: .hearts))
-        #expect((subject.columns[0].layer.sublayers?.count == 1)) // and that's all there are
-        #expect(subject.columns[1].cards == [])
-        #expect(subject.columns[2].cards == [])
-        #expect(subject.columns[3].cards == [])
-        #expect(subject.columns[4].cards == [])
-        #expect(subject.columns[5].cards == [])
-        #expect(subject.columns[6].cards == [
+        let foundationCard = try #require(subject.foundations.first as? MockCardView)
+        #expect(foundationCard.cards == [Card(rank: .ace, suit: .spades)])
+        #expect(foundationCard.methodsCalled == ["redraw(movableCount:)"])
+        #expect(foundationCard.movableCount == 0)
+        let freeCellCard = try #require(subject.freeCells.first as? MockCardView)
+        #expect(freeCellCard.cards == [Card(rank: .king, suit: .hearts)])
+        #expect(freeCellCard.methodsCalled == ["redraw(movableCount:)"])
+        #expect(freeCellCard.movableCount == 0)
+        let columnCard = try #require(subject.columns.first as? MockCardView)
+        #expect(columnCard.cards == [
             Card(rank: .jack, suit: .hearts),
             Card(rank: .ten, suit: .clubs)
         ])
-        #expect((subject.columns[6].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .jack, suit: .hearts))
-        #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == Card(rank: .ten, suit: .clubs))
-        #expect((subject.columns[6].layer.sublayers?.count == 2)) // and that's all there are
-        #expect(subject.columns[7].cards == [])
+        #expect(columnCard.methodsCalled == ["redraw(movableCount:)"])
+        #expect(columnCard.movableCount == 0)
     }
 
     @Test("present: distributes state layout cards into card views, tells them to redraw with borders")
     func presentBorders() async throws {
-        sizer.sizeToReturn = CGSize(width: 50, height: 100)
-        subject.view.bounds.size.width = 400
-        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
-        subject.viewWillLayoutSubviews()
         var layout = Layout()
-        layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [Card(rank: .ace, suit: .hearts)]
-        layout.freeCells[3].cards = [Card(rank: .king, suit: .hearts)]
-        layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
-        layout.columns[6].cards = [
+        layout.foundations[0].cards = [Card(rank: .ace, suit: .spades)]
+        layout.freeCells[0].cards = [Card(rank: .king, suit: .hearts)]
+        layout.columns[0].cards = [
             Card(rank: .jack, suit: .hearts),
             Card(rank: .ten, suit: .clubs)
         ]
-        // that was prep, here comes the test
-        await subject.present(GameState(layout: layout, sequences: true)) // *
-        // what we want to know is not just that the cards were dealt out but that they _appear_
-        #expect(subject.foundations[0].cards == [])
-        #expect(subject.foundations[1].cards == [Card(rank: .ace, suit: .hearts)])
-        #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .ace, suit: .hearts))
-        #expect(subject.foundations[2].cards == [])
-        #expect(subject.foundations[3].cards == [])
-        #expect(subject.freeCells[0].cards == [])
-        #expect(subject.freeCells[1].cards == [])
-        #expect(subject.freeCells[2].cards == [])
-        #expect(subject.freeCells[3].cards == [Card(rank: .king, suit: .hearts)])
-        #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .king, suit: .hearts))
-        #expect(subject.columns[0].cards == [Card(rank: .queen, suit: .hearts)])
-        #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .queen, suit: .hearts))
-        #expect((subject.columns[0].layer.sublayers?.count == 2)) // *
-        let borderLayer = try #require(subject.columns[0].layer.sublayers?.last)
-        #expect(borderLayer is BorderLayer)
-        #expect(subject.columns[1].cards == [])
-        #expect(subject.columns[2].cards == [])
-        #expect(subject.columns[3].cards == [])
-        #expect(subject.columns[4].cards == [])
-        #expect(subject.columns[5].cards == [])
-        #expect(subject.columns[6].cards == [
+        subject.viewWillLayoutSubviews()
+        await subject.present(GameState(layout: layout, sequences: true))
+        let foundationCard = try #require(subject.foundations.first as? MockCardView)
+        #expect(foundationCard.cards == [Card(rank: .ace, suit: .spades)])
+        #expect(foundationCard.methodsCalled == ["redraw(movableCount:)"])
+        #expect(foundationCard.movableCount == 0)
+        let freeCellCard = try #require(subject.freeCells.first as? MockCardView)
+        #expect(freeCellCard.cards == [Card(rank: .king, suit: .hearts)])
+        #expect(freeCellCard.methodsCalled == ["redraw(movableCount:)"])
+        #expect(freeCellCard.movableCount == 0)
+        let columnCard = try #require(subject.columns.first as? MockCardView)
+        #expect(columnCard.cards == [
             Card(rank: .jack, suit: .hearts),
             Card(rank: .ten, suit: .clubs)
         ])
-        #expect((subject.columns[6].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .jack, suit: .hearts))
-        #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == Card(rank: .ten, suit: .clubs))
-        #expect((subject.columns[6].layer.sublayers?.count == 3)) // *
-        let borderLayer2 = try #require(subject.columns[6].layer.sublayers?.last)
-        #expect(borderLayer2 is BorderLayer)
-        #expect(subject.columns[7].cards == [])
+        #expect(columnCard.methodsCalled == ["redraw(movableCount:)"])
+        #expect(columnCard.movableCount == 2) // *
     }
 
     @Test("present: if highlightOn false, removes and nilifies highlightLayer")
     func presentHighlightOnFalse() async {
-        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
         let layer = CALayer()
         subject.view.layer.addSublayer(layer)
@@ -262,7 +233,6 @@ struct GameViewControllerTests {
 
     @Test("present: if highlightOn true, adds and configures highlightLayer")
     func presentHighlightOnTrue() async throws {
-        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
         await subject.present(GameState(firstTapLocation: Location(category: .column, index: 0)))
         let layer = try #require(subject.highlightLayer)
@@ -274,16 +244,13 @@ struct GameViewControllerTests {
 
     @Test("present: sets card view enablements")
     func presentEnablements() async throws {
-        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
-        let allCardViews = subject.view.subviews.compactMap { $0 as? CardView }
-        allCardViews.forEach { $0.cards = [Card(rank: .two, suit: .clubs)] }
-        allCardViews.forEach { $0.setEnablement(.enabled) }
-        #expect(allCardViews.allSatisfy { $0.alpha == 1 })
+        let allCards = try #require((subject.foundations + subject.freeCells + subject.columns) as? [MockCardView])
         var state = GameState()
         state.enablements = state.baseEnablements
         await subject.present(state)
-        #expect(allCardViews.allSatisfy { $0.alpha == 0.5 })
+        #expect(allCards.allSatisfy { $0.methodsCalled == ["setEnablement(_:)"] })
+        #expect(allCards.allSatisfy { $0.enablement == .normal })
     }
 
     @Test("doDeal: sends deal")

@@ -139,17 +139,19 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     func present(_ state: GameState) async {
         // reflect layout into card views, skipping card views that do not change
-        for index in 0..<4 {
+        for index in foundations.indices {
             if foundations[index].cards != state.layout.foundations[index].cards {
                 foundations[index].cards = state.layout.foundations[index].cards
                 await foundations[index].redraw()
             }
+        }
+        for index in freeCells.indices {
             if freeCells[index].cards != state.layout.freeCells[index].cards {
                 freeCells[index].cards = state.layout.freeCells[index].cards
                 await freeCells[index].redraw()
             }
         }
-        for index in 0..<8 {
+        for index in columns.indices {
             if columns[index].cards != state.layout.columns[index].cards {
                 columns[index].cards = state.layout.columns[index].cards
                 let movableCount = if state.sequences {
@@ -167,8 +169,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             highlightLayer = nil
         }
         for (location, enablement) in state.enablements {
-            let cardView = groupFor(location)[location.index]
-            cardView.setEnablement(enablement)
+            let group = groupFor(location)
+            if group.indices.contains(location.index) {
+                group[location.index].setEnablement(enablement)
+            }
         }
     }
 
