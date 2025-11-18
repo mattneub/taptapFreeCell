@@ -59,27 +59,27 @@ struct CardTests {
     func reverseDescription() {
         do {
             let result = Card(description: "AC")
-            #expect(result == .init(rank: .ace, suit: .clubs))
+            #expect(result == Card(rank: .ace, suit: .clubs))
         }
         do {
             let result = Card(description: "2H")
-            #expect(result == .init(rank: .two, suit: .hearts))
+            #expect(result == Card(rank: .two, suit: .hearts))
         }
         do {
             let result = Card(description: "3D")
-            #expect(result == .init(rank: .three, suit: .diamonds))
+            #expect(result == Card(rank: .three, suit: .diamonds))
         }
         do {
             let result = Card(description: "4S")
-            #expect(result == .init(rank: .four, suit: .spades))
+            #expect(result == Card(rank: .four, suit: .spades))
         }
         do {
             let result = Card(description: "TH")
-            #expect(result == .init(rank: .ten, suit: .hearts))
+            #expect(result == Card(rank: .ten, suit: .hearts))
         }
         do {
             let result = Card(description: "JD")
-            #expect(result == .init(rank: .jack, suit: .diamonds))
+            #expect(result == Card(rank: .jack, suit: .diamonds))
         }
         // okay I'm convinced; try some bad ones
         do {

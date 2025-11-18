@@ -98,7 +98,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
             let cards = foundations[index].cards
             for internalIndex in cards.indices {
                 result.append(
-                    .init(
+                    LocationAndCard(
                         location: Location(category: .foundation, index: index),
                         internalIndex: internalIndex,
                         card: cards[internalIndex]
@@ -110,7 +110,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
             let cards = freeCells[index].cards
             for internalIndex in cards.indices {
                 result.append(
-                    .init(
+                    LocationAndCard(
                         location: Location(category: .freeCell, index: index),
                         internalIndex: internalIndex,
                         card: cards[internalIndex]
@@ -122,7 +122,7 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
             let cards = columns[index].cards
             for internalIndex in cards.indices {
                 result.append(
-                    .init(
+                    LocationAndCard(
                         location: Location(category: .column, index: index),
                         internalIndex: internalIndex,
                         card: cards[internalIndex]

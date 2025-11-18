@@ -14,7 +14,7 @@ struct DeckTests {
         #expect(subject.isEmpty == false)
         subject.cards = []
         #expect(subject.isEmpty == true)
-        subject.cards = [.init(rank: .jack, suit: .hearts)]
+        subject.cards = [Card(rank: .jack, suit: .hearts)]
         #expect(subject.isEmpty == false)
     }
 
@@ -76,9 +76,9 @@ struct DeckTests {
     @Test("deal: deals from the front of the deck")
     func deal() {
         var subject = Deck()
-        subject.cards = [.init(rank: .jack, suit: .hearts), .init(rank: .queen, suit: .clubs)]
+        subject.cards = [Card(rank: .jack, suit: .hearts), Card(rank: .queen, suit: .clubs)]
         let result = subject.deal()
-        #expect(result == .init(rank: .jack, suit: .hearts))
-        #expect(subject.cards == [.init(rank: .queen, suit: .clubs)])
+        #expect(result == Card(rank: .jack, suit: .hearts))
+        #expect(subject.cards == [Card(rank: .queen, suit: .clubs)])
     }
 }

@@ -208,23 +208,23 @@ final class GameProcessor: Processor {
         case .freeCell:
             if card.canGoOn(state.layout.foundations) { // if can go on _any_ foundation, illuminate _all_
                 (0..<4).forEach {
-                    result[.init(category: .foundation, index: $0)] = .enabled
+                    result[Location(category: .foundation, index: $0)] = .enabled
                 }
             }
             (0..<8).forEach { // if can go on a column, illuminate that one
                 if card.canGoOn(state.layout.columns[$0]) {
-                    result[.init(category: .column, index: $0)] = .enabled
+                    result[Location(category: .column, index: $0)] = .enabled
                 }
             }
         case .column:
             if state.layout.numberOfEmptyFreeCells > 0 { // if can go on _any_ freecell, illuminate _all_
                 (0..<4).forEach {
-                    result[.init(category: .freeCell, index: $0)] = .enabled
+                    result[Location(category: .freeCell, index: $0)] = .enabled
                 }
             }
             if card.canGoOn(state.layout.foundations) { // if can go on _any_ foundation, illuminate _all_
                 (0..<4).forEach {
-                    result[.init(category: .foundation, index: $0)] = .enabled
+                    result[Location(category: .foundation, index: $0)] = .enabled
                 }
             }
             (0..<8).forEach { // if can be moved to a column, illuminate that one
@@ -234,7 +234,7 @@ final class GameProcessor: Processor {
                     sequenceMoves: state.sequenceMoves,
                     supermoves: state.supermoves
                 ) > 0 {
-                    result[.init(category: .column, index: $0)] = .enabled
+                    result[Location(category: .column, index: $0)] = .enabled
                 }
             }
         }
@@ -253,12 +253,12 @@ final class GameProcessor: Processor {
         thisFreeCell:
             if let card = state.layout.freeCells[source].card {
                 if card.canGoOn(state.layout.foundations) {
-                    result[.init(category: .freeCell, index: source)] = .enabled
+                    result[Location(category: .freeCell, index: source)] = .enabled
                     continue freecells
                 }
                 for dest in (0..<8) {
                     if card.canGoOn(state.layout.columns[dest]) && !state.layout.columns[dest].isEmpty {
-                        result[.init(category: .freeCell, index: source)] = .enabled
+                        result[Location(category: .freeCell, index: source)] = .enabled
                         continue freecells
                     }
                 }
@@ -268,7 +268,7 @@ final class GameProcessor: Processor {
         for source in (0..<8) {
             if let card = state.layout.columns[source].card {
                 if card.canGoOn(state.layout.foundations) {
-                    result[.init(category: .column, index: source)] = .enabled
+                    result[Location(category: .column, index: source)] = .enabled
                     continue columns
                 }
             }
@@ -280,7 +280,7 @@ final class GameProcessor: Processor {
                         sequenceMoves: state.sequenceMoves,
                         supermoves: state.supermoves
                     ) > 0 {
-                        result[.init(category: .column, index: source)] = .enabled
+                        result[Location(category: .column, index: source)] = .enabled
                         continue columns
                     }
                 }
@@ -328,7 +328,7 @@ final class GameProcessor: Processor {
             if let card = state.layout.card(at: location) {
                 if card.canGoOn(state.layout.foundations) {
                     try oncer.doYourThing(
-                        .init(
+                        Location(
                             category: .foundation,
                             index: state.layout.indexOfFoundation(for: card.suit)
                         )
@@ -336,11 +336,11 @@ final class GameProcessor: Processor {
                 }
                 for index in 0..<8 {
                     if card.canGoOn(state.layout.columns[index]) {
-                        if emptyColumns(destination, .init(category: .column, index: index)) {
+                        if emptyColumns(destination, Location(category: .column, index: index)) {
                             continue
                         }
                         try oncer.doYourThing(
-                            .init(
+                            Location(
                                 category: .column,
                                 index: index
                             )
@@ -352,7 +352,7 @@ final class GameProcessor: Processor {
             if let card = state.layout.card(at: location) {
                 if card.canGoOn(state.layout.foundations) {
                     try oncer.doYourThing(
-                        .init(
+                        Location(
                             category: .foundation,
                             index: state.layout.indexOfFoundation(for: card.suit)
                         )
@@ -360,7 +360,7 @@ final class GameProcessor: Processor {
                 }
                 if let index = state.layout.indexOfFirstEmptyFreeCell {
                     try oncer.doYourThing(
-                        .init(
+                        Location(
                             category: .freeCell,
                             index: index
                         )
@@ -373,11 +373,11 @@ final class GameProcessor: Processor {
                         sequenceMoves: state.sequenceMoves,
                         supermoves: state.supermoves
                     ) > 0 {
-                        if emptyColumns(destination, .init(category: .column, index: index)) {
+                        if emptyColumns(destination, Location(category: .column, index: index)) {
                             continue
                         }
                         try oncer.doYourThing(
-                            .init(
+                            Location(
                                 category: .column,
                                 index: index
                             )

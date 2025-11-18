@@ -51,9 +51,12 @@ struct CardImage {
         xOffset = CGFloat(cardNumber % 9) // integer modulo
         yOffset = CGFloat(cardNumber / 9) // integer division
         let size = CGSize(width: width, height: height)
-        let renderer = UIGraphicsImageRenderer(size: size, format: .init().applying {
-            $0.scale = scale
-        })
+        let renderer = UIGraphicsImageRenderer(
+            size: size,
+            format: UIGraphicsImageRendererFormat().applying {
+                $0.scale = scale
+            }
+        )
         let image = renderer.image { _ in
             sourceImage.draw(at: CGPoint(
                 x: -offset-(xOffset * width),

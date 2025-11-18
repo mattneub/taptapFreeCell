@@ -7,17 +7,17 @@ struct FoundationTests {
         var subject = Foundation(suit: .hearts)
         #expect(subject.isEmpty == true)
         #expect(subject.card == nil)
-        subject.cards = [.init(rank: .ace, suit: .hearts), .init(rank: .two, suit: .hearts)]
+        subject.cards = [Card(rank: .ace, suit: .hearts), Card(rank: .two, suit: .hearts)]
         #expect(subject.isEmpty == false)
-        #expect(subject.card == .init(rank: .two, suit: .hearts))
+        #expect(subject.card == Card(rank: .two, suit: .hearts))
     }
 
     @Test("accept: appends to cards")
     func accept() {
         var subject = Foundation(suit: .hearts)
-        subject.accept(card: .init(rank: .ace, suit: .hearts))
-        subject.accept(card: .init(rank: .two, suit: .hearts))
-        #expect(subject.cards == [.init(rank: .ace, suit: .hearts), .init(rank: .two, suit: .hearts)])
+        subject.accept(card: Card(rank: .ace, suit: .hearts))
+        subject.accept(card: Card(rank: .two, suit: .hearts))
+        #expect(subject.cards == [Card(rank: .ace, suit: .hearts), Card(rank: .two, suit: .hearts)])
     }
 
     @Test("canGoOn: works correctly")
@@ -26,7 +26,7 @@ struct FoundationTests {
             var subject = Foundation(suit: .hearts)
             #expect(Card(rank: .ace, suit: .hearts).canGoOn(subject) == true)
             #expect(Card(rank: .two, suit: .hearts).canGoOn(subject) == false)
-            subject.cards = [.init(rank: .ace, suit: .hearts)]
+            subject.cards = [Card(rank: .ace, suit: .hearts)]
             #expect(Card(rank: .two, suit: .hearts).canGoOn(subject) == true)
             #expect(Card(rank: .three, suit: .hearts).canGoOn(subject) == false)
         }
@@ -41,8 +41,8 @@ struct FoundationTests {
         var subject = [Foundation(suit: .hearts), Foundation(suit: .spades)]
         #expect(Card(rank: .ace, suit: .clubs).canGoOn(subject) == false)
         #expect(Card(rank: .ace, suit: .spades).canGoOn(subject) == true)
-        subject[0].cards = [.init(rank: .ace, suit: .hearts)]
-        subject[1].cards = [.init(rank: .ace, suit: .spades)]
+        subject[0].cards = [Card(rank: .ace, suit: .hearts)]
+        subject[1].cards = [Card(rank: .ace, suit: .spades)]
         #expect(Card(rank: .ace, suit: .clubs).canGoOn(subject) == false)
         #expect(Card(rank: .ace, suit: .spades).canGoOn(subject) == false)
         #expect(Card(rank: .two, suit: .spades).canGoOn(subject) == true)
@@ -52,19 +52,19 @@ struct FoundationTests {
     @Test("accept: foundation array works correctly")
     func acceptArray() {
         var subject = [Foundation(suit: .hearts), Foundation(suit: .spades), Foundation(suit: .clubs)]
-        subject.accept(card: .init(rank: .ace, suit: .diamonds))
+        subject.accept(card: Card(rank: .ace, suit: .diamonds))
         #expect(subject.allSatisfy { $0.isEmpty }) // didn't go on any of them
-        subject.accept(card: .init(rank: .ace, suit: .spades))
+        subject.accept(card: Card(rank: .ace, suit: .spades))
         #expect(subject[0].isEmpty)
-        #expect(subject[1].cards == [.init(rank: .ace, suit: .spades)])
+        #expect(subject[1].cards == [Card(rank: .ace, suit: .spades)])
         #expect(subject[2].isEmpty)
-        subject.accept(card: .init(rank: .two, suit: .spades))
+        subject.accept(card: Card(rank: .two, suit: .spades))
         #expect(subject[0].isEmpty)
-        #expect(subject[1].cards == [.init(rank: .ace, suit: .spades), .init(rank: .two, suit: .spades)])
+        #expect(subject[1].cards == [Card(rank: .ace, suit: .spades), Card(rank: .two, suit: .spades)])
         #expect(subject[2].isEmpty)
-        subject.accept(card: .init(rank: .two, suit: .clubs))
+        subject.accept(card: Card(rank: .two, suit: .clubs))
         #expect(subject[0].isEmpty)
-        #expect(subject[1].cards == [.init(rank: .ace, suit: .spades), .init(rank: .two, suit: .spades)])
+        #expect(subject[1].cards == [Card(rank: .ace, suit: .spades), Card(rank: .two, suit: .spades)])
         #expect(subject[2].isEmpty)
     }
 }

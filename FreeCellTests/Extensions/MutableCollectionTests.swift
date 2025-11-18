@@ -8,17 +8,17 @@ struct MutableCollectionTests {
             var name: String
         }
         var people: [Person] = [
-            .init(name: "manny"),
-            .init(name: "moe"),
-            .init(name: "jack"),
+            Person(name: "manny"),
+            Person(name: "moe"),
+            Person(name: "jack"),
         ]
         people.modifyEach {
             $0.name = $0.name.uppercased()
         }
         #expect(people == [
-            .init(name: "MANNY"),
-            .init(name: "MOE"),
-            .init(name: "JACK"),
+            Person(name: "MANNY"),
+            Person(name: "MOE"),
+            Person(name: "JACK"),
         ])
     }
 }

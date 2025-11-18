@@ -7,32 +7,32 @@ struct FreeCellTests {
         var subject = FreeCell()
         #expect(subject.isEmpty == true)
         #expect(subject.card == nil)
-        subject.cards = [.init(rank: .jack, suit: .hearts)]
+        subject.cards = [Card(rank: .jack, suit: .hearts)]
         #expect(subject.isEmpty == false)
-        #expect(subject.card == .init(rank: .jack, suit: .hearts))
+        #expect(subject.card == Card(rank: .jack, suit: .hearts))
     }
 
     @Test("description works")
     func description() {
         var subject = FreeCell()
         #expect(subject.description == "XX")
-        subject.cards = [.init(rank: .jack, suit: .hearts)]
+        subject.cards = [Card(rank: .jack, suit: .hearts)]
         #expect(subject.description == "JH")
     }
 
     @Test("accept works")
     func accept() {
         var subject = FreeCell()
-        subject.accept(card: .init(rank: .jack, suit: .hearts))
-        #expect(subject.card == .init(rank: .jack, suit: .hearts))
+        subject.accept(card: Card(rank: .jack, suit: .hearts))
+        #expect(subject.card == Card(rank: .jack, suit: .hearts))
     }
 
     @Test("surrender works")
     func surrender() {
         var subject = FreeCell()
-        subject.cards = [.init(rank: .jack, suit: .hearts)]
+        subject.cards = [Card(rank: .jack, suit: .hearts)]
         let result = subject.surrenderCard()
         #expect(subject.card == nil)
-        #expect(result == .init(rank: .jack, suit: .hearts))
+        #expect(result == Card(rank: .jack, suit: .hearts))
     }
 }

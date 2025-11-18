@@ -40,11 +40,11 @@ struct GameState: Equatable {
     let baseEnablements: [Location: Enablement] = {
         var result = [Location: Enablement]()
         (0..<4).forEach {
-            result[.init(category: .foundation, index: $0)] = .normal
-            result[.init(category: .freeCell, index: $0)] = .normal
+            result[Location(category: .foundation, index: $0)] = .normal
+            result[Location(category: .freeCell, index: $0)] = .normal
         }
         (0..<8).forEach {
-            result[.init(category: .column, index: $0)] = .normal
+            result[Location(category: .column, index: $0)] = .normal
         }
         return result
     }()

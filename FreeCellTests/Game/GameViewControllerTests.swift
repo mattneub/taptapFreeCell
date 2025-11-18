@@ -161,28 +161,28 @@ struct GameViewControllerTests {
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
         var layout = Layout()
-        layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [.init(rank: .ace, suit: .hearts)]
-        layout.freeCells[3].cards = [.init(rank: .king, suit: .hearts)]
-        layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+        layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [Card(rank: .ace, suit: .hearts)]
+        layout.freeCells[3].cards = [Card(rank: .king, suit: .hearts)]
+        layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
         layout.columns[6].cards = [
-            .init(rank: .jack, suit: .hearts),
-            .init(rank: .ten, suit: .clubs)
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .ten, suit: .clubs)
         ]
         // that was prep, here comes the test
-        await subject.present(.init(layout: layout, sequences: false))
+        await subject.present(GameState(layout: layout, sequences: false))
         // what we want to know is not just that the cards were dealt out but that they _appear_
         #expect(subject.foundations[0].cards == [])
-        #expect(subject.foundations[1].cards == [.init(rank: .ace, suit: .hearts)])
-        #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .ace, suit: .hearts))
+        #expect(subject.foundations[1].cards == [Card(rank: .ace, suit: .hearts)])
+        #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .ace, suit: .hearts))
         #expect(subject.foundations[2].cards == [])
         #expect(subject.foundations[3].cards == [])
         #expect(subject.freeCells[0].cards == [])
         #expect(subject.freeCells[1].cards == [])
         #expect(subject.freeCells[2].cards == [])
-        #expect(subject.freeCells[3].cards == [.init(rank: .king, suit: .hearts)])
-        #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .king, suit: .hearts))
-        #expect(subject.columns[0].cards == [.init(rank: .queen, suit: .hearts)])
-        #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .queen, suit: .hearts))
+        #expect(subject.freeCells[3].cards == [Card(rank: .king, suit: .hearts)])
+        #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .king, suit: .hearts))
+        #expect(subject.columns[0].cards == [Card(rank: .queen, suit: .hearts)])
+        #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .queen, suit: .hearts))
         #expect((subject.columns[0].layer.sublayers?.count == 1)) // and that's all there are
         #expect(subject.columns[1].cards == [])
         #expect(subject.columns[2].cards == [])
@@ -190,11 +190,11 @@ struct GameViewControllerTests {
         #expect(subject.columns[4].cards == [])
         #expect(subject.columns[5].cards == [])
         #expect(subject.columns[6].cards == [
-            .init(rank: .jack, suit: .hearts),
-            .init(rank: .ten, suit: .clubs)
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .ten, suit: .clubs)
         ])
-        #expect((subject.columns[6].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .jack, suit: .hearts))
-        #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == .init(rank: .ten, suit: .clubs))
+        #expect((subject.columns[6].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .jack, suit: .hearts))
+        #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == Card(rank: .ten, suit: .clubs))
         #expect((subject.columns[6].layer.sublayers?.count == 2)) // and that's all there are
         #expect(subject.columns[7].cards == [])
     }
@@ -206,28 +206,28 @@ struct GameViewControllerTests {
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
         var layout = Layout()
-        layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [.init(rank: .ace, suit: .hearts)]
-        layout.freeCells[3].cards = [.init(rank: .king, suit: .hearts)]
-        layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+        layout.foundations[layout.indexOfFoundation(for: .hearts)].cards = [Card(rank: .ace, suit: .hearts)]
+        layout.freeCells[3].cards = [Card(rank: .king, suit: .hearts)]
+        layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
         layout.columns[6].cards = [
-            .init(rank: .jack, suit: .hearts),
-            .init(rank: .ten, suit: .clubs)
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .ten, suit: .clubs)
         ]
         // that was prep, here comes the test
-        await subject.present(.init(layout: layout, sequences: true)) // *
+        await subject.present(GameState(layout: layout, sequences: true)) // *
         // what we want to know is not just that the cards were dealt out but that they _appear_
         #expect(subject.foundations[0].cards == [])
-        #expect(subject.foundations[1].cards == [.init(rank: .ace, suit: .hearts)])
-        #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .ace, suit: .hearts))
+        #expect(subject.foundations[1].cards == [Card(rank: .ace, suit: .hearts)])
+        #expect((subject.foundations[1].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .ace, suit: .hearts))
         #expect(subject.foundations[2].cards == [])
         #expect(subject.foundations[3].cards == [])
         #expect(subject.freeCells[0].cards == [])
         #expect(subject.freeCells[1].cards == [])
         #expect(subject.freeCells[2].cards == [])
-        #expect(subject.freeCells[3].cards == [.init(rank: .king, suit: .hearts)])
-        #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .king, suit: .hearts))
-        #expect(subject.columns[0].cards == [.init(rank: .queen, suit: .hearts)])
-        #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .queen, suit: .hearts))
+        #expect(subject.freeCells[3].cards == [Card(rank: .king, suit: .hearts)])
+        #expect((subject.freeCells[3].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .king, suit: .hearts))
+        #expect(subject.columns[0].cards == [Card(rank: .queen, suit: .hearts)])
+        #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .queen, suit: .hearts))
         #expect((subject.columns[0].layer.sublayers?.count == 2)) // *
         let borderLayer = try #require(subject.columns[0].layer.sublayers?.last)
         #expect(borderLayer is BorderLayer)
@@ -237,11 +237,11 @@ struct GameViewControllerTests {
         #expect(subject.columns[4].cards == [])
         #expect(subject.columns[5].cards == [])
         #expect(subject.columns[6].cards == [
-            .init(rank: .jack, suit: .hearts),
-            .init(rank: .ten, suit: .clubs)
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .ten, suit: .clubs)
         ])
-        #expect((subject.columns[6].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .jack, suit: .hearts))
-        #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == .init(rank: .ten, suit: .clubs))
+        #expect((subject.columns[6].layer.sublayers?[0] as? CardLayer)?.card == Card(rank: .jack, suit: .hearts))
+        #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == Card(rank: .ten, suit: .clubs))
         #expect((subject.columns[6].layer.sublayers?.count == 3)) // *
         let borderLayer2 = try #require(subject.columns[6].layer.sublayers?.last)
         #expect(borderLayer2 is BorderLayer)
@@ -264,7 +264,7 @@ struct GameViewControllerTests {
     func presentHighlightOnTrue() async throws {
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
-        await subject.present(GameState(firstTapLocation: .init(category: .column, index: 0)))
+        await subject.present(GameState(firstTapLocation: Location(category: .column, index: 0)))
         let layer = try #require(subject.highlightLayer)
         #expect(layer.superlayer === subject.columns[0].layer.superlayer)
         #expect(layer.frame == subject.columns[0].layer.frame)
@@ -277,7 +277,7 @@ struct GameViewControllerTests {
         subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor() // real layout
         subject.viewWillLayoutSubviews()
         let allCardViews = subject.view.subviews.compactMap { $0 as? CardView }
-        allCardViews.forEach { $0.cards = [.init(rank: .two, suit: .clubs)] }
+        allCardViews.forEach { $0.cards = [Card(rank: .two, suit: .clubs)] }
         allCardViews.forEach { $0.setEnablement(.enabled) }
         #expect(allCardViews.allSatisfy { $0.alpha == 1 })
         var state = GameState()
