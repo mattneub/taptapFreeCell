@@ -230,7 +230,7 @@ struct GameViewControllerTests {
         #expect((subject.columns[0].layer.sublayers?[0] as? CardLayer)?.card == .init(rank: .queen, suit: .hearts))
         #expect((subject.columns[0].layer.sublayers?.count == 2)) // *
         let borderLayer = try #require(subject.columns[0].layer.sublayers?.last)
-        #expect(borderLayer.borderColor == UIColor.blue.cgColor)
+        #expect(borderLayer is BorderLayer)
         #expect(subject.columns[1].cards == [])
         #expect(subject.columns[2].cards == [])
         #expect(subject.columns[3].cards == [])
@@ -244,7 +244,7 @@ struct GameViewControllerTests {
         #expect((subject.columns[6].layer.sublayers?[1] as? CardLayer)?.card == .init(rank: .ten, suit: .clubs))
         #expect((subject.columns[6].layer.sublayers?.count == 3)) // *
         let borderLayer2 = try #require(subject.columns[6].layer.sublayers?.last)
-        #expect(borderLayer2.borderColor == UIColor.blue.cgColor)
+        #expect(borderLayer2 is BorderLayer)
         #expect(subject.columns[7].cards == [])
     }
 
@@ -460,6 +460,50 @@ struct GameViewControllerTests {
             #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
             #expect(subject.confettiTask?.isCancelled == true)
         }
+    }
+
+    @Test("receive removeConfetti: removes confetti if present")
+    func removeConfetti() async {
+        Task {
+            await subject.receive(.confetti)
+        }
+        await #while(subject.confetti == nil)
+        await subject.receive(.removeConfetti)
+        #expect(subject.confetti == nil)
+        #expect(subject.view.layer.sublayers?.compactMap { $0 as? CAEmitterLayer }.count == 0)
+        #expect(subject.confettiTask?.isCancelled == true)
+    }
+
+    @Test("receive tint: calls tintCard -1 for foundations and freeCells, internalIndex for columns")
+    func tint() async throws {
+        subject.viewWillLayoutSubviews()
+        let tintees: [LocationAndCard] = [
+            LocationAndCard(location: Location(category: .foundation, index: 0), internalIndex: 5, card: Card(rank: .ten, suit: .hearts)),
+            LocationAndCard(location: Location(category: .freeCell, index: 0), internalIndex: 5, card: Card(rank: .ten, suit: .hearts)),
+            LocationAndCard(location: Location(category: .column, index: 0), internalIndex: 5, card: Card(rank: .ten, suit: .hearts)),
+        ]
+        await subject.receive(.tint(tintees))
+        let foundationCard = try #require(subject.foundations[0] as? MockCardView)
+        #expect(foundationCard.methodsCalled == ["tintCard(_:)"])
+        #expect(foundationCard.tintCardIndex == -1)
+        let freeCellCard = try #require(subject.freeCells[0] as? MockCardView)
+        #expect(freeCellCard.methodsCalled == ["tintCard(_:)"])
+        #expect(freeCellCard.tintCardIndex == -1)
+        let columnCard = try #require(subject.columns[0] as? MockCardView)
+        #expect(columnCard.methodsCalled == ["tintCard(_:)"])
+        #expect(columnCard.tintCardIndex == 5)
+    }
+
+    @Test("receive tintsOff: calls removeTintLayers on all cards")
+    func tintsOff() async throws {
+        subject.viewWillLayoutSubviews()
+        await subject.receive(.tintsOff)
+        let foundationCard = try #require(subject.foundations[0] as? MockCardView)
+        #expect(foundationCard.methodsCalled == ["removeTintLayers()"])
+        let freeCellCard = try #require(subject.freeCells[0] as? MockCardView)
+        #expect(freeCellCard.methodsCalled == ["removeTintLayers()"])
+        let columnCard = try #require(subject.columns[0] as? MockCardView)
+        #expect(columnCard.methodsCalled == ["removeTintLayers()"])
     }
 
     @Test("receive updateStopwatch: sets label with formatted string")

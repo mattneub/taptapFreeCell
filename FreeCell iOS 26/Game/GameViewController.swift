@@ -182,10 +182,34 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             }
             try? await confettiTask?.value
             ensureNoConfetti()
+        case .removeConfetti:
+            ensureNoConfetti()
+        case .tint(let locationsAndCards):
+            tint(locationsAndCards)
+        case .tintsOff:
+            removeAllTints()
         case .updateStopwatch(let timeInterval):
             if let string = Stopwatch.timeTakenFormatter.string(from: timeInterval) {
                 timerLabel.text = string
             }
+        }
+    }
+
+    func tint(_ locationsAndCards: [LocationAndCard]) {
+        for locationAndCard in locationsAndCards {
+            let location = locationAndCard.location
+            let cardView = groupFor(location)[location.index]
+            if location.category == .foundation || location.category == .freeCell {
+                cardView.tintCard(-1) // meaning last card
+            } else {
+                cardView.tintCard(locationAndCard.internalIndex)
+            }
+        }
+    }
+
+    func removeAllTints() {
+        for cardView in (foundations + freeCells + columns) {
+            cardView.removeTintLayers()
         }
     }
 

@@ -5,7 +5,7 @@ import UIKit
 /// free cells, and the columns of the layout are all card views. Card views are thus completely
 /// stationary; it is the card layers that fly around the interface. Also, a card view is a view,
 /// so it is something that can be tapped; card views are the chief things the user interacts with.
-final class CardView: UIView {
+class CardView: UIView {
     /// Layout location represented by this card view.
     let location: Location
 
@@ -15,6 +15,10 @@ final class CardView: UIView {
     /// Card(s) considered to belong to this view. This view's job is to direct the drawing of
     /// its card(s), though (as I've said) it does not actually _do_ the drawing.
     var cards = [Card]()
+
+    /// List of current tint layers, used for showing same-ranked cards,
+    /// so that we can easily remove them all when showing same-ranked cards is over.
+    var tintLayers = [CALayer]()
 
     static var baseSize: CGSize = .zero // will be set when view controller knows view size
     static let cardLayerBorder: CGFloat = 2
@@ -34,7 +38,9 @@ final class CardView: UIView {
         translatesAutoresizingMaskIntoConstraints = false
         let tapper = MyTapGestureRecognizer(target: self, action: #selector(tapped))
         self.addGestureRecognizer(tapper)
-        // self.finishInitialConfiguration()
+        let longPresser = MyLongPressGestureRecognizer(target: self, action: #selector(longPressed))
+        longPresser.minimumPressDuration = 0.25
+        self.addGestureRecognizer(longPresser)
     }
 
     required init?(coder: NSCoder) {
@@ -85,9 +91,7 @@ final class CardView: UIView {
                     self.layer.addSublayer(cardLayer)
                 }
                 if movableCount > 0 {
-                    let borderLayer = CALayer()
-                    borderLayer.borderColor = UIColor.blue.cgColor
-                    borderLayer.borderWidth = 2
+                    let borderLayer = BorderLayer()
                     // magic numbers adjust so that drawn border occupies card layer inset
                     borderLayer.frame = CGRect(
                         x: 0,
@@ -96,7 +100,6 @@ final class CardView: UIView {
                         height: CGFloat(movableCount + 1) * (CardView.baseSize.height / 2) - 2
                     )
                     borderLayer.zPosition = CGFloat(cards.count)
-                    borderLayer.cornerRadius = 4
                     self.layer.addSublayer(borderLayer)
                 }
                 alpha = 1
@@ -122,6 +125,55 @@ final class CardView: UIView {
     @objc func tapped() {
         Task {
             await processor?.receive(.tapped(location))
+        }
+    }
+
+    @objc func longPressed(_ gestureRecognizer: UIGestureRecognizer) {
+        guard !cards.isEmpty else {
+            return
+        }
+        switch gestureRecognizer.state {
+        case .began:
+            if location.category == .foundation || location.category == .freeCell {
+                Task {
+                    await processor?.receive(.longPress(location, -1)) // -1 means use `card`
+                }
+            } else {
+                let point = gestureRecognizer.location(in: self)
+                let superlayerPoint = convert(point, to: self.superview)
+                let hitLayer = layer.hitTest(superlayerPoint)
+                if let cardLayer = hitLayer?.superlayer as? CardLayer {
+                    Task {
+                        await processor?.receive(.longPress(location, Int(cardLayer.zPosition)))
+                    }
+                }
+            }
+        case .ended:
+            Task {
+                await processor?.receive(.longPressEnded)
+            }
+        default: break
+        }
+    }
+    
+    /// Cover the card at the given index with a yellow overlay, to help the user spot it.
+    /// - Parameter index: The card's index, or `-1` to mean the _last_ card (as in the case of
+    /// a foundation).
+    func tintCard(_ index: Int) {
+        let cardLayers = layer.sublayers(ofType: CardLayer.self)
+        if let cardLayer = index == -1 ? cardLayers.last : cardLayers[index] {
+            let tintLayer = CALayer()
+            tintLayer.frame = cardLayer.bounds.insetBy(dx: 2, dy: 2)
+            tintLayer.backgroundColor = UIColor.yellow.withAlphaComponent(0.8).cgColor
+            tintLayer.compositingFilter = "multiplyBlendMode"
+            cardLayer.addSublayer(tintLayer)
+            self.tintLayers.append(tintLayer)
+        }
+    }
+
+    func removeTintLayers() {
+        while let tintLayer = tintLayers.popLast() {
+            tintLayer.removeFromSuperlayer()
         }
     }
 

@@ -4,7 +4,7 @@ import UIKit
 import WaitWhile
 
 struct CardViewTests {
-    @Test("initialize: view is born with location, translates set to false, tapper")
+    @Test("initialize: view is born with location, translates set to false, tapper, long presser")
     func initialize() throws {
         let subject = CardView(location: .init(category: .column, index: 0))
         #expect(subject.location.category == .column)
@@ -13,6 +13,10 @@ struct CardViewTests {
         let tapper = try #require(subject.gestureRecognizers?.first as? MyTapGestureRecognizer)
         #expect(tapper.target === subject)
         #expect(tapper.action == #selector(subject.tapped))
+        let longPresser = try #require(subject.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        #expect(longPresser.minimumPressDuration == 0.25)
+        #expect(longPresser.target === subject)
+        #expect(longPresser.action == #selector(subject.longPressed))
     }
 
     @Test("redraw: if no cards, shows empty layer and has alpha 0.5")
@@ -192,5 +196,137 @@ struct CardViewTests {
         subject.tapped()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.tapped(.init(category: .column, index: 0))])
+    }
+
+    @Test("longPressed: if no cards, does nothing")
+    func longPressedNoCard() async throws {
+        let processor = MockReceiver<GameAction>()
+        let subject = CardView(location: .init(category: .foundation, index: 1))
+        subject.processor = processor
+        let presser = try #require(subject.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        presser.state = .began // this calls `action` on `target` for us
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(processor.thingsReceived.isEmpty)
+    }
+
+    @Test("longPressed: if state is `.began`, if foundation or free cell, sends longPress with index -1")
+    func longPressedBeganFoundationFreeCell() async throws {
+        let processor = MockReceiver<GameAction>()
+        let subject = CardView(location: .init(category: .foundation, index: 1))
+        subject.cards = [.init(rank: .ace, suit: .clubs)]
+        subject.processor = processor
+        let presser = try #require(subject.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        presser.state = .began // this calls `action` on `target` for us
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.longPress(.init(category: .foundation, index: 1), -1)])
+    }
+
+    @Test("longPressed: if state is `.began`, if column, sends longPress with z position of hit card layer")
+    func longPressedBeganColumn() async throws {
+        let processor = MockReceiver<GameAction>()
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let subject = CardView(location: .init(category: .column, index: 1))
+        view.addSubview(subject)
+        subject.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let cardLayer = await CardLayer(card: .init(rank: .queen, suit: .hearts))
+        cardLayer.frame = CGRect(x: 50, y: 50, width: 50, height: 50)
+        cardLayer.zPosition = 6
+        subject.layer.addSublayer(cardLayer)
+        let frontLayer = CALayer()
+        frontLayer.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
+        cardLayer.addSublayer(frontLayer)
+        subject.cards = [.init(rank: .ace, suit: .clubs)]
+        subject.processor = processor
+        let presser = try #require(subject.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        presser.locationForTesting = .init(x: 75, y: 75)
+        // that was all prep! this is the test
+        presser.state = .began // this calls `action` on `target` for us
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.longPress(.init(category: .column, index: 1), 6)])
+    }
+
+    @Test("longPressed: if state is `.ended`, if foundation or free cell, sends longPressEnded")
+    func longPressedEndedFoundationFreeCell() async throws {
+        let processor = MockReceiver<GameAction>()
+        let subject = CardView(location: .init(category: .foundation, index: 1))
+        subject.cards = [.init(rank: .ace, suit: .clubs)]
+        subject.processor = processor
+        let presser = try #require(subject.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        presser.state = .ended // this calls `action` on `target` for us
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.longPressEnded])
+    }
+
+    @Test("longPressed: if state is `.began`, if column, sends longPress with z position of hit card layer")
+    func longPressedEndedColumn() async throws {
+        let processor = MockReceiver<GameAction>()
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let subject = CardView(location: .init(category: .column, index: 1))
+        view.addSubview(subject)
+        subject.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let cardLayer = await CardLayer(card: .init(rank: .queen, suit: .hearts))
+        cardLayer.frame = CGRect(x: 50, y: 50, width: 50, height: 50)
+        cardLayer.zPosition = 6
+        subject.layer.addSublayer(cardLayer)
+        let frontLayer = CALayer()
+        frontLayer.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
+        cardLayer.addSublayer(frontLayer)
+        subject.cards = [.init(rank: .ace, suit: .clubs)]
+        subject.processor = processor
+        let presser = try #require(subject.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        presser.locationForTesting = .init(x: 75, y: 75)
+        // that was all prep! this is the test
+        presser.state = .ended // this calls `action` on `target` for us
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.longPressEnded])
+    }
+
+    @Test("tintCard: puts tint layer in front of card layer at given index")
+    func tintCard() async throws {
+        let subject = CardView(location: .init(category: .column, index: 1))
+        subject.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let cardLayer = await CardLayer(card: .init(rank: .king, suit: .hearts))
+        cardLayer.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
+        let cardLayer2 = await CardLayer(card: .init(rank: .queen, suit: .hearts))
+        cardLayer2.frame = CGRect(x: 50, y: 50, width: 50, height: 50)
+        subject.layer.addSublayer(cardLayer)
+        subject.layer.addSublayer(cardLayer2)
+        subject.tintCard(1)
+        let tintLayer = try #require(subject.tintLayers.first)
+        #expect(tintLayer.superlayer === cardLayer2)
+        #expect(tintLayer.frame == CGRect(x: 2, y: 2, width: 46, height: 46))
+        #expect(tintLayer.backgroundColor == UIColor.yellow.withAlphaComponent(0.8).cgColor)
+        #expect(tintLayer.compositingFilter as? String == "multiplyBlendMode")
+    }
+
+    @Test("tintCard: with card index -1, puts tint layer in front of last card layer")
+    func tintCardMinusOne() async throws {
+        let subject = CardView(location: .init(category: .column, index: 1))
+        subject.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let cardLayer = await CardLayer(card: .init(rank: .king, suit: .hearts))
+        cardLayer.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
+        let cardLayer2 = await CardLayer(card: .init(rank: .queen, suit: .hearts))
+        cardLayer2.frame = CGRect(x: 50, y: 50, width: 50, height: 50)
+        subject.layer.addSublayer(cardLayer)
+        subject.layer.addSublayer(cardLayer2)
+        subject.tintCard(-1) // *
+        let tintLayer = try #require(subject.tintLayers.first)
+        #expect(tintLayer.superlayer === cardLayer2)
+        #expect(tintLayer.frame == CGRect(x: 2, y: 2, width: 46, height: 46))
+        #expect(tintLayer.backgroundColor == UIColor.yellow.withAlphaComponent(0.8).cgColor)
+        #expect(tintLayer.compositingFilter as? String == "multiplyBlendMode")
+    }
+
+    @Test("removeTintLayers: removes all tint layers")
+    func removeTintLayers() async throws {
+        let subject = CardView(location: .init(category: .column, index: 1))
+        let tintLayer = CALayer()
+        let tintLayer2 = CALayer()
+        subject.layer.sublayers = [tintLayer, tintLayer2]
+        subject.tintLayers = [tintLayer, tintLayer2]
+        subject.removeTintLayers()
+        #expect(subject.tintLayers.isEmpty)
+        #expect(tintLayer.superlayer == nil)
+        #expect(tintLayer2.superlayer == nil)
     }
 }

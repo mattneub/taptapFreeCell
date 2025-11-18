@@ -91,6 +91,46 @@ struct LayoutTests {
         #expect(subject.card(at: .init(category: .foundation, index: 1)) == nil)
     }
 
+    @Test("cardAtLocation:internalIndex: with index -1 reduces to cardAtLocation")
+    func cardAtLocationInternalIndexMinusOne() {
+        var subject = Layout()
+        subject.freeCells[0].cards = [.init(rank: .jack, suit: .hearts)]
+        subject.columns[0].cards = [.init(rank: .ten, suit: .hearts)]
+        subject.foundations[0].cards = [.init(rank: .nine, suit: .spades)]
+        #expect(subject.card(at: .init(category: .freeCell, index: 0), internalIndex: -1) == .init(rank: .jack, suit: .hearts))
+        #expect(subject.card(at: .init(category: .freeCell, index: 1), internalIndex: -1) == nil)
+        #expect(subject.card(at: .init(category: .column, index: 0), internalIndex: -1) == .init(rank: .ten, suit: .hearts))
+        #expect(subject.card(at: .init(category: .column, index: 1), internalIndex: -1) == nil)
+        #expect(subject.card(at: .init(category: .foundation, index: 0), internalIndex: -1) == .init(rank: .nine, suit: .spades))
+        #expect(subject.card(at: .init(category: .foundation, index: 1), internalIndex: -1) == nil)
+    }
+
+    @Test("cardAtLocation:internalIndex: with index not -1 gets correct card")
+    func cardAtLocationInternalIndexPositive() {
+        var subject = Layout()
+        subject.freeCells[0].cards = [.init(rank: .jack, suit: .hearts)]
+        subject.columns[0].cards = [
+            .init(rank: .ten, suit: .hearts),
+            .init(rank: .nine, suit: .clubs),
+            .init(rank: .eight, suit: .diamonds)
+        ]
+        subject.foundations[0].cards = [
+            .init(rank: .eight, suit: .spades),
+            .init(rank: .nine, suit: .spades)
+        ]
+        #expect(subject.card(at: .init(category: .freeCell, index: 0), internalIndex: 0) == .init(rank: .jack, suit: .hearts))
+        #expect(subject.card(at: .init(category: .freeCell, index: 0), internalIndex: 1) == nil)
+        #expect(subject.card(at: .init(category: .freeCell, index: 1), internalIndex: 0) == nil)
+        #expect(subject.card(at: .init(category: .column, index: 0), internalIndex: 0) == .init(rank: .ten, suit: .hearts))
+        #expect(subject.card(at: .init(category: .column, index: 0), internalIndex: 1) == .init(rank: .nine, suit: .clubs))
+        #expect(subject.card(at: .init(category: .column, index: 0), internalIndex: 2) == .init(rank: .eight, suit: .diamonds))
+        #expect(subject.card(at: .init(category: .column, index: 0), internalIndex: 3) == nil)
+        #expect(subject.card(at: .init(category: .column, index: 1), internalIndex: 0) == nil)
+        #expect(subject.card(at: .init(category: .foundation, index: 0), internalIndex: 0) == .init(rank: .eight, suit: .spades))
+        #expect(subject.card(at: .init(category: .foundation, index: 0), internalIndex: 1) == .init(rank: .nine, suit: .spades))
+        #expect(subject.card(at: .init(category: .foundation, index: 1), internalIndex: 0) == nil)
+    }
+
     @Test("surrenderCardfromLocation: works correctly")
     func surrenderCardFromLocation() {
         var subject = Layout()
@@ -101,6 +141,30 @@ struct LayoutTests {
         #expect(subject.surrenderCard(from: .init(category: .column, index: 0)) == .init(rank: .nine, suit: .spades))
         #expect(subject.columns[0].cards.isEmpty)
     }
+
+    @Test("allLocationsAndCards gives correct result")
+    func allLocationsAndCards() {
+        var subject = Layout()
+        subject.freeCells[0].cards = [.init(rank: .jack, suit: .hearts)]
+        subject.columns[0].cards = [
+            .init(rank: .ten, suit: .hearts),
+            .init(rank: .nine, suit: .clubs),
+            .init(rank: .eight, suit: .diamonds)
+        ]
+        subject.foundations[0].cards = [
+            .init(rank: .eight, suit: .spades),
+            .init(rank: .nine, suit: .spades)
+        ]
+        let result = Set(subject.allLocationsAndCards())
+        #expect(result.count == 6)
+        #expect(result.contains(.init(location: .init(category: .freeCell, index: 0), internalIndex: 0, card: .init(rank: .jack, suit: .hearts))))
+        #expect(result.contains(.init(location: .init(category: .column, index: 0), internalIndex: 0, card: .init(rank: .ten, suit: .hearts))))
+        #expect(result.contains(.init(location: .init(category: .column, index: 0), internalIndex: 1, card: .init(rank: .nine, suit: .clubs))))
+        #expect(result.contains(.init(location: .init(category: .column, index: 0), internalIndex: 2, card: .init(rank: .eight, suit: .diamonds))))
+        #expect(result.contains(.init(location: .init(category: .foundation, index: 0), internalIndex: 0, card: .init(rank: .eight, suit: .spades))))
+        #expect(result.contains(.init(location: .init(category: .foundation, index: 0), internalIndex: 1, card: .init(rank: .nine, suit: .spades))))
+    }
+
 
     @Test("deal deals correctly")
     func deal() {

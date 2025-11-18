@@ -51,7 +51,28 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
         return group[location.index].card
     }
 
-    /// Convert from a location to its corresponding source card,
+    /// Convert from a location and "internal index" to the corresponding card.
+    /// - Parameters:
+    ///   - location: The location in the layout.
+    ///   - internalIndex: The index within that location, or -1 to use the `card` property.
+    /// - Returns: The card, or `nil` if no actual card could be found.
+    func card(at location: Location, internalIndex: Int) -> Card? {
+        if internalIndex == -1 {
+            return card(at: location)
+        }
+        let group: [Destination] = switch location.category {
+        case .foundation: foundations
+        case .freeCell: freeCells
+        case .column: columns
+        }
+        let cards = group[location.index].cards
+        if cards.indices.contains(internalIndex) {
+            return cards[internalIndex]
+        }
+        return nil
+    }
+
+    /// Convert from a location to its corresponding source `card`,
     /// e.g. the card that would move from here to a foundation if possible, and
     /// _remove_ that card as well as returning it.
     /// - Parameter location: The location in the layout.
@@ -65,6 +86,51 @@ struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
         case .freeCell: surrender(from: &freeCells)
         case .column: surrender(from: &columns)
         }
+    }
+
+    /// List all locations that contain cards, along with their cards.
+    /// This means returning _three_ pieces of information, exactly the three pieces
+    /// that a LocationAndCard supplies: the location, the index of the card _within_ the
+    /// cards of the location, and the card.
+    func allLocationsAndCards() -> [LocationAndCard] {
+        var result = [LocationAndCard]()
+        for index in foundations.indices {
+            let cards = foundations[index].cards
+            for internalIndex in cards.indices {
+                result.append(
+                    .init(
+                        location: Location(category: .foundation, index: index),
+                        internalIndex: internalIndex,
+                        card: cards[internalIndex]
+                    )
+                )
+            }
+        }
+        for index in freeCells.indices {
+            let cards = freeCells[index].cards
+            for internalIndex in cards.indices {
+                result.append(
+                    .init(
+                        location: Location(category: .freeCell, index: index),
+                        internalIndex: internalIndex,
+                        card: cards[internalIndex]
+                    )
+                )
+            }
+        }
+        for index in columns.indices {
+            let cards = columns[index].cards
+            for internalIndex in cards.indices {
+                result.append(
+                    .init(
+                        location: Location(category: .column, index: index),
+                        internalIndex: internalIndex,
+                        card: cards[internalIndex]
+                    )
+                )
+            }
+        }
+        return result
     }
 
     mutating func deal(_ deck: Deck) {

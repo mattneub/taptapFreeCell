@@ -28,6 +28,16 @@ final class GameProcessor: Processor {
             state.enablements = hintEnablements()
             await presenter?.present(state)
             await checkTheStopwatch()
+        case .longPress(let location, let internalIndex):
+            await ensureNeutralState() // TODO: okay?
+            let card = state.layout.card(at: location, internalIndex: internalIndex)
+            let allCards = state.layout.allLocationsAndCards()
+            let allCardsFiltered = allCards.filter { $0.card.rank == card?.rank }
+            await presenter?.receive(.tint(allCardsFiltered))
+            // no stopwatch check, it's distracting, and so what if it is first move?
+        case .longPressEnded:
+            await presenter?.receive(.tintsOff)
+            await checkTheStopwatch()
         case .redo:
             if state.redoStack.count > 0 {
                 state.undoStack.append(state.layout)
@@ -50,6 +60,11 @@ final class GameProcessor: Processor {
             await ensureNeutralState()
             await checkTheStopwatch()
         case .tapped(let tap):
+            if state.gameIsOver == true && state.gameInProgress == false {
+                // edge case; `.tapped` comes from _card view_ so view controller never hears about it
+                // therefore _we_ have to _tell_ the view controller to remove the confetti if any
+                await presenter?.receive(.removeConfetti)
+            }
             if state.firstTapLocation == nil {
                 await handleFirstTap(tap)
             } else {

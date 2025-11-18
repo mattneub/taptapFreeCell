@@ -98,6 +98,38 @@ struct GameProcessorTests {
         #expect(stopwatch.methodsCalled == ["advance()"])
     }
 
+    @Test("receive longPress: sends tint with all cards of same rank")
+    func longPress() async throws {
+        subject.state.firstTapLocation = .init(category: .freeCell, index: 1)
+        subject.state.layout.foundations[0].cards = [.init(rank: .six, suit: .spades)]
+        subject.state.layout.freeCells[0].cards = [.init(rank: .seven, suit: .spades)]
+        subject.state.layout.freeCells[1].cards = [.init(rank: .two, suit: .clubs)]
+        subject.state.layout.freeCells[2].cards = [.init(rank: .king, suit: .hearts)]
+        subject.state.layout.columns[0].cards = [.init(rank: .eight, suit: .hearts), .init(rank: .seven, suit: .spades)]
+        subject.state.layout.columns[1].cards = [.init(rank: .seven, suit: .clubs), .init(rank: .six, suit: .hearts)]
+        subject.state.layout.columns[2].cards = [.init(rank: .three, suit: .hearts)]
+        subject.state.layout.columns[3].cards = [.init(rank: .six, suit: .diamonds), .init(rank: .five, suit: .spades)]
+        await subject.receive(.longPress(.init(category: .foundation, index: 0), -1))
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        let expected: [LocationAndCard] = [
+            .init(location: .init(category: .foundation, index: 0), internalIndex: 0, card: .init(rank: .six, suit: .spades)),
+            .init(location: .init(category: .column, index: 1), internalIndex: 1, card: .init(rank: .six, suit: .hearts)),
+            .init(location: .init(category: .column, index: 3), internalIndex: 0, card: .init(rank: .six, suit: .diamonds)),
+        ]
+        #expect(presenter.thingsReceived == [.tint(expected)])
+        print(presenter.thingsReceived)
+    }
+
+    @Test("receive longPressEnded: sends tintsOff")
+    func longPressEnded() async {
+        subject.state.layout.columns[0].cards = [.init(rank: .queen, suit: .hearts)]
+        await subject.receive(.longPressEnded)
+        #expect(presenter.thingsReceived == [.tintsOff])
+        #expect(stopwatch.methodsCalled == ["advance()"])
+    }
+
     @Test("receive redo: if redo stack not empty, move one redo layout to layout and layout to undo")
     func redo() async {
         do {
@@ -1163,6 +1195,16 @@ struct GameProcessorTests {
         stopwatch.state = .running
         subject.state.gameInProgress = true
         do {
+            await subject.receive(.longPressEnded)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.tintsOff, .confetti])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = true
+        do {
             await subject.receive(.redo)
             #expect(subject.state.gameInProgress == false)
             #expect(stopwatch.methodsCalled == ["stop()"])
@@ -1245,6 +1287,16 @@ struct GameProcessorTests {
         stopwatch.state = .running
         subject.state.gameInProgress = false
         do {
+            await subject.receive(.longPressEnded)
+            #expect(subject.state.gameInProgress == false)
+            #expect(stopwatch.methodsCalled == ["stop()"])
+            #expect(presenter.thingsReceived == [.tintsOff])
+        }
+        presenter.thingsReceived = []
+        stopwatch.methodsCalled = []
+        stopwatch.state = .running
+        subject.state.gameInProgress = false
+        do {
             await subject.receive(.redo)
             #expect(subject.state.gameInProgress == false)
             #expect(stopwatch.methodsCalled == ["stop()"])
@@ -1278,7 +1330,7 @@ struct GameProcessorTests {
             await subject.receive(.tapped(.init(category: .column, index: 0)))
             #expect(subject.state.gameInProgress == false)
             #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived == [])
+            #expect(presenter.thingsReceived == [.removeConfetti]) // edge case
         }
         presenter.thingsReceived = []
         stopwatch.methodsCalled = []
@@ -1316,6 +1368,13 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.hint)
+            #expect(stopwatch.methodsCalled == ["start(from:)"])
+            #expect(stopwatch.fromTimeInterval == 0)
+        }
+        stopwatch.state = .stopped
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.longPressEnded)
             #expect(stopwatch.methodsCalled == ["start(from:)"])
             #expect(stopwatch.fromTimeInterval == 0)
         }
@@ -1376,6 +1435,12 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.hint)
+            #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        }
+        stopwatch.state = .paused
+        stopwatch.methodsCalled = []
+        do {
+            await subject.receive(.longPressEnded)
             #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
         }
         stopwatch.state = .paused
