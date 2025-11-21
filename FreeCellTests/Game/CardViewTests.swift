@@ -19,18 +19,27 @@ struct CardViewTests {
         #expect(longPresser.action == #selector(subject.longPressed))
     }
 
-    @Test("redraw: if no cards, shows empty layer and has alpha 0.5")
-    func redrawNoCards() async throws {
+    @Test("emptyLayer: is correctly constructed")
+    func emptyLayer() {
         let subject = CardView(location: Location(category: .column, index: 0))
         CardView.baseSize = CGSize(width: 100, height: 200)
-        await subject.redraw()
-        let layer = try #require(subject.layer.sublayers?.first)
+        let layer = subject.emptyLayer
         #expect(layer.frame == CGRect(x: 4, y: 2, width: 92, height: 192))
         #expect(layer.cornerRadius == 4)
         #expect(layer.masksToBounds == true)
         #expect(layer.backgroundColor == UIColor.white.cgColor)
         #expect(layer.zPosition == -1)
+    }
+
+    @Test("redraw: if no cards, shows empty layer and has alpha 0.5")
+    func redrawNoCards() async throws {
+        let subject = CardView(location: Location(category: .column, index: 0))
+        CardView.baseSize = CGSize(width: 100, height: 200)
+        await subject.redraw()
+        #expect(subject.emptyLayer.isHidden == false)
+        #expect(subject.emptyLayer.frame == CGRect(x: 4, y: 2, width: 92, height: 192))
         #expect(subject.alpha == 0.5)
+        #expect(subject.layer.sublayers(ofType: CardLayer.self).isEmpty)
     }
 
     @Test("redraw: if no cards, shows empty layer and has alpha 0.5, slightly different frame if not column")
@@ -39,26 +48,19 @@ struct CardViewTests {
             let subject = CardView(location: Location(category: .freeCell, index: 0))
             CardView.baseSize = CGSize(width: 100, height: 200)
             await subject.redraw()
-            let layer = try #require(subject.layer.sublayers?.first)
-            #expect(layer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
-            #expect(layer.cornerRadius == 4)
-            #expect(layer.masksToBounds == true)
-            #expect(layer.backgroundColor == UIColor.white.cgColor)
-            #expect(layer.zPosition == -1)
+            #expect(subject.emptyLayer.isHidden == false)
+            #expect(subject.emptyLayer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
             #expect(subject.alpha == 0.5)
+            #expect(subject.layer.sublayers(ofType: CardLayer.self).isEmpty)
         }
         do {
             let subject = CardView(location: Location(category: .foundation, index: 0))
             CardView.baseSize = CGSize(width: 100, height: 200)
             await subject.redraw()
-            let layer = try #require(subject.layer.sublayers?.first)
-            #expect(layer.superlayer === subject.layer)
-            #expect(layer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
-            #expect(layer.cornerRadius == 4)
-            #expect(layer.masksToBounds == true)
-            #expect(layer.backgroundColor == UIColor.white.cgColor)
-            #expect(layer.zPosition == -1)
+            #expect(subject.emptyLayer.isHidden == false)
+            #expect(subject.emptyLayer.frame == CGRect(x: 4, y: 4, width: 92, height: 192))
             #expect(subject.alpha == 0.5)
+            #expect(subject.layer.sublayers(ofType: CardLayer.self).isEmpty)
         }
     }
 
@@ -68,21 +70,34 @@ struct CardViewTests {
         CardView.baseSize = CGSize(width: 100, height: 200)
         subject.cards = [Card(rank: .jack, suit: .hearts)]
         await subject.redraw()
-        let layer = try #require(subject.layer.sublayers?.first as? CardLayer)
+        let layer = try #require(subject.layer.sublayers(ofType: CardLayer.self).first)
         #expect(layer.card == Card(rank: .jack, suit: .hearts))
         #expect(layer.frame == CGRect(x: 0, y: 0, width: 100, height: 200))
         #expect(subject.alpha == 1)
+        #expect(subject.emptyLayer.isHidden)
     }
 
-    @Test("redraw: if foundation with card, shows card layer and has alpha 0.4")
+    @Test("redraw: if foundation with cards, shows card layers and has alpha 0.5")
     func redrawFoundation() async throws {
         let subject = CardView(location: Location(category: .foundation, index: 0))
         CardView.baseSize = CGSize(width: 100, height: 200)
-        subject.cards = [Card(rank: .jack, suit: .hearts)]
+        subject.cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .nine, suit: .spades),
+            Card(rank: .eight, suit: .diamonds),
+        ]
         await subject.redraw()
-        let layer = try #require(subject.layer.sublayers?.first as? CardLayer)
-        #expect(layer.card == Card(rank: .jack, suit: .hearts))
-        #expect(layer.frame == CGRect(x: 0, y: 0, width: 100, height: 200))
+        let layers = subject.layer.sublayers(ofType: CardLayer.self)
+        #expect(layers[0].card == Card(rank: .jack, suit: .hearts))
+        #expect(layers[0].frame == CGRect(x: 0, y: 0, width: 100, height: 200))
+        #expect(layers[0].zPosition == 0)
+        #expect(layers[1].card == Card(rank: .nine, suit: .spades))
+        #expect(layers[1].frame == CGRect(x: 0, y: 0, width: 100, height: 200))
+        #expect(layers[1].zPosition == 1)
+        #expect(layers[2].card == Card(rank: .eight, suit: .diamonds))
+        #expect(layers[2].frame == CGRect(x: 0, y: 0, width: 100, height: 200))
+        #expect(layers[2].zPosition == 2)
+        #expect(subject.emptyLayer.isHidden)
         #expect(subject.alpha == 0.5)
     }
 
@@ -96,7 +111,7 @@ struct CardViewTests {
             Card(rank: .eight, suit: .diamonds),
         ]
         await subject.redraw()
-        let layers = try #require(subject.layer.sublayers as? [CardLayer])
+        let layers = subject.layer.sublayers(ofType: CardLayer.self)
         #expect(layers[0].card == Card(rank: .jack, suit: .hearts))
         #expect(layers[0].frame == CGRect(x: 0, y: 0, width: 100, height: 200))
         #expect(layers[0].zPosition == 0)
@@ -107,6 +122,8 @@ struct CardViewTests {
         #expect(layers[2].frame == CGRect(x: 0, y: 200, width: 100, height: 200))
         #expect(layers[2].zPosition == 2)
         #expect(subject.heightConstraint.constant == 400)
+        #expect(subject.emptyLayer.isHidden)
+        #expect(subject.alpha == 1)
     }
 
     @Test("redraw: column with movableCount draws border layer")
@@ -328,5 +345,85 @@ struct CardViewTests {
         #expect(subject.tintLayers.isEmpty)
         #expect(tintLayer.superlayer == nil)
         #expect(tintLayer2.superlayer == nil)
+    }
+
+    @Test("hideCard: hides card layer at given index")
+    func hideCard() async {
+        let subject = CardView(location: Location(category: .column, index: 0))
+        CardView.baseSize = CGSize(width: 100, height: 200)
+        subject.cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .nine, suit: .spades),
+            Card(rank: .eight, suit: .diamonds),
+        ]
+        await subject.redraw()
+        let layers = subject.layer.sublayers(ofType: CardLayer.self)
+        #expect(layers.count == 3)
+        #expect(layers.allSatisfy { $0.isHidden == false })
+        subject.hideCard(at: 2)
+        #expect(layers[0].isHidden == false)
+        #expect(layers[1].isHidden == false)
+        #expect(layers[2].isHidden == true)
+        #expect(subject.emptyLayer.isHidden == true)
+        #expect(subject.alpha == 1)
+    }
+
+    @Test("hideCard: if hides all card layers, empty layer appears, disabled")
+    func hideAllCards() async {
+        let subject = CardView(location: Location(category: .column, index: 0))
+        CardView.baseSize = CGSize(width: 100, height: 200)
+        subject.cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .nine, suit: .spades),
+            Card(rank: .eight, suit: .diamonds),
+        ]
+        await subject.redraw()
+        subject.hideCard(at: 2)
+        subject.hideCard(at: 1)
+        subject.hideCard(at: 0)
+        let layers = subject.layer.sublayers(ofType: CardLayer.self)
+        #expect(layers.count == 3)
+        #expect(layers.allSatisfy { $0.isHidden == true })
+        #expect(subject.emptyLayer.isHidden == false)
+        #expect(subject.alpha == 0.5)
+    }
+
+    @Test("showCards: shows all card layer, hides empty layer, normalizes enablement")
+    func showCards() async {
+        let subject = CardView(location: Location(category: .column, index: 0))
+        CardView.baseSize = CGSize(width: 100, height: 200)
+        subject.cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .nine, suit: .spades),
+            Card(rank: .eight, suit: .diamonds),
+        ]
+        await subject.redraw()
+        subject.hideCard(at: 2)
+        subject.hideCard(at: 1)
+        subject.hideCard(at: 0)
+        subject.showCards()
+        let layers = subject.layer.sublayers(ofType: CardLayer.self)
+        #expect(layers.count == 3)
+        #expect(layers.allSatisfy { $0.isHidden == false })
+        #expect(subject.emptyLayer.isHidden == true)
+        #expect(subject.alpha == 1)
+    }
+
+    @Test("hideBorder: hides border layer, showBorder: shows it")
+    func hideBorder() async throws {
+        let subject = CardView(location: Location(category: .column, index: 0))
+        CardView.baseSize = CGSize(width: 100, height: 200)
+        subject.cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .nine, suit: .spades),
+            Card(rank: .eight, suit: .diamonds),
+        ]
+        await subject.redraw(movableCount: 1)
+        let border = try #require(subject.layer.sublayers?.first { $0 is BorderLayer })
+        #expect(border.isHidden == false)
+        subject.hideBorder()
+        #expect(border.isHidden == true)
+        subject.showBorder()
+        #expect(border.isHidden == false)
     }
 }

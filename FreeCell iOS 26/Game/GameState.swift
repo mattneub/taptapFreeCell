@@ -14,17 +14,14 @@ struct GameState: Equatable {
     var showDestinations = true
     var autoplay = true
     var unambiguousMove = true
+    var animationSpeed = AnimationSpeed.fast
 
     /// The game is always in one of two states: either the user has just performed the first
     /// tap of a two-tap sequence, or not. If so, and only if so, this is non-`nil`, and tells
     /// where the first tap was.
     var firstTapLocation: Location? = nil
 
-    /// We need to know, when the game is over, whether this is the _first_ time we have
-    /// discovered that it was over. So this variable lets us record that we already
-    /// knew that the game was over; if the game is underway we set it to true, and when
-    /// we learn that the game is over we set it to false.
-    var gameInProgress = false
+    var gameProgress: GameProgress = .waitingForDeal
 
     var gameIsOver: Bool {
         layout.numberOfCardsRemaining == 0
@@ -53,5 +50,18 @@ struct GameState: Equatable {
         case disabled
         case enabled
         case normal
+    }
+
+    enum AnimationSpeed: Double {
+        case fast = 0.1
+        case glacial = 0.5
+        case noAnimation = 0.0
+        case slow = 0.3
+    }
+
+    enum GameProgress {
+        case inProgress
+        case waitingForDeal
+        case waitingForFirstMove
     }
 }

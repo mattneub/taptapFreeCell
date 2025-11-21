@@ -32,6 +32,12 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     var confettiTask: Task<(), Error>?
 
+    /// Imaginary point off the top of the screen representing the location of the deck.
+    /// Deal is animated from this point.
+    var deckPoint: CGPoint {
+        CGPoint(x: view.bounds.midX, y: -(CardView.baseSize.height * 2))
+    }
+
     /// Label that shows the elapsed time of the game.
     lazy var timerLabel = UILabel().applying {
         $0.text = "00:00:00"
@@ -169,7 +175,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             highlightLayer = nil
         }
         for (location, enablement) in state.enablements {
-            let group = groupFor(location)
+            let group = group(for: location)
             if group.indices.contains(location.index) {
                 group[location.index].setEnablement(enablement)
             }
@@ -178,6 +184,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     func receive(_ effect: GameEffect) async {
         switch effect {
+        case .animate(let moves, let duration):
+            guard !moves.isEmpty else {
+                return // nothing to do
+            }
+            await animate(moves, duration: duration)
         case .confetti:
             self.confetti = ConfettiDropper(displayScale: traitCollection.displayScale)
             confetti?.addEmitter(to: view)
@@ -202,7 +213,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     func tint(_ locationsAndCards: [LocationAndCard]) {
         for locationAndCard in locationsAndCards {
             let location = locationAndCard.location
-            let cardView = groupFor(location)[location.index]
+            let cardView = cardView(for: location)
             if location.category == .foundation || location.category == .freeCell {
                 cardView.tintCard(-1) // meaning last card
             } else {
@@ -279,7 +290,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
-    func groupFor(_ location: Location) -> [CardView] {
+    func group(for location: Location) -> [CardView] {
         switch location.category {
         case .foundation: foundations
         case .freeCell: freeCells
@@ -287,8 +298,12 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
+    func cardView(for location: Location) -> CardView {
+        group(for: location)[location.index]
+    }
+
     func highlight(_ location: Location, tint: Bool, grow: Bool) async {
-        let cardView = groupFor(location)[location.index]
+        let cardView = cardView(for: location)
         let highlightLayer = CALayer()
         highlightLayer.contentsScale = self.traitCollection.displayScale + 1
         highlightLayer.isOpaque = true
@@ -316,5 +331,82 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
         self.highlightLayer = highlightLayer
     }
-
+    
+    /// Animate an enactment of the card moves described in the Moves list, using "fake" card
+    /// layers. *Assumption*: The _real_ card layers have _already_ been removed from their
+    /// source card views and have _already_ been created in their destination card views.
+    /// _real_
+    /// - Parameters:
+    ///   - moves: The list of moves.
+    ///   - duration: The animation duration.
+    func animate(_ moves: [Move], duration: Double) async {
+        // local struct that collects all the info needed to perform the actual animation
+        struct MoveInfo {
+            let layer: CardLayer
+            let oldPosition: CGPoint
+            let newPosition: CGPoint
+            let newCardView: CardView
+        }
+        var infos = [MoveInfo]()
+        var dealing = false
+        // prepare all the calculated info needed to perform the animation
+        for move in moves {
+            let oldCardView = cardView(for: move.source.location)
+            let oldInternalIndex = move.source.internalIndex
+            let newCardView = cardView(for: move.destination.location)
+            let newInternalIndex = move.destination.internalIndex
+            newCardView.hideCard(at: newInternalIndex)
+            newCardView.hideBorder()
+            let oldCardLayer = await CardLayer(card: move.source.card)
+            oldCardLayer.zPosition = CGFloat(move.destination.internalIndex) // TODO: might need tweaking :)
+            let oldCardLayerFrame = oldCardView.convert(oldCardView.frame(forCardIndex: oldInternalIndex), to: view)
+            let newCardLayerFrame = newCardView.convert(newCardView.frame(forCardIndex: newInternalIndex), to: view)
+            // equality of old frame and new frame is a signal that this card arrives from the deck
+            if oldCardLayerFrame == newCardLayerFrame {
+                dealing = true
+            }
+            let info = MoveInfo(
+                layer: oldCardLayer,
+                oldPosition: dealing ? deckPoint : oldCardLayerFrame.center,
+                newPosition: newCardLayerFrame.center,
+                newCardView: newCardView
+            )
+            infos.append(info)
+        }
+        // we now have all the information; the animation now begins!
+        // first, insert all the moving cards into the visible interface at their _old_ positions
+        infos.forEach {
+            view.layer.addSublayer($0.layer)
+        }
+        // next, animate all the moving cards to their _new_ positions (and also _put_ all the
+        // moving cards _at_ their new positions, so they don't jump back to their starting point)
+        await TransactionWaiter.shared.perform {
+            for info in infos {
+                let move = CABasicAnimation(keyPath: #keyPath(CALayer.position))
+                move.fromValue = info.oldPosition
+                move.toValue = info.newPosition
+                move.duration = dealing ? duration * 2 : duration
+                info.layer.add(move, forKey: "move")
+                info.layer.position = info.newPosition
+            }
+        }
+        // dance to prevent flash as we remove the moving cards and reveal the _real_ cards
+        // which are already in place
+        await TransactionWaiter.shared.perform {
+            CATransaction.setDisableActions(true)
+            infos.forEach {
+                $0.newCardView.showCards()
+                $0.newCardView.showBorder()
+            }
+        }
+        await TransactionWaiter.shared.perform {
+            CATransaction.setDisableActions(true)
+            infos.forEach {
+                $0.layer.isHidden = true
+            }
+        }
+        infos.forEach {
+            $0.layer.removeFromSuperlayer()
+        }
+    }
 }

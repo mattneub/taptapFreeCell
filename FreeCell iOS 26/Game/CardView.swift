@@ -32,6 +32,24 @@ class CardView: UIView {
     lazy var widthConstraint = widthAnchor.constraint(equalToConstant: 0)
     lazy var heightConstraint = heightAnchor.constraint(equalToConstant: 0)
 
+    /// Layer that appears in the card view if it has no cards.
+    lazy var emptyLayer = CALayer().applying {
+        $0.frame = CGRect(
+            origin: .zero,
+            size: CardView.baseSize
+        )
+        .inset(by: CardView.cardLayerInset)
+        .inset(by: CardView.cardLayerInset)
+        if location.category == .column {
+            $0.frame = $0.frame.offsetBy(dx: 0, dy: -CardView.cardLayerInset.top)
+            // looks better somehow, but only for columns
+        }
+        $0.cornerRadius = 4
+        $0.masksToBounds = true
+        $0.backgroundColor = UIColor.white.cgColor
+        $0.zPosition = -1
+    }
+
     init(location: Location) {
         self.location = location
         super.init(frame: .zero)
@@ -49,44 +67,30 @@ class CardView: UIView {
 
     func redraw(movableCount: Int = 0) async {
         layer.sublayers = nil
+        self.layer.addSublayer(emptyLayer)
         if cards.isEmpty {
-            // in the case where we have _no_ cards, portray a card-shaped layer to show where the
-            // card view is
-            let emptyLayer = CALayer().applying {
-                $0.frame = CGRect(
-                    origin: .zero,
-                    size: CardView.baseSize
-                )
-                .inset(by: CardView.cardLayerInset)
-                .inset(by: CardView.cardLayerInset)
-                if location.category == .column {
-                    $0.frame = $0.frame.offsetBy(dx: 0, dy: -CardView.cardLayerInset.top)
-                    // looks better somehow, but only for columns
-                }
-                $0.cornerRadius = 4
-                $0.masksToBounds = true
-                $0.backgroundColor = UIColor.white.cgColor
-                $0.zPosition = -1
-            }
+            emptyLayer.isHidden = false
             alpha = 0.5
-            self.layer.addSublayer(emptyLayer)
         } else {
+            emptyLayer.isHidden = true
             switch location.category {
-            case .foundation, .freeCell:
-                if let card = cards.last {
+            case .freeCell, .foundation:
+                // cards go on top of one another in a simple pile
+                for (offset, card) in cards.enumerated() {
                     let cardLayer = await CardLayer(card: card)
+                    cardLayer.zPosition = CGFloat(offset)
                     self.layer.addSublayer(cardLayer)
-                    alpha = location.category == .freeCell ? 1 : 0.5
                 }
+                alpha =  location.category == .freeCell ? 1 : 0.5
             case .column:
-                // this is the Really Interesting Part
+                // cards go on top of one another fanned vertically down
                 heightConstraint.constant = max(
                     CGFloat(cards.count + 1) * CardView.baseSize.height / 2,
                     CardView.baseSize.height
                 )
                 for (offset, card) in cards.enumerated() {
                     let cardLayer = await CardLayer(card: card)
-                    cardLayer.frame.origin.y = (CardView.baseSize.height / 2) * CGFloat(offset)
+                    cardLayer.frame = frame(forCardIndex: offset)
                     cardLayer.zPosition = CGFloat(offset)
                     self.layer.addSublayer(cardLayer)
                 }
@@ -107,13 +111,32 @@ class CardView: UIView {
         }
     }
 
+    /// Utility that calculates the frame of a card layer within the card view.
+    /// - Parameter offset: The offset (index) of the represented card within `cards`.
+    /// - Returns: The frame.
+    func frame(forCardIndex offset: Int) -> CGRect {
+        switch location.category {
+        case .foundation, .freeCell:
+            return CGRect(origin: .zero, size: CardView.baseSize)
+        case .column:
+            return CGRect(
+                origin: CGPoint(x: 0, y: (CardView.baseSize.height / 2) * CGFloat(offset)),
+                size: CardView.baseSize
+            )
+        }
+    }
+
+    /// "Enablement" means (to the user) "you can/can't play to/from here". Used when the user
+    /// does the first tap, to show where the second tap might go, and also when the user asks
+    /// to see all cards that can play ("hint").
+    /// - Parameter enablement: The enablement value to use.
     func setEnablement(_ enablement: GameState.Enablement) {
         switch enablement {
         case .disabled:
             alpha = 0.5
         case .enabled:
             alpha = 1.0
-        case .normal:
+        case .normal: // neutral; neither enabled nor disabled
             if cards.isEmpty {
                 alpha = 0.5
             } else {
@@ -155,7 +178,7 @@ class CardView: UIView {
         default: break
         }
     }
-    
+
     /// Cover the card at the given index with a yellow overlay, to help the user spot it.
     /// - Parameter index: The card's index, or `-1` to mean the _last_ card (as in the case of
     /// a foundation).
@@ -174,6 +197,55 @@ class CardView: UIView {
     func removeTintLayers() {
         while let tintLayer = tintLayers.popLast() {
             tintLayer.removeFromSuperlayer()
+        }
+    }
+
+/*
+ These methods are called only during an animation. They are purely temporary, and in fact
+ deliberately distort the way the card view is drawn, part of a sleight of hand that
+ disguises from the user the fact that the card that appears to be moving towards this
+ card view is in reality already _in_ the card view. This is coherent only because we
+ guarantee that every `hide` call is balanced by a `show` call at the end of the animation.
+*/
+
+    /// Temporarily hide the card layer at the given index. If this causes the card view to
+    /// appear to have _no_ cards, also show the empty layer.
+    /// - Parameter index: The index (within `cards`) of the card layer to be hidden.
+    func hideCard(at index: Int) {
+        let cardLayers = layer.sublayers(ofType: CardLayer.self)
+        if cardLayers.indices.contains(index) {
+            cardLayers[index].isHidden = true
+        }
+        if cardLayers.allSatisfy({ $0.isHidden }) {
+            emptyLayer.isHidden = false
+            setEnablement(.disabled)
+        }
+    }
+
+    /// Hide the blue border.
+    func hideBorder() { // TODO: But it would be better to revise the border's value?
+        if let border = layer.sublayers(ofType: BorderLayer.self).first {
+            border.isHidden = true
+        }
+    }
+
+    /// Show all card layers, restoring the normal drawing of the card view. At the end, we set
+    /// the enablement to the standard neutral value, in case we changed it in `hideCards`.
+    func showCards() {
+        let cardLayers = layer.sublayers(ofType: CardLayer.self)
+        cardLayers.forEach {
+            $0.isHidden = false
+        }
+        if cardLayers.count > 0 {
+            emptyLayer.isHidden = true
+        }
+        setEnablement(.normal)
+    }
+
+    /// Show the blue border.
+    func showBorder() {
+        if let border = layer.sublayers(ofType: BorderLayer.self).first {
+            border.isHidden = false
         }
     }
 

@@ -4,6 +4,7 @@ import UIKit
 final class MockCardView: CardView {
     var methodsCalled = [String]()
     var tintCardIndex: Int?
+    var hideCardIndex: Int?
     var movableCount: Int?
     var enablement: GameState.Enablement?
 
@@ -23,6 +24,23 @@ final class MockCardView: CardView {
     }
 
     override func removeTintLayers() {
+        methodsCalled.append(#function)
+    }
+
+    override func hideCard(at index: Int) {
+        methodsCalled.append(#function)
+        hideCardIndex = index
+    }
+
+    override func showCards() {
+        methodsCalled.append(#function)
+    }
+
+    override func hideBorder() {
+        methodsCalled.append(#function)
+    }
+
+    override func showBorder() {
         methodsCalled.append(#function)
     }
 }

@@ -17,6 +17,14 @@ struct GameViewControllerTests {
         subject.processor = processor
     }
 
+    @Test("deckPoint: is correctly defined in terms of view bounds and card size")
+    func deckPoint() {
+        sizer.sizeToReturn = CGSize(width: 50, height: 100)
+        subject.view.bounds.size.width = 400
+        subject.viewWillLayoutSubviews()
+        #expect(subject.deckPoint == CGPoint(x: 200, y: -200)) // half view width, twice card height
+    }
+
     @Test("timerLabel is correctly constructed")
     func timerLabel() {
         let label = subject.timerLabel
@@ -307,6 +315,51 @@ struct GameViewControllerTests {
         subject.doRedoAll()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.redoAll])
+    }
+
+    @Test("receive animate: calls hide/show index/border on destination card(s)")
+    func animate() async throws {
+        subject.loadViewIfNeeded()
+        subject.viewWillLayoutSubviews()
+        subject.foundations[0].cards = [
+            Card(rank: .ace, suit: .spades),
+            Card(rank: .two, suit: .spades),
+            Card(rank: .three, suit: .spades),
+        ]
+        let move = Move(
+            source: LocationAndCard(
+                location: Location(category: .column, index: 0),
+                internalIndex: 0,
+                card: Card(rank: .three, suit: .spades)
+            ),
+            destination: LocationAndCard(
+                location: Location(category: .foundation, index: 0),
+                internalIndex: 2,
+                card: Card(rank: .three, suit: .spades)
+            )
+        )
+        await subject.receive(.animate([move], duration: 0.05))
+        let destination = try #require(subject.foundations[0] as? MockCardView)
+        #expect(destination.methodsCalled == [
+            "hideCard(at:)", "hideBorder()", "redraw(movableCount:)", "showCards()", "showBorder()"
+        ])
+        #expect(destination.hideCardIndex == 2)
+        // that's really all we can test; by the time we return from `await`, the fake card layers
+        // have all been removed, the animations are gone, etc.
+    }
+
+    @Test("receive animate: with empty moves does nothing")
+    func animateNoMoves() async throws {
+        subject.loadViewIfNeeded()
+        subject.viewWillLayoutSubviews()
+        subject.foundations[0].cards = [
+            Card(rank: .ace, suit: .spades),
+            Card(rank: .two, suit: .spades),
+            Card(rank: .three, suit: .spades),
+        ]
+        await subject.receive(.animate([], duration: 0.05))
+        let destination = try #require(subject.foundations[0] as? MockCardView)
+        #expect(destination.methodsCalled.isEmpty)
     }
 
     @Test("receive confetti: sets confetti, adds emitter, sets cancellable task")

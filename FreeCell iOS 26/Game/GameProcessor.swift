@@ -7,11 +7,14 @@ final class GameProcessor: Processor {
 
     lazy var stopwatch: StopwatchType = Stopwatch(delegate: self)
 
+    lazy var animator: AnimatorType = Animator(processor: self)
+
     var state = GameState()
 
     func receive(_ action: GameAction) async {
         switch action {
         case .autoplay:
+            await ensureNeutralState()
             await autoplay()
             await checkTheStopwatch()
         case .deal:
@@ -20,8 +23,9 @@ final class GameProcessor: Processor {
             state.layout.deal(deck)
             state.undoStack = []
             state.redoStack = []
-            state.gameInProgress = true
+            state.gameProgress = .waitingForFirstMove
             await ensureNeutralState()
+            await animator.animate(oldLayout: Layout(), newLayout: state.layout, speed: state.animationSpeed)
             await stopwatch.reset()
         case .hint:
             state.firstTapLocation = nil
@@ -40,19 +44,23 @@ final class GameProcessor: Processor {
             await checkTheStopwatch()
         case .redo:
             if state.redoStack.count > 0 {
+                let oldLayout = state.layout
                 state.undoStack.append(state.layout)
                 state.layout = state.redoStack.removeLast()
                 await ensureNeutralState()
+                await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkTheStopwatch()
         case .redoAll:
             if state.redoStack.count > 0 {
+                let oldLayout = state.layout
                 state.undoStack.append(state.layout)
                 while !state.redoStack.isEmpty {
                     state.undoStack.append(state.redoStack.removeLast())
                 }
                 state.layout = state.undoStack.removeLast()
                 await ensureNeutralState()
+                await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkTheStopwatch()
         case .tapBackground:
@@ -60,7 +68,7 @@ final class GameProcessor: Processor {
             await ensureNeutralState()
             await checkTheStopwatch()
         case .tapped(let tap):
-            if state.gameIsOver == true && state.gameInProgress == false {
+            if state.gameIsOver == true && state.gameProgress == .waitingForDeal {
                 // edge case; `.tapped` comes from _card view_ so view controller never hears about it
                 // therefore _we_ have to _tell_ the view controller to remove the confetti if any
                 await presenter?.receive(.removeConfetti)
@@ -73,19 +81,23 @@ final class GameProcessor: Processor {
             await checkTheStopwatch()
         case .undo:
             if state.undoStack.count > 0 {
+                let oldLayout = state.layout
                 state.redoStack.append(state.layout)
                 state.layout = state.undoStack.removeLast()
                 await ensureNeutralState()
+                await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkTheStopwatch()
         case .undoAll:
             if state.undoStack.count > 0 {
+                let oldLayout = state.layout
                 state.redoStack.append(state.layout)
                 while !state.undoStack.isEmpty {
                     state.redoStack.append(state.undoStack.removeLast())
                 }
                 state.layout = state.redoStack.removeLast()
                 await ensureNeutralState()
+                await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkTheStopwatch()
         }
@@ -143,8 +155,9 @@ final class GameProcessor: Processor {
         if state.layout != oldLayout {
             state.undoStack.append(oldLayout)
             state.redoStack = []
+            await ensureNeutralState()
+            await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
         }
-        await ensureNeutralState()
     }
     
     /// The user has tapped a card view when there is no recorded first tap. Therefore _this_ is
@@ -164,6 +177,7 @@ final class GameProcessor: Processor {
             state.undoStack.append(oldLayout)
             state.redoStack = []
             await ensureNeutralState()
+            await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             if state.autoplay {
                 await autoplay()
             }
@@ -451,8 +465,11 @@ final class GameProcessor: Processor {
         if state.layout != oldLayout {
             state.undoStack.append(oldLayout)
             state.redoStack = []
+            await ensureNeutralState()
+            await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
+        } else {
+            await ensureNeutralState() // bad second tap! restore neutrality, wait for another tap-tap
         }
-        await ensureNeutralState()
         if state.autoplay {
             await autoplay()
         }
@@ -461,12 +478,15 @@ final class GameProcessor: Processor {
     func checkTheStopwatch() async {
         if state.gameIsOver {
             await stopwatch.stop()
-            if state.gameInProgress {
-                state.gameInProgress = false
+            if state.gameProgress == .inProgress {
+                state.gameProgress = .waitingForDeal
                 await presenter?.receive(.confetti)
             }
+        }
+        if state.gameProgress == .waitingForDeal { // only `deal` can change this
             return
         }
+        state.gameProgress = .inProgress
         switch stopwatch.state {
         case .paused:
             await stopwatch.resumeIfPaused()
