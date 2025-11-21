@@ -24,4 +24,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         coordinator.createInterface(window: window)
         window.makeKeyAndVisible()
     }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        services.lifetime.didBecomeActive()
+    }
+
+    func sceneWillResignActive(_ scene: UIScene) {
+        services.lifetime.willResignActive()
+    }
 }

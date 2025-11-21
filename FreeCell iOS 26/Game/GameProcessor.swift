@@ -11,6 +11,32 @@ final class GameProcessor: Processor {
 
     var state = GameState()
 
+    /// This method effectively subscribes to the publishable property in the observable
+    /// Lifetime instance. Once called, it sets up a Task that loops forever. The `dropFirst` is
+    /// because we get a `.becomeActive` message when subscribing in the first place, which we ignore.
+    func listenForEvent() async throws {
+        let observations = Observations {
+            return services.lifetime.event
+        }
+        for await event in observations.dropFirst() {
+            try Task.checkCancellation()
+            if let event {
+                switch event {
+                case .becomeActive:
+                    await stopwatch.resumeIfPaused()
+                case .resignActive:
+                    await stopwatch.pause()
+                }
+            }
+        }
+    }
+
+    /// Variable that gives us a handle on our perpetually looping task, so that we can
+    /// cancel it. We do not in fact intend to cancel it; it really does just loop forever.
+    /// However, it's nice to have a way out, e.g. when testing, plus the population of this
+    /// variable tells us that our subscription is in place, also useful when testing.
+    var listenForEventTask: Task<(), any Error>?
+
     func receive(_ action: GameAction) async {
         switch action {
         case .autoplay:
@@ -27,6 +53,11 @@ final class GameProcessor: Processor {
             await ensureNeutralState()
             await animator.animate(oldLayout: Layout(), newLayout: state.layout, speed: state.animationSpeed)
             await stopwatch.reset()
+        case .didInitialLayout:
+            // called exactly once early in the lifetime of the app; set up our listener tasks
+            listenForEventTask = Task {
+                try await listenForEvent()
+            }
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()

@@ -1,17 +1,20 @@
 @testable import FreeCell
 import Testing
 import Foundation
+import WaitWhile
 
 struct GameProcessorTests {
     let subject = GameProcessor()
     let presenter = MockReceiverPresenter<GameEffect, GameState>()
     let stopwatch = MockStopwatch()
     let animator = MockAnimator()
+    let lifetime = MockLifetime()
 
     init() {
         subject.presenter = presenter
         subject.stopwatch = stopwatch
         subject.animator = animator
+        services.lifetime = lifetime
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -105,6 +108,39 @@ struct GameProcessorTests {
         #expect(animator.newLayout == subject.state.layout)
         #expect(animator.speed == subject.state.animationSpeed)
         #expect(stopwatch.methodsCalled == ["reset()"])
+    }
+
+    @Test("receive didInitialLayout: sets up the lifetime listener task")
+    func didInitialLayout() async {
+        #expect(subject.listenForEventTask == nil)
+        await subject.receive(.didInitialLayout)
+        await #while(subject.listenForEventTask == nil)
+        #expect(subject.listenForEventTask != nil)
+        subject.listenForEventTask?.cancel()
+    }
+
+    @Test("receive didInitialLayout: setting the lifetime's becomeActive calls the stopwatch resumeIfPaused")
+    func didInitialLayoutBecomeActive() async {
+        await subject.receive(.didInitialLayout)
+        await #while(subject.listenForEventTask == nil)
+        Task {
+            lifetime.event = .becomeActive
+        }
+        await #while(stopwatch.methodsCalled.isEmpty)
+        #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
+        subject.listenForEventTask?.cancel()
+    }
+
+    @Test("receive didInitialLayout: setting the lifetime's resignActive calls the stopwatch pause")
+    func didInitialLayoutResignActive() async {
+        await subject.receive(.didInitialLayout)
+        await #while(subject.listenForEventTask == nil)
+        Task {
+            lifetime.event = .resignActive
+        }
+        await #while(stopwatch.methodsCalled.isEmpty)
+        #expect(stopwatch.methodsCalled == ["pause()"])
+        subject.listenForEventTask?.cancel()
     }
 
     @Test("receive hint: enables freecells and columns that can move nontrivially")

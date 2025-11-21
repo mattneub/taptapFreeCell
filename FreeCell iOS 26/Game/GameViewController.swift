@@ -140,6 +140,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                 cardView.processor = self.processor
                 await cardView.redraw()
             }
+            await processor?.receive(.didInitialLayout)
         }
     }
 

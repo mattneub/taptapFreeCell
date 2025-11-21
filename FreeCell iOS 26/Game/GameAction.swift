@@ -1,6 +1,7 @@
 enum GameAction: Equatable {
     case autoplay
     case deal
+    case didInitialLayout
     case hint
     case longPress(Location, Int)
     case longPressEnded

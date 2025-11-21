@@ -4,6 +4,7 @@ import Foundation
 protocol StopwatchType {
     var state: Stopwatch.State { get }
     func advance() async
+    func pause() async
     func reset() async
     func resumeIfPaused() async
     func start(from: TimeInterval) async

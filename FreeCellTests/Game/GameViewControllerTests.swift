@@ -109,8 +109,8 @@ struct GameViewControllerTests {
         #expect(tapper3.action == #selector(subject.twoFingerTap))
     }
 
-    @Test("view will layout: first time only, calls card sizer, interface constructor")
-    func viewWillLayout() throws {
+    @Test("view will layout: first time only, calls card sizer, interface constructor, calls processor didInitialLayout")
+    func viewWillLayout() async throws {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
         subject.viewWillLayoutSubviews()
@@ -125,11 +125,16 @@ struct GameViewControllerTests {
         #expect(freeCell.location.category == .freeCell)
         let column = try #require(subject.columns.first)
         #expect(column.location.category == .column)
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.didInitialLayout])
         sizer.methodsCalled = []
         constructor.methodsCalled = []
+        processor.thingsReceived = []
         subject.viewWillLayoutSubviews()
         #expect(sizer.methodsCalled.isEmpty)
         #expect(constructor.methodsCalled.isEmpty)
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(processor.thingsReceived.isEmpty)
     }
 
     @Test("view will layout: configures all card views as empty, sets processor; card views category and index are right")

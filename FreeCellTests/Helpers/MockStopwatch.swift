@@ -10,6 +10,10 @@ final class MockStopwatch: StopwatchType {
         methodsCalled.append(#function)
     }
 
+    func pause() async {
+        methodsCalled.append(#function)
+    }
+
     func reset() async {
         methodsCalled.append(#function)
     }
