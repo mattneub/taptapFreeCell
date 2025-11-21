@@ -22,7 +22,7 @@ struct GameViewControllerTests {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
         subject.viewWillLayoutSubviews()
-        #expect(subject.deckPoint == CGPoint(x: 200, y: -200)) // half view width, twice card height
+        #expect(subject.deckPoint == CGPoint(x: 200, y: -100)) // half view width, twice card height
     }
 
     @Test("timerLabel is correctly constructed")

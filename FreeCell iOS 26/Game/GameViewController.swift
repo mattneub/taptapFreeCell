@@ -35,7 +35,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     /// Imaginary point off the top of the screen representing the location of the deck.
     /// Deal is animated from this point.
     var deckPoint: CGPoint {
-        CGPoint(x: view.bounds.midX, y: -(CardView.baseSize.height * 2))
+        CGPoint(x: view.bounds.midX, y: -(CardView.baseSize.height))
     }
 
     /// Label that shows the elapsed time of the game.
@@ -335,17 +335,23 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     /// Animate an enactment of the card moves described in the Moves list, using "fake" card
     /// layers. *Assumption*: The _real_ card layers have _already_ been removed from their
     /// source card views and have _already_ been created in their destination card views.
-    /// _real_
     /// - Parameters:
     ///   - moves: The list of moves.
     ///   - duration: The animation duration.
     func animate(_ moves: [Move], duration: Double) async {
+        // when testing, it helps to insert a fake duration, e.g. `let duration = 1.0`, so you
+        // can get a good look at the animation
+        view.isUserInteractionEnabled = false
+        // before doing anything else, collect all the different ranks of all the moving cards;
+        // we will need this in order to stagger the launch of cards moving to foundations
+        let ranks = Set(moves.map { $0.destination.card.rank }).sorted { $0.rawValue < $1.rawValue }
         // local struct that collects all the info needed to perform the actual animation
         struct MoveInfo {
             let layer: CardLayer
             let oldPosition: CGPoint
             let newPosition: CGPoint
             let newCardView: CardView
+            let newInternalIndex: Int
         }
         var infos = [MoveInfo]()
         var dealing = false
@@ -357,37 +363,100 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             let newInternalIndex = move.destination.internalIndex
             newCardView.hideCard(at: newInternalIndex)
             newCardView.hideBorder()
-            let oldCardLayer = await CardLayer(card: move.source.card)
-            oldCardLayer.zPosition = CGFloat(move.destination.internalIndex) // TODO: might need tweaking :)
-            let oldCardLayerFrame = oldCardView.convert(oldCardView.frame(forCardIndex: oldInternalIndex), to: view)
-            let newCardLayerFrame = newCardView.convert(newCardView.frame(forCardIndex: newInternalIndex), to: view)
+            let cardLayer = await CardLayer(card: move.source.card)
+            cardLayer.zPosition = CGFloat(move.source.internalIndex) // i.e exactly where the old real card layer was
+            let oldCardLayerFrame = oldCardView.convert(
+                oldCardView.frame(forCardIndex: oldInternalIndex),
+                to: view
+            )
+            let newCardLayerFrame = newCardView.convert(
+                newCardView.frame(forCardIndex: newInternalIndex),
+                to: view
+            )
             // equality of old frame and new frame is a signal that this card arrives from the deck
             if oldCardLayerFrame == newCardLayerFrame {
                 dealing = true
             }
             let info = MoveInfo(
-                layer: oldCardLayer,
+                layer: cardLayer,
                 oldPosition: dealing ? deckPoint : oldCardLayerFrame.center,
                 newPosition: newCardLayerFrame.center,
-                newCardView: newCardView
+                newCardView: newCardView,
+                newInternalIndex: move.destination.internalIndex
             )
             infos.append(info)
         }
         // we now have all the information; the animation now begins!
-        // first, insert all the moving cards into the visible interface at their _old_ positions
+        // insert all moving cards into the visible interface at the _old_ positions / zPositions
         infos.forEach {
             view.layer.addSublayer($0.layer)
         }
-        // next, animate all the moving cards to their _new_ positions (and also _put_ all the
-        // moving cards _at_ their new positions, so they don't jump back to their starting point)
+        // animate all moving cards to their _new_ positions / zPositions
         await TransactionWaiter.shared.perform {
+            CATransaction.setDisableActions(true) // in case we set an animatable property directly
             for info in infos {
+                // group
+                let group = CAAnimationGroup()
+                group.duration = duration
+                group.beginTime = CACurrentMediaTime() + 0.01
+                group.timingFunction = if duration < 0.15 {
+                    CAMediaTimingFunction(name: .linear)
+                } else {
+                    CAMediaTimingFunction(controlPoints: 0.9, 0.1, 0.7, 0.9)
+                }
+                // normally, I would scold anyone who uses this trick; but here it is safe and
+                // acceptable, because what we are animating is a _fake_ layer which _itself_
+                // will be removed when the animation is over
+                // furthermore, this setting is _inherited_, so we don't need to repeat it
+                // for the child animations; they _all_ fill both backwards and forwards
+                group.fillMode = .both
+                group.isRemovedOnCompletion = false
+                // accumulate desired animations into an array to be set as the group's animations
+                var animations = [CAAnimation]()
+                // move
                 let move = CABasicAnimation(keyPath: #keyPath(CALayer.position))
                 move.fromValue = info.oldPosition
                 move.toValue = info.newPosition
-                move.duration = dealing ? duration * 2 : duration
-                info.layer.add(move, forKey: "move")
-                info.layer.position = info.newPosition
+                animations.append(move)
+                // waggle (transforms: subtle grow-shrink, rotate-and-back, shift-and-back)
+                let waggle = CABasicAnimation(keyPath: #keyPath(CALayer.transform))
+                waggle.duration = duration / 2.0
+                waggle.autoreverses = true
+                waggle.fromValue = CATransform3DIdentity
+                var transform = CATransform3DMakeScale(1.2, 1.2, 1)
+                transform = CATransform3DRotate(transform, .pi/35, 0, 0, 1)
+                transform = CATransform3DTranslate(transform, -(info.layer.bounds.width/6), 0, 0)
+                waggle.toValue = transform
+                animations.append(waggle)
+                // zPosition
+                let zPosition = CABasicAnimation(keyPath: #keyPath(CALayer.zPosition))
+                zPosition.fromValue = info.layer.zPosition
+                zPosition.toValue = CGFloat(info.newInternalIndex) + 0.5 // just in front of real card
+                // we now face a little problem: let's say we are moving 5 cards from a column to
+                // a foundation; they will all essential reverse their zPositions, and we don't
+                // want that to happen right at the start or end, or indeed at any obstreperous
+                // instant — so we not only animate but randomly stagger the change
+                zPosition.duration = duration / Double.random(in: 2...8) // cool
+                zPosition.beginTime = duration - zPosition.duration
+                animations.append(zPosition)
+                // things we do for foundations only
+                if info.newCardView.location.category == .foundation {
+                    // fade, because the foundation is faded
+                    let fade = CABasicAnimation(keyPath: #keyPath(CALayer.opacity))
+                    fade.fromValue = 1.0
+                    fade.toValue = 0.5
+                    fade.duration = duration / 2.0
+                    fade.beginTime = duration / 2.0 // don't start to fade until halfway thru
+                    animations.append(fade)
+                    // and now my absolute favorite part: stagger the animation launches
+                    // so that lower ranks start moving earlier than higher ranks
+                    if let offset = ranks.firstIndex(of: info.layer.card.rank) {
+                        group.beginTime += (duration / 4.0) * Double(offset)
+                    }
+                }
+                // the end! wrap it all up and add it to the layer
+                group.animations = animations
+                info.layer.add(group, forKey: nil)
             }
         }
         // dance to prevent flash as we remove the moving cards and reveal the _real_ cards
@@ -408,5 +477,6 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         infos.forEach {
             $0.layer.removeFromSuperlayer()
         }
+        view.isUserInteractionEnabled = true
     }
 }
