@@ -32,4 +32,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillResignActive(_ scene: UIScene) {
         services.lifetime.willResignActive()
     }
+
+    func sceneDidEnterBackground(_ scene: UIScene) {
+        services.lifetime.didEnterBackground()
+    }
 }

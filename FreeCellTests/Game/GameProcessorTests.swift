@@ -9,12 +9,14 @@ struct GameProcessorTests {
     let stopwatch = MockStopwatch()
     let animator = MockAnimator()
     let lifetime = MockLifetime()
+    let persistence = MockPersistence()
 
     init() {
         subject.presenter = presenter
         subject.stopwatch = stopwatch
         subject.animator = animator
         services.lifetime = lifetime
+        services.persistence = persistence
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -107,7 +109,7 @@ struct GameProcessorTests {
         #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
         #expect(animator.newLayout == subject.state.layout)
         #expect(animator.speed == subject.state.animationSpeed)
-        #expect(stopwatch.methodsCalled == ["reset()"])
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
     }
 
     @Test("receive didInitialLayout: sets up the lifetime listener task")
@@ -141,6 +143,60 @@ struct GameProcessorTests {
         await #while(stopwatch.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled == ["pause()"])
         subject.listenForEventTask?.cancel()
+    }
+
+    @Test("receive didInitialLayout: setting the lifetime's enterBackground sends remove confetti, tells persistence to save game")
+    func didInitialLayoutEnterBackground() async {
+        await subject.receive(.didInitialLayout)
+        await #while(subject.listenForEventTask == nil)
+        Task {
+            lifetime.event = .enterBackground
+        }
+        await #while(persistence.methodsCalled.count < 2) // because loadGame is called first!
+        #expect(persistence.methodsCalled.last == "saveGame(_:)")
+        #expect(presenter.thingsReceived == [.removeConfetti])
+    }
+
+    @Test("receive didInitialLayout: restores game if there is one saved")
+    func didInitialLayoutRestoreGame() async {
+        var layout = Layout()
+        layout.columns[0].cards = [Card(rank: .six, suit: .spades)]
+        let savedGame = SavedGame(
+            layout: layout,
+            undoStack: [Layout(), Layout(), Layout()],
+            redoStack: [Layout(), Layout()],
+            timeTaken: 3
+        )
+        persistence.savedGameToReturn = savedGame
+        await subject.receive(.didInitialLayout)
+        #expect(subject.state.layout == layout)
+        #expect(subject.state.undoStack == [Layout(), Layout(), Layout()])
+        #expect(subject.state.redoStack == [Layout(), Layout()])
+        #expect(subject.state.gameProgress == .waitingForFirstMove)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 3)
+    }
+
+    @Test("receive didInitialLayout: restores game if there is one saved and that game is over")
+    func didInitialLayoutRestoreGameOver() async {
+        var layout = Layout()
+        layout.foundations[0].cards = [Card(rank: .six, suit: .spades)] // *
+        let savedGame = SavedGame(
+            layout: layout,
+            undoStack: [Layout(), Layout(), Layout()],
+            redoStack: [Layout(), Layout()],
+            timeTaken: 3
+        )
+        persistence.savedGameToReturn = savedGame
+        await subject.receive(.didInitialLayout)
+        #expect(subject.state.layout == layout)
+        #expect(subject.state.undoStack == [Layout(), Layout(), Layout()])
+        #expect(subject.state.redoStack == [Layout(), Layout()])
+        #expect(subject.state.gameProgress == .waitingForDeal) // *
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 3)
     }
 
     @Test("receive hint: enables freecells and columns that can move nontrivially")
@@ -1571,8 +1627,7 @@ struct GameProcessorTests {
         subject.state.layout.columns[7].cards = [Card(rank: .six, suit: .clubs)]
         do {
             await subject.receive(.autoplay)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1580,8 +1635,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.hint)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1589,8 +1643,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.longPressEnded)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1598,8 +1651,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.redo)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1607,8 +1659,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.redoAll)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1616,8 +1667,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.tapBackground)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1625,8 +1675,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1634,8 +1683,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.undo)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
@@ -1643,8 +1691,7 @@ struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.undoAll)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
             #expect(subject.state.gameProgress == .inProgress)
         }
     }
@@ -1656,64 +1703,55 @@ struct GameProcessorTests {
         subject.state.layout.columns[7].cards = [Card(rank: .six, suit: .clubs)]
         do {
             await subject.receive(.autoplay)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.hint)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.longPressEnded)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.redo)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.redoAll)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.tapBackground)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.undo)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
         stopwatch.state = .stopped
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.undoAll)
-            #expect(stopwatch.methodsCalled == ["start(from:)"])
-            #expect(stopwatch.fromTimeInterval == 0)
+            #expect(stopwatch.methodsCalled == ["start()"])
         }
     }
 

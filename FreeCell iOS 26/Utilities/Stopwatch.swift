@@ -3,17 +3,18 @@ import Foundation
 /// The public face of our Stopwatch type, so we can mock it for testing.
 protocol StopwatchType {
     var state: Stopwatch.State { get }
+    var elapsedTime: TimeInterval { get }
     func advance() async
     func pause() async
-    func reset() async
+    func reset(to: TimeInterval) async
     func resumeIfPaused() async
-    func start(from: TimeInterval) async
+    func start() async
     func stop() async
 }
 
 extension StopwatchType {
-    func start() async {
-        await start(from: 0)
+    func reset() async {
+        await reset(to: 0)
     }
 }
 
@@ -58,10 +59,14 @@ final class Stopwatch: StopwatchType {
         state = .stopped
     }
 
-    /// Stop and show zero.
-    func reset() async {
-        await stop()
-        elapsedTime = 0
+    /// Stop and set the elapsed time and display it. We are messing with Time here, so we
+    /// do not `advance`, but we do update `whenWeLastUpdated` so the next advance will be correct.
+    /// - Parameter elapsedTime: The time to set the stopwatch to. This is so we can use a
+    /// `reset` call at launch if we are displaying a saved game.
+    func reset(to elapsedTime: TimeInterval = 0) async {
+        state = .stopped
+        self.elapsedTime = elapsedTime
+        whenWeLastUpdated = services.date.init()
         await delegate?.stopwatchDidUpdate(elapsedTime)
     }
 
@@ -86,11 +91,9 @@ final class Stopwatch: StopwatchType {
         await delegate?.stopwatchDidUpdate(elapsedTime)
     }
 
-    /// Start from the given initial value, which is zero by default. Then wait one second
-    /// and display the elapsed time. In this way, the user sees immediately that the stopwatch
-    /// is running.
-    func start(from initialValue: TimeInterval = 0) async {
-        elapsedTime = initialValue
+    /// Start running from the current time, then wait one second and display the elapsed time.
+    /// In this way, the user sees immediately that the stopwatch is running.
+    func start() async {
         state = .running
         whenWeLastUpdated = services.date.init()
         await delegate?.stopwatchDidUpdate(elapsedTime)

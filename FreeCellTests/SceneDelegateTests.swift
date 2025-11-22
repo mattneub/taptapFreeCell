@@ -36,5 +36,15 @@ struct SceneDelegateTests {
         subject.sceneWillResignActive(scene)
         #expect(lifetime.methodsCalled == ["willResignActive()"])
     }
+
+    @Test("sceneDidEnterBackground: calls lifetime didEnterBackground")
+    func didEnterBackground() throws {
+        let lifetime = MockLifetime()
+        services.lifetime = lifetime
+        let subject = SceneDelegate()
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        subject.sceneDidEnterBackground(scene)
+        #expect(lifetime.methodsCalled == ["didEnterBackground()"])
+    }
 }
 

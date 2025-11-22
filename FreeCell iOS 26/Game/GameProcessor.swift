@@ -24,6 +24,16 @@ final class GameProcessor: Processor {
                 switch event {
                 case .becomeActive:
                     await stopwatch.resumeIfPaused()
+                case .enterBackground:
+                    await presenter?.receive(.removeConfetti)
+                    services.persistence.saveGame(
+                        SavedGame(
+                            layout: state.layout,
+                            undoStack: state.undoStack,
+                            redoStack: state.redoStack,
+                            timeTaken: stopwatch.elapsedTime
+                        )
+                    )
                 case .resignActive:
                     await stopwatch.pause()
                 }
@@ -54,9 +64,24 @@ final class GameProcessor: Processor {
             await animator.animate(oldLayout: Layout(), newLayout: state.layout, speed: state.animationSpeed)
             await stopwatch.reset()
         case .didInitialLayout:
-            // called exactly once early in the lifetime of the app; set up our listener tasks
+            // called exactly once early in the lifetime of the app
+            // set up our listener tasks
             listenForEventTask = Task {
                 try await listenForEvent()
+            }
+            // restore game if there was one
+            if let game = services.persistence.loadGame() {
+                state.layout = game.layout
+                state.undoStack = game.undoStack
+                state.redoStack = game.redoStack
+                if state.gameIsOver {
+                    state.gameProgress = .waitingForDeal
+                } else {
+                    state.gameProgress = .waitingForFirstMove
+                }
+                await ensureNeutralState()
+                await stopwatch.reset(to: game.timeTaken)
+                // the stopwatch is now _stopped_ at the loaded time
             }
         case .hint:
             state.firstTapLocation = nil

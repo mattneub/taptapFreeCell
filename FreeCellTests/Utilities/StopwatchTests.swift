@@ -60,14 +60,25 @@ struct StopwatchTests {
         #expect(subject.state == .stopped)
     }
 
-    @Test("reset: just like `stop` except that the elapsedTime and delegate time is zero")
+    @Test("reset: just like `stop` except that the elapsedTime and delegate time is zero by default")
     func reset() async throws {
         await subject.reset()
         #expect(subject.elapsedTime == 0)
         let subjectLastUpdated = try #require(subject.whenWeLastUpdated as? MockDate)
         #expect(subjectLastUpdated.uuid != lastUpdated.uuid) // proving it's a new "date" instance
-        #expect(delegate.methodsCalled == ["stopwatchDidUpdate(_:)", "stopwatchDidUpdate(_:)"])
+        #expect(delegate.methodsCalled == ["stopwatchDidUpdate(_:)"])
         #expect(delegate.timeInterval == 0)
+        #expect(subject.state == .stopped)
+    }
+
+    @Test("resetTo: just like `stop` except that the elapsedTime and delegate time is given time")
+    func resetTo() async throws {
+        await subject.reset(to: 100)
+        #expect(subject.elapsedTime == 100)
+        let subjectLastUpdated = try #require(subject.whenWeLastUpdated as? MockDate)
+        #expect(subjectLastUpdated.uuid != lastUpdated.uuid) // proving it's a new "date" instance
+        #expect(delegate.methodsCalled == ["stopwatchDidUpdate(_:)"])
+        #expect(delegate.timeInterval == 100)
         #expect(subject.state == .stopped)
     }
 
@@ -141,24 +152,12 @@ struct StopwatchTests {
     @Test("start: sets state to running, then like `advance` but adds `lastUpdated` to argument")
     func start() async throws {
         subject.state = .stopped
-        await subject.start() // argument is _zero_
-        #expect(subject.elapsedTime == 100) // proving they were added together
+        await subject.start()
+        #expect(subject.elapsedTime == 150) // proving they were added together
         let subjectLastUpdated = try #require(subject.whenWeLastUpdated as? MockDate)
         #expect(subjectLastUpdated.uuid != lastUpdated.uuid) // proving it's a new "date" instance
         #expect(delegate.methodsCalled == ["stopwatchDidUpdate(_:)", "stopwatchDidUpdate(_:)"])
-        #expect(delegate.timeInterval == 100)
-        #expect(subject.state == .running)
-    }
-
-    @Test("start: sets state to running, then like `advance` but adds `lastUpdated` to argument")
-    func startFrom() async throws {
-        subject.state = .stopped
-        await subject.start(from: 500)
-        #expect(subject.elapsedTime == 600) // proving they were added together
-        let subjectLastUpdated = try #require(subject.whenWeLastUpdated as? MockDate)
-        #expect(subjectLastUpdated.uuid != lastUpdated.uuid) // proving it's a new "date" instance
-        #expect(delegate.methodsCalled == ["stopwatchDidUpdate(_:)", "stopwatchDidUpdate(_:)"])
-        #expect(delegate.timeInterval == 600)
+        #expect(delegate.timeInterval == 150)
         #expect(subject.state == .running)
     }
 

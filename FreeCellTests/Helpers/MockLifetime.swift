@@ -3,7 +3,6 @@ import UIKit
 
 @Observable
 final class MockLifetime: LifetimeType {
-
     var methodsCalled = [String]()
 
     var event: LifetimeEvent?
@@ -15,4 +14,9 @@ final class MockLifetime: LifetimeType {
     func willResignActive() {
         methodsCalled.append(#function)
     }
+
+    func didEnterBackground() {
+        methodsCalled.append(#function)
+    }
+
 }

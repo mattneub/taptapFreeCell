@@ -1,7 +1,7 @@
 import Foundation
 
 /// The overall game state, i.e. what cards are in what piles.
-struct Layout: CustomStringConvertible, /* Codable,*/ Equatable {
+struct Layout: CustomStringConvertible, Codable, Equatable {
     init() {} // to distinguish from init(shlomiTableauDescription:)
 
     var foundations: [Foundation] = Suit.foundationOrder.map { Foundation(suit: $0) }

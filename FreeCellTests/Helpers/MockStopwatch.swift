@@ -2,8 +2,9 @@
 import Foundation
 
 final class MockStopwatch: StopwatchType {
+    var elapsedTime: TimeInterval = 0
     var state: Stopwatch.State = .running
-    var fromTimeInterval: TimeInterval?
+    var resetTimeInterval: TimeInterval?
     var methodsCalled = [String]()
 
     func advance() async {
@@ -14,17 +15,17 @@ final class MockStopwatch: StopwatchType {
         methodsCalled.append(#function)
     }
 
-    func reset() async {
+    func reset(to timeInterval: TimeInterval) async {
         methodsCalled.append(#function)
+        self.resetTimeInterval = timeInterval
     }
 
     func resumeIfPaused() async {
         methodsCalled.append(#function)
     }
 
-    func start(from: TimeInterval) async {
+    func start() async {
         methodsCalled.append(#function)
-        self.fromTimeInterval = from
     }
 
     func stop() async {

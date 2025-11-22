@@ -4,6 +4,7 @@ protocol LifetimeType {
     var event: LifetimeEvent? { get }
 
     func didBecomeActive()
+    func didEnterBackground()
     func willResignActive()
 }
 
@@ -17,9 +18,13 @@ final class Lifetime: LifetimeType {
     func willResignActive() {
         event = .resignActive
     }
+    func didEnterBackground() {
+        event = .enterBackground
+    }
 }
 
 enum LifetimeEvent {
     case becomeActive
+    case enterBackground
     case resignActive
 }
