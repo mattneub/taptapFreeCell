@@ -54,6 +54,20 @@ final class GameProcessor: Processor {
             await autoplay()
             await checkTheStopwatch()
         case .deal:
+            if state.gameProgress != .waitingForDeal {
+                let result = await coordinator?.showAlert(
+                    title: "Really Deal?",
+                    message: """
+                    You have not yet finished the current game. \
+                    Do you really want to lose this game and deal another game?
+                    """,
+                    buttonTitles: ["Cancel", "Deal"]
+                )
+                if result == "Cancel" {
+                    return
+                }
+                // TODO: add this game to lost games
+            }
             var deck = Deck()
             deck.shuffle()
             state.layout.deal(deck)

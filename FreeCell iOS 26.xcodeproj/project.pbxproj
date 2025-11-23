@@ -58,6 +58,20 @@
 			);
 			target = 3FB3F2AA2EB8E76C00689661 /* FreeCell iOS 26 */;
 		};
+		3FD3CA332ED28DCA00F62B59 /* Exceptions for "FreeCellTests" folder in "FreeCell iOS 26" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Helpers/UIAlertController.swift,
+			);
+			target = 3FB3F2AA2EB8E76C00689661 /* FreeCell iOS 26 */;
+		};
+		3FD3CA342ED28DCA00F62B59 /* Exceptions for "FreeCellTests" folder in "FreeCellTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Helpers/UIAlertController.swift,
+			);
+			target = 3FB3F4B02EB8F8E600689661 /* FreeCellTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -76,6 +90,10 @@
 		};
 		3FB3F4B22EB8F8E600689661 /* FreeCellTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3FD3CA332ED28DCA00F62B59 /* Exceptions for "FreeCellTests" folder in "FreeCell iOS 26" target */,
+				3FD3CA342ED28DCA00F62B59 /* Exceptions for "FreeCellTests" folder in "FreeCellTests" target */,
+			);
 			path = FreeCellTests;
 			sourceTree = "<group>";
 		};

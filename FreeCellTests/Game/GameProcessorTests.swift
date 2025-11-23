@@ -10,8 +10,10 @@ struct GameProcessorTests {
     let animator = MockAnimator()
     let lifetime = MockLifetime()
     let persistence = MockPersistence()
+    let coordinator = MockRootCoordinator()
 
     init() {
+        subject.coordinator = coordinator
         subject.presenter = presenter
         subject.stopwatch = stopwatch
         subject.animator = animator
@@ -91,12 +93,50 @@ struct GameProcessorTests {
 
     @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it, empties undo/redo")
     func deal() async {
-        subject.state.gameProgress = .inProgress
+        subject.state.gameProgress = .waitingForDeal
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.undoStack = [Layout(), Layout()]
         subject.state.redoStack = [Layout(), Layout()]
         #expect(subject.state.layout == Layout())
         await subject.receive(.deal)
+        let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
+        #expect(tableau.count == 104) // fifty two cards
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.gameProgress == .waitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
+        #expect(animator.newLayout == subject.state.layout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+    }
+
+    @Test("receive deal: if game is not waitingForDeal, puts up alert; if user cancels, stops")
+    func dealNotWaitingForDeal() async {
+        subject.state.gameProgress = .inProgress
+        coordinator.buttonTitleToReturn = "Cancel"
+        await subject.receive(.deal)
+        #expect(coordinator.methodsCalled == ["showAlert(title:message:buttonTitles:)"])
+        #expect(coordinator.title == "Really Deal?")
+        #expect(coordinator.message == "You have not yet finished the current game. Do you really want to lose this game and deal another game?")
+        #expect(coordinator.buttonTitles == ["Cancel", "Deal"])
+        #expect(subject.state.layout == Layout())
+        #expect(presenter.statesPresented.isEmpty)
+        #expect(animator.methodsCalled.isEmpty)
+        #expect(stopwatch.methodsCalled.isEmpty)
+    }
+
+    @Test("receive deal: if game is not waitingForDeal, puts up alert; if user does not cancel, proceeds to deal")
+    func dealNotWaitingForDealUserSaysDeal() async {
+        subject.state.gameProgress = .inProgress
+        coordinator.buttonTitleToReturn = "Deal"
+        await subject.receive(.deal)
+        #expect(coordinator.title == "Really Deal?")
+        #expect(coordinator.message == "You have not yet finished the current game. Do you really want to lose this game and deal another game?")
+        #expect(coordinator.buttonTitles == ["Cancel", "Deal"])
         let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
         #expect(tableau.count == 104) // fifty two cards
         #expect(subject.state.firstTapLocation == nil)
