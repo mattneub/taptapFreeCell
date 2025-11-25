@@ -1,5 +1,5 @@
 import Testing
-@testable import FreeCell
+@testable import TTFreeCell
 
 struct MutableCollectionTests {
     @Test("modifyEach: works as expected")

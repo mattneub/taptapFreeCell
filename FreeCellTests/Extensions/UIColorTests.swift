@@ -1,6 +1,6 @@
 import UIKit
 import Testing
-@testable import FreeCell
+@testable import TTFreeCell
 
 struct UIColorTests {
     @Test("highlightColor is right")

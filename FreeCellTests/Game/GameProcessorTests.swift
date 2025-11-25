@@ -1,4 +1,4 @@
-@testable import FreeCell
+@testable import TTFreeCell
 import Testing
 import Foundation
 import WaitWhile
@@ -11,6 +11,7 @@ struct GameProcessorTests {
     let lifetime = MockLifetime()
     let persistence = MockPersistence()
     let coordinator = MockRootCoordinator()
+    let stats = MockStats()
 
     init() {
         subject.coordinator = coordinator
@@ -19,6 +20,8 @@ struct GameProcessorTests {
         subject.animator = animator
         services.lifetime = lifetime
         services.persistence = persistence
+        services.stats = stats
+        services.date = MockDate.self
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -41,6 +44,7 @@ struct GameProcessorTests {
         subject.state.layout = layout
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.redoStack = [Layout()]
+        subject.state.layout.moveCode = "heyho"
         let oldLayout = layout
         await subject.receive(.autoplay)
         #expect(subject.state.layout.foundations[0].cards == [
@@ -63,6 +67,7 @@ struct GameProcessorTests {
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(subject.state.undoStack.last == oldLayout)
         #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
         #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
         #expect(animator.oldLayout == oldLayout)
         #expect(animator.newLayout == subject.state.layout)
@@ -78,6 +83,7 @@ struct GameProcessorTests {
             Card(rank: .three, suit: .spades),
         ]
         subject.state.layout = layout
+        subject.state.layout.moveCode = "heyho"
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.redoStack = [Layout()]
         let oldLayout = layout
@@ -87,6 +93,7 @@ struct GameProcessorTests {
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack == [Layout()])
+        #expect(subject.state.layout.moveCode == "heyho")
         #expect(animator.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled == ["advance()"])
     }
@@ -97,6 +104,7 @@ struct GameProcessorTests {
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.undoStack = [Layout(), Layout()]
         subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
         #expect(subject.state.layout == Layout())
         await subject.receive(.deal)
         let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
@@ -106,6 +114,7 @@ struct GameProcessorTests {
         #expect(presenter.statesPresented == [subject.state])
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
         #expect(subject.state.gameProgress == .waitingForFirstMove)
         #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
         #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
@@ -127,16 +136,37 @@ struct GameProcessorTests {
         #expect(presenter.statesPresented.isEmpty)
         #expect(animator.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled.isEmpty)
     }
 
-    @Test("receive deal: if game is not waitingForDeal, puts up alert; if user does not cancel, proceeds to deal")
+    @Test("receive deal: if game is not waitingForDeal, puts up alert; if user does not cancel, saves lost game, proceeds to deal")
     func dealNotWaitingForDealUserSaysDeal() async {
+        stopwatch.elapsedTime = 200
         subject.state.gameProgress = .inProgress
         coordinator.buttonTitleToReturn = "Deal"
+        var layout1 = Layout()
+        layout1.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
+        var layout2 = Layout()
+        layout2.moveCode = "hey"
+        subject.state.undoStack = [
+            layout1,
+            layout2
+        ]
+        subject.state.layout.moveCode = "ho"
         await subject.receive(.deal)
         #expect(coordinator.title == "Really Deal?")
         #expect(coordinator.message == "You have not yet finished the current game. Do you really want to lose this game and deal another game?")
         #expect(coordinator.buttonTitles == ["Cancel", "Deal"])
+        await #while(stats.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled == ["saveStat(_:)"])
+        #expect(stats.stat == Stat(
+            dateFinished: Date.distantPast,
+            won: false,
+            initialLayout: layout1,
+            movesCount: 2,
+            timeTaken: 200,
+            codes: ["hey", "ho"]
+        ))
         let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
         #expect(tableau.count == 104) // fifty two cards
         #expect(subject.state.firstTapLocation == nil)
@@ -144,6 +174,7 @@ struct GameProcessorTests {
         #expect(presenter.statesPresented == [subject.state])
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
         #expect(subject.state.gameProgress == .waitingForFirstMove)
         #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
         #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
@@ -152,12 +183,14 @@ struct GameProcessorTests {
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
     }
 
-    @Test("receive didInitialLayout: sets up the lifetime listener task")
+    @Test("receive didInitialLayout: sets up the lifetime listener task, tells stats to load stats")
     func didInitialLayout() async {
         #expect(subject.listenForEventTask == nil)
         await subject.receive(.didInitialLayout)
         await #while(subject.listenForEventTask == nil)
         #expect(subject.listenForEventTask != nil)
+        await #while(stats.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled == ["loadStats()"])
         subject.listenForEventTask?.cancel()
     }
 
@@ -212,7 +245,7 @@ struct GameProcessorTests {
         #expect(subject.state.layout == layout)
         #expect(subject.state.undoStack == [Layout(), Layout(), Layout()])
         #expect(subject.state.redoStack == [Layout(), Layout()])
-        #expect(subject.state.gameProgress == .waitingForFirstMove)
+        #expect(subject.state.gameProgress == .waitingForFirstMove) // *
         #expect(presenter.statesPresented == [subject.state])
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
         #expect(stopwatch.resetTimeInterval == 3)
@@ -221,7 +254,7 @@ struct GameProcessorTests {
     @Test("receive didInitialLayout: restores game if there is one saved and that game is over")
     func didInitialLayoutRestoreGameOver() async {
         var layout = Layout()
-        layout.foundations[0].cards = [Card(rank: .six, suit: .spades)] // *
+        layout.foundations[0].cards = [Card(rank: .six, suit: .spades)]
         let savedGame = SavedGame(
             layout: layout,
             undoStack: [Layout(), Layout(), Layout()],
@@ -371,7 +404,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout.columns[0].cards == [])
             #expect(subject.state.layout.columns[1].cards == [])
             #expect(subject.state.layout.columns[2].cards == [Card(rank: .queen, suit: .hearts)])
-            #expect(subject.state.redoStack == [])
+            #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -460,6 +493,7 @@ struct GameProcessorTests {
                 Card(rank: .two, suit: .clubs),
                 Card(rank: .ace, suit: .clubs),
             ]
+            subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
             subject.state.autoplay = false // we will play just the ace and stop
             subject.state.redoStack = [Layout()]
@@ -469,6 +503,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout.foundation(for: .clubs).cards == [Card(rank: .ace, suit: .clubs)])
             #expect(subject.state.layout.columns[0].cards == [Card(rank: .two, suit: .clubs)])
             #expect(subject.state.redoStack.isEmpty)
+            #expect(subject.state.layout.moveCode == nil)
             #expect(subject.state.undoStack.last?.columns[0].cards == [
                 Card(rank: .two, suit: .clubs),
                 Card(rank: .ace, suit: .clubs),
@@ -493,6 +528,7 @@ struct GameProcessorTests {
                 Card(rank: .ace, suit: .clubs),
             ]
             subject.state.layout.columns[7].cards = [Card(rank: .seven, suit: .clubs)]
+            subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
             subject.state.autoplay = true // we will play and then autoplay
             subject.state.redoStack = [Layout]()
@@ -505,6 +541,7 @@ struct GameProcessorTests {
             ])
             #expect(subject.state.layout.columns[0].cards == [])
             #expect(subject.state.redoStack.isEmpty)
+            #expect(subject.state.layout.moveCode == nil)
             #expect(subject.state.undoStack.first?.columns[0].cards == [
                 Card(rank: .two, suit: .clubs),
                 Card(rank: .ace, suit: .clubs),
@@ -538,7 +575,7 @@ struct GameProcessorTests {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
-            #expect(presenter.statesPresented == [subject.state])
+            #expect(presenter.statesPresented[0] == subject.state)
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
         subject.state.firstTapLocation = nil
@@ -552,7 +589,7 @@ struct GameProcessorTests {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.enablements != subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
-            #expect(presenter.statesPresented == [subject.state])
+            #expect(presenter.statesPresented[0] == subject.state)
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
@@ -639,6 +676,7 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[0].cards = [Card(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [Card(rank: .king, suit: .clubs)]
             subject.state.layout.columns[2].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = true
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
@@ -652,6 +690,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == Location(category: .freeCell, index: 0))
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(presenter.statesPresented == [subject.state])
             #expect(animator.methodsCalled.isEmpty)
             #expect(stopwatch.methodsCalled == ["advance()"])
@@ -667,6 +706,7 @@ struct GameProcessorTests {
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
+            subject.state.layout.moveCode = "heyho"
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
@@ -676,13 +716,14 @@ struct GameProcessorTests {
             #expect(subject.state.enablements == expected)
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(presenter.statesPresented == [subject.state])
             #expect(animator.methodsCalled.isEmpty)
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
     }
 
-    @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if unambiguous move, makes it, undo/redo")
+    @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if unambiguous move, makes it, undo/redo, move code")
     func tapFirstUnambiguousYesFreeCell() async {
         subject.state.gameProgress = .inProgress
         do {
@@ -696,6 +737,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[6].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
@@ -711,6 +753,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == Location(category: .freeCell, index: 0))
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(presenter.statesPresented == [subject.state])
             #expect(animator.methodsCalled.isEmpty)
             #expect(stopwatch.methodsCalled == ["advance()"])
@@ -731,6 +774,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[6].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = true // *
             let oldLayout = subject.state.layout
             await subject.receive(.tapped(Location(category: .freeCell, index: 0)))
@@ -745,6 +789,8 @@ struct GameProcessorTests {
             #expect(subject.state.undoStack.first == oldLayout)
             #expect(subject.state.undoStack.last?.columns[7].cards == [Card(rank: .ace, suit: .diamonds)])
             // because that change happened in the round of autoplay
+            #expect(subject.state.undoStack.last?.moveCode == "ah") // because the _user_ moved queen to foundation
+            #expect(subject.state.layout.moveCode == nil) // because the autoplay move is not the user
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented.last == subject.state)
@@ -774,6 +820,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[6].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = false
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -786,6 +833,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == Location(category: .freeCell, index: 0))
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(presenter.statesPresented == [subject.state])
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
@@ -807,6 +855,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[6].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = true // *
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
@@ -823,6 +872,8 @@ struct GameProcessorTests {
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.first == oldLayout)
             #expect(subject.state.undoStack.last?.columns[7].cards == [Card(rank: .ace, suit: .diamonds)])
+            #expect(subject.state.undoStack.last?.moveCode == "a2") // user moved queen onto king of club
+            #expect(subject.state.layout.moveCode == nil) // computer autoplayed
             #expect(presenter.statesPresented.last == subject.state)
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
@@ -846,6 +897,7 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[1].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
@@ -861,6 +913,7 @@ struct GameProcessorTests {
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(presenter.statesPresented == [subject.state])
             #expect(animator.methodsCalled.isEmpty)
             #expect(stopwatch.methodsCalled == ["advance()"])
@@ -887,20 +940,24 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[1].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = true
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))
-            #expect(subject.state.layout.foundations[1].cards == [
+            let expected: [Card] = [
                 Card(rank: .jack, suit: .hearts),
                 Card(rank: .queen, suit: .hearts)
-            ])
+            ]
+            #expect(subject.state.layout.foundations[1].cards == expected)
             #expect(subject.state.layout.columns[0].cards == [])
             #expect(subject.state.layout.columns[7].cards == [])
             #expect(subject.state.layout.foundations[3].cards == [Card(rank: .ace, suit: .diamonds)])
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.first == oldLayout)
             #expect(subject.state.undoStack.last?.columns[7].cards == [Card(rank: .ace, suit: .diamonds)])
+            #expect(subject.state.undoStack.last?.moveCode == "1h")
+            #expect(subject.state.layout.moveCode == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented.last == subject.state)
@@ -934,6 +991,7 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[1].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
@@ -944,6 +1002,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(subject.state.enablements == expected)
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
             #expect(presenter.statesPresented == [subject.state])
@@ -971,20 +1030,24 @@ struct GameProcessorTests {
             subject.state.layout.freeCells[1].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.unambiguousMove = true // *
             subject.state.redoStack = [Layout()]
             let oldLayout = subject.state.layout
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.layout.columns[0].isEmpty)
-            #expect(subject.state.layout.columns[1].cards == [
+            let expected: [Card] = [
                 Card(rank: .king, suit: .clubs),
                 Card(rank: .queen, suit: .hearts),
-            ])
+            ]
+            #expect(subject.state.layout.columns[1].cards == expected)
             #expect(subject.state.layout.columns[7].isEmpty)
             #expect(subject.state.layout.foundations[3].cards == [Card(rank: .ace, suit: .diamonds)])
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.first == oldLayout)
             #expect(subject.state.undoStack.last?.columns[7].cards == [Card(rank: .ace, suit: .diamonds)])
+            #expect(subject.state.undoStack.last?.moveCode == "12")
+            #expect(subject.state.layout.moveCode == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == nil)
             #expect(presenter.statesPresented.last == subject.state)
@@ -1008,11 +1071,14 @@ struct GameProcessorTests {
         do {
             // much simpler example!
             subject.state.layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
             subject.state.unambiguousMove = true
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.layout.columns[0].cards.isEmpty)
-            #expect(subject.state.layout.freeCells[0].cards == [Card(rank: .queen, suit: .hearts)])
+            let expected: [Card] = [Card(rank: .queen, suit: .hearts)]
+            #expect(subject.state.layout.freeCells[0].cards == expected)
+            #expect(subject.state.layout.moveCode == "1a")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented.last == subject.state)
@@ -1058,6 +1124,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
             subject.state.layout.foundations[1].cards = [Card(rank: .four, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
             subject.state.autoplay = false
             subject.state.undoStack = [Layout()]
@@ -1069,6 +1136,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(presenter.statesPresented == [subject.state])
             #expect(animator.methodsCalled.isEmpty)
             #expect(stopwatch.methodsCalled == ["advance()"])
@@ -1097,6 +1165,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout.columns[0].cards.isEmpty)
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.last == oldLayout)
+            #expect(subject.state.layout.moveCode == "1h")
             #expect(presenter.statesPresented == [subject.state])
             #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
             #expect(animator.oldLayout == oldLayout)
@@ -1114,6 +1183,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
             subject.state.layout.freeCells[0].cards = [Card(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -1122,6 +1192,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1137,6 +1208,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .column, index: 0)
             subject.state.layout.freeCells[0].cards = [Card(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.autoplay = false
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
@@ -1146,6 +1218,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout.columns[0].cards == [])
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.last == oldLayout)
+            #expect(subject.state.layout.moveCode == "1b") // where it _went_, not where user _tapped_
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1165,6 +1238,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
             subject.state.layout.freeCells[0].cards = [Card(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -1173,6 +1247,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1188,6 +1263,7 @@ struct GameProcessorTests {
             subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
             subject.state.layout.freeCells[0].cards = [Card(rank: .five, suit: .clubs)]
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.autoplay = false
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
@@ -1199,6 +1275,7 @@ struct GameProcessorTests {
             ])
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.last == oldLayout)
+            #expect(subject.state.layout.moveCode == "a1")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1217,6 +1294,7 @@ struct GameProcessorTests {
             // can't put a heart on a heart
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
             subject.state.layout.columns[1].cards = [Card(rank: .five, suit: .hearts)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
@@ -1226,6 +1304,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
             #expect(subject.state.redoStack == [Layout()])
+            #expect(subject.state.layout.moveCode == "heyho")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1244,6 +1323,7 @@ struct GameProcessorTests {
                 Card(rank: .five, suit: .clubs),
                 Card(rank: .four, suit: .diamonds)
             ]
+            subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
             subject.state.autoplay = false
             let oldLayout = subject.state.layout
@@ -1257,6 +1337,7 @@ struct GameProcessorTests {
             ])
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.last == oldLayout)
+            #expect(subject.state.layout.moveCode == "21")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1277,6 +1358,7 @@ struct GameProcessorTests {
             Card(rank: .five, suit: .clubs),
             Card(rank: .four, suit: .diamonds)
         ]
+        subject.state.layout.moveCode = "heyho"
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         let oldLayout = subject.state.layout
         subject.state.autoplay = false
@@ -1286,6 +1368,7 @@ struct GameProcessorTests {
         #expect(subject.state.layout == oldLayout)
         #expect(subject.state.undoStack == [Layout()])
         #expect(subject.state.redoStack == [Layout()])
+        #expect(subject.state.layout.moveCode == "heyho")
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])
@@ -1306,6 +1389,7 @@ struct GameProcessorTests {
             subject.state.layout.columns[2].cards = [Card(rank: .two, suit: .spades)]
             subject.state.layout.freeCells[0].cards = [Card(rank: .three, suit: .spades)]
             subject.state.layout.foundations[0].cards = [Card(rank: .ace, suit: .spades)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
             subject.state.autoplay = false // *
             let oldLayout = subject.state.layout
@@ -1322,6 +1406,7 @@ struct GameProcessorTests {
             #expect(subject.state.layout.foundations[0].cards == [Card(rank: .ace, suit: .spades)])
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.last == oldLayout)
+            #expect(subject.state.layout.moveCode == "21")
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented == [subject.state])
@@ -1351,6 +1436,7 @@ struct GameProcessorTests {
             subject.state.layout.foundations[0].cards = [Card(rank: .ace, suit: .spades)]
             subject.state.layout.foundations[1].cards = [Card(rank: .ace, suit: .hearts)]
             subject.state.layout.foundations[3].cards = [Card(rank: .ace, suit: .diamonds)]
+            subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
             subject.state.autoplay = true // *
             let oldLayout = subject.state.layout
@@ -1374,6 +1460,8 @@ struct GameProcessorTests {
             #expect(subject.state.redoStack.isEmpty)
             #expect(subject.state.undoStack.first == oldLayout)
             #expect(subject.state.undoStack.last?.foundations[0].cards == [Card(rank: .ace, suit: .spades)])
+            #expect(subject.state.undoStack.last?.moveCode == "21")
+            #expect(subject.state.layout.moveCode == nil)
             #expect(subject.state.firstTapLocation == nil)
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(presenter.statesPresented.count == 2)
@@ -1476,7 +1564,7 @@ struct GameProcessorTests {
         }
     }
 
-    @Test("every `receive`, if the layout is empty of freecell / column cards, declares the game over")
+    @Test("receive autoplay or tapped: if the layout is empty of freecell / column cards, declares the game over")
     func receiveWhenGameOver() async {
         stopwatch.state = .running
         subject.state.gameProgress = .inProgress
@@ -1484,56 +1572,7 @@ struct GameProcessorTests {
             await subject.receive(.autoplay)
             #expect(subject.state.gameProgress == .waitingForDeal)
             #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.hint)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.longPressEnded)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.redo)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.redoAll)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.tapBackground)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
+            await #while(presenter.thingsReceived.isEmpty)
             #expect(presenter.thingsReceived.last == .confetti)
         }
         presenter.thingsReceived = []
@@ -1544,31 +1583,47 @@ struct GameProcessorTests {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.gameProgress == .waitingForDeal)
             #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.undo)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(presenter.thingsReceived.last == .confetti)
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .inProgress
-        do {
-            await subject.receive(.undoAll)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
+            await #while(presenter.thingsReceived.isEmpty)
             #expect(presenter.thingsReceived.last == .confetti)
         }
     }
 
-    @Test("every `receive`, if the layout is empty, but game not in progress, no confetti")
+    @Test("receive autoplay or tapped: if declares the game over, saves the won game stat")
+    func receiveWhenGameOverSaveGame() async {
+        stopwatch.state = .running
+        subject.state.gameProgress = .inProgress
+        var layout = Layout()
+        layout.moveCode = "heyho"
+        layout.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.undoStack = [layout, Layout()]
+        stopwatch.elapsedTime = 200
+        let expected = Stat(
+            dateFinished: Date.distantPast,
+            won: true,
+            initialLayout: layout,
+            movesCount: 1,
+            timeTaken: 200,
+            codes: ["heyho"]
+        )
+        do {
+            await subject.receive(.autoplay)
+            await #while(stats.methodsCalled.isEmpty)
+            #expect(stats.methodsCalled == ["saveStat(_:)"])
+            #expect(stats.stat == expected)
+        }
+        stats.methodsCalled = []
+        stats.stat = nil
+        stopwatch.state = .running
+        subject.state.gameProgress = .inProgress
+        do {
+            await subject.receive(.tapped(Location(category: .column, index: 0)))
+            await #while(stats.methodsCalled.isEmpty)
+            #expect(stats.methodsCalled == ["saveStat(_:)"])
+            #expect(stats.stat == expected)
+        }
+    }
+
+    @Test("receive autoplay or tapped: if the layout is empty, but game not in progress, no confetti, no save")
     func receiveWhenGameOverGameNotInProgress() async {
         stopwatch.state = .running
         subject.state.gameProgress = .waitingForDeal
@@ -1577,56 +1632,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .waitingForDeal)
             #expect(stopwatch.methodsCalled == ["stop()"])
             #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.hint)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.longPressEnded)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.redo)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.redoAll)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.tapBackground)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
+            #expect(stats.methodsCalled.isEmpty)
         }
         presenter.thingsReceived = []
         stopwatch.methodsCalled = []
@@ -1637,26 +1643,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .waitingForDeal)
             #expect(stopwatch.methodsCalled == ["stop()"])
             #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.undo)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
-        }
-        presenter.thingsReceived = []
-        stopwatch.methodsCalled = []
-        stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
-        do {
-            await subject.receive(.undoAll)
-            #expect(subject.state.gameProgress == .waitingForDeal)
-            #expect(stopwatch.methodsCalled == ["stop()"])
-            #expect(!presenter.thingsReceived.contains(.confetti))
+            #expect(stats.methodsCalled.isEmpty)
         }
     }
 

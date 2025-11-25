@@ -1,5 +1,5 @@
 import Foundation
-@testable import FreeCell
+@testable import TTFreeCell
 
 final class MockUserDefaults: UserDefaultsType {
     var methodsCalled = [String]()

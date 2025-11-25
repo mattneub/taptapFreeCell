@@ -156,8 +156,10 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
 
     var microsoftDealNumber: Int? = nil
 
-    // TODO: I can't believe there's not a better way than a darned string
-    // var moveCode: String? = nil
+    /// Standard notation of the user move (if there was one) whereby we reached this layout.
+    /// At the end of a game, the move codes in the undo stack plus the final layout should
+    /// describe the course of the game in human readable form.
+    var moveCode: String? = nil
 
     mutating func deal(microsoftDealNumber: Int) {
         let d = Deck(microsoftDealNumber: microsoftDealNumber)

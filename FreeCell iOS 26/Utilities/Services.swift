@@ -5,5 +5,6 @@ final class Services {
     var date: DateType.Type = Date.self
     var lifetime: LifetimeType = Lifetime()
     var persistence: PersistenceType = Persistence()
+    var stats: StatsType = Stats()
     var userDefaults: UserDefaultsType = UserDefaults.standard
 }

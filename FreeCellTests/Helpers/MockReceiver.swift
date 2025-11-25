@@ -1,4 +1,4 @@
-@testable import FreeCell
+@testable import TTFreeCell
 
 final class MockReceiver<T>: Receiver {
     var thingsReceived: [T] = []

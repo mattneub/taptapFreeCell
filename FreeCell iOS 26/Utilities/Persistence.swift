@@ -2,6 +2,7 @@ import Foundation
 
 struct Defaults {
     static let currentGame = "currentGame"
+    static let stats = "stats" // actually, this one keys into Documents
 }
 
 struct SavedGame: Codable, Equatable {

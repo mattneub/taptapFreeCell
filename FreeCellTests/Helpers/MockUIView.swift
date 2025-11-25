@@ -1,5 +1,5 @@
 import UIKit
-@testable import FreeCell
+@testable import TTFreeCell
 
 final class MockUIView: UIView {
     static var duration: TimeInterval = 0

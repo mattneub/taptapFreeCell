@@ -1,4 +1,4 @@
-@testable import FreeCell
+@testable import TTFreeCell
 import Foundation
 
 final class MockStopwatch: StopwatchType {

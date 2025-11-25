@@ -1,16 +1,16 @@
-@testable import FreeCell
+@testable import TTFreeCell
 import UIKit
 
 final class MockFileManager: FileManagerType {
-    var methodsCalled = [String]()
-    var name: String?
-    var applicationSupportURLtoReturn: URL?
-    var documentsUTLtoReturn: URL?
+    nonisolated(unsafe) var methodsCalled = [String]()
+    nonisolated(unsafe) var name: String?
+    nonisolated(unsafe) var applicationSupportURLtoReturn: URL?
+    nonisolated(unsafe) var documentsURLtoReturn: URL?
 
     func urlInDocuments(name: String) -> URL? {
         methodsCalled.append(#function)
         self.name = name
-        return documentsUTLtoReturn
+        return documentsURLtoReturn
     }
 
     func urlInApplicationSupport(name: String) -> URL? {

@@ -1,5 +1,5 @@
 import UIKit
-@testable import FreeCell
+@testable import TTFreeCell
 
 @discardableResult
 func makeWindow(viewController: UIViewController? = nil) -> UIWindow {

@@ -1,5 +1,5 @@
 import Testing
-@testable import FreeCell
+@testable import TTFreeCell
 
 struct StringTests {
     @Test("trimming whitespaces from line ends: trims at trailing end")

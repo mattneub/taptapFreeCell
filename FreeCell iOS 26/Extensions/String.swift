@@ -7,6 +7,7 @@ extension String {
             .map { $0.replacing(/\s*$/, with: "") }
             .joined(separator: "\n")
     }
+
     var trimmingWhitespacesFromLines: String {
         self
             .components(separatedBy: "\n")

@@ -1,4 +1,4 @@
-@testable import FreeCell
+@testable import TTFreeCell
 import Testing
 
 struct SuitTests {

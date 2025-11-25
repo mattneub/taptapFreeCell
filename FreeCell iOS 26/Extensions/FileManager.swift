@@ -1,7 +1,7 @@
 import Foundation
 
 /// Protocol embodying the public face of FileManager, so we can mock it for testing.
-protocol FileManagerType {
+protocol FileManagerType: Sendable {
     func urlInDocuments(name: String) -> URL?
     func urlInApplicationSupport(name: String) -> URL?
 }

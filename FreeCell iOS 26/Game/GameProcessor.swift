@@ -52,7 +52,7 @@ final class GameProcessor: Processor {
         case .autoplay:
             await ensureNeutralState()
             await autoplay()
-            await checkTheStopwatch()
+            await checkGameEndAndStopwatch(action: action)
         case .deal:
             if state.gameProgress != .waitingForDeal {
                 let result = await coordinator?.showAlert(
@@ -66,13 +66,14 @@ final class GameProcessor: Processor {
                 if result == "Cancel" {
                     return
                 }
-                // TODO: add this game to lost games
+                saveGame(won: false)
             }
             var deck = Deck()
             deck.shuffle()
             state.layout.deal(deck)
             state.undoStack = []
             state.redoStack = []
+            state.layout.moveCode = nil
             state.gameProgress = .waitingForFirstMove
             await ensureNeutralState()
             await animator.animate(oldLayout: Layout(), newLayout: state.layout, speed: state.animationSpeed)
@@ -97,11 +98,15 @@ final class GameProcessor: Processor {
                 await stopwatch.reset(to: game.timeTaken)
                 // the stopwatch is now _stopped_ at the loaded time
             }
+            // read stats
+            Task { // may be very time consuming, but that's no problem since we don't need a result
+                await services.stats.loadStats()
+            }
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()
             await presenter?.present(state)
-            await checkTheStopwatch()
+            await checkStopwatch()
         case .longPress(let location, let internalIndex):
             await ensureNeutralState() // TODO: okay?
             let card = state.layout.card(at: location, internalIndex: internalIndex)
@@ -111,7 +116,7 @@ final class GameProcessor: Processor {
             // no stopwatch check, it's distracting, and so what if it is first move?
         case .longPressEnded:
             await presenter?.receive(.tintsOff)
-            await checkTheStopwatch()
+            await checkStopwatch()
         case .redo:
             if state.redoStack.count > 0 {
                 let oldLayout = state.layout
@@ -120,7 +125,7 @@ final class GameProcessor: Processor {
                 await ensureNeutralState()
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
-            await checkTheStopwatch()
+            await checkStopwatch()
         case .redoAll:
             if state.redoStack.count > 0 {
                 let oldLayout = state.layout
@@ -132,11 +137,11 @@ final class GameProcessor: Processor {
                 await ensureNeutralState()
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
-            await checkTheStopwatch()
+            await checkStopwatch()
         case .tapBackground:
             // user can always tap the background to get out of any "mode"
             await ensureNeutralState()
-            await checkTheStopwatch()
+            await checkStopwatch()
         case .tapped(let tap):
             if state.gameIsOver == true && state.gameProgress == .waitingForDeal {
                 // edge case; `.tapped` comes from _card view_ so view controller never hears about it
@@ -148,7 +153,7 @@ final class GameProcessor: Processor {
             } else {
                 await handleSecondTap(tap)
             }
-            await checkTheStopwatch()
+            await checkGameEndAndStopwatch(action: action)
         case .undo:
             if state.undoStack.count > 0 {
                 let oldLayout = state.layout
@@ -157,7 +162,7 @@ final class GameProcessor: Processor {
                 await ensureNeutralState()
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
-            await checkTheStopwatch()
+            await checkStopwatch()
         case .undoAll:
             if state.undoStack.count > 0 {
                 let oldLayout = state.layout
@@ -169,7 +174,7 @@ final class GameProcessor: Processor {
                 await ensureNeutralState()
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
-            await checkTheStopwatch()
+            await checkStopwatch()
         }
     }
 
@@ -225,6 +230,7 @@ final class GameProcessor: Processor {
         if state.layout != oldLayout {
             state.undoStack.append(oldLayout)
             state.redoStack = []
+            state.layout.moveCode = nil // user didn't do anything to get here
             await ensureNeutralState()
             await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
         }
@@ -246,6 +252,7 @@ final class GameProcessor: Processor {
         if playToFoundationIfSafeAndPossible(location: location) { // TODO: check a pref here?
             state.undoStack.append(oldLayout)
             state.redoStack = []
+            state.layout.moveCode = nil // counts as an autoplay
             await ensureNeutralState()
             await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             if state.autoplay {
@@ -492,12 +499,14 @@ final class GameProcessor: Processor {
             return // shouldn't happen
         }
         let oldLayout = state.layout
+        var moveCodeSecondCharacter = ""
         switch secondTapLocation.category {
         case .foundation:
             // doesn't matter which foundation was tapped; if it can move, move it
             if card.canGoOn(state.layout.foundations) {
                 let card = state.layout.surrenderCard(from: firstTapLocation)
                 state.layout.foundations.accept(card: card)
+                moveCodeSecondCharacter = "h"
             }
         case .freeCell:
             // doesn't matter which free cell was tapped; if it can move, move to first empty
@@ -509,6 +518,7 @@ final class GameProcessor: Processor {
             }
             let card = state.layout.surrenderCard(from: firstTapLocation)
             state.layout.freeCells[targetIndex].accept(card: card)
+            moveCodeSecondCharacter = Location(category: .freeCell, index: targetIndex).standardNotation
         case .column:
             switch firstTapLocation.category {
             case .foundation: break // shouldn't happen
@@ -516,6 +526,7 @@ final class GameProcessor: Processor {
                 if card.canGoOn(state.layout.columns[secondTapLocation.index]) {
                     let card = state.layout.surrenderCard(from: firstTapLocation)
                     state.layout.columns[secondTapLocation.index].accept(card: card)
+                    moveCodeSecondCharacter = Location(category: .column, index: secondTapLocation.index).standardNotation
                 }
             case .column:
                 let number = state.layout.howManyCardsCanMoveLegally(
@@ -529,12 +540,14 @@ final class GameProcessor: Processor {
                         state.layout.columns[secondTapLocation.index].accept(card: $0)
                     }
                     state.layout.columns[firstTapLocation.index].cards.removeLast(number)
+                    moveCodeSecondCharacter = Location(category: .column, index: secondTapLocation.index).standardNotation
                 }
             }
         }
         if state.layout != oldLayout {
             state.undoStack.append(oldLayout)
             state.redoStack = []
+            state.layout.moveCode = firstTapLocation.standardNotation + moveCodeSecondCharacter
             await ensureNeutralState()
             await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
         } else {
@@ -545,14 +558,35 @@ final class GameProcessor: Processor {
         }
     }
 
-    func checkTheStopwatch() async {
-        if state.gameIsOver {
-            await stopwatch.stop()
-            if state.gameProgress == .inProgress {
-                state.gameProgress = .waitingForDeal
-                await presenter?.receive(.confetti)
+    /// Check to see whether the game is over. If it is, set the stopwatch and game progress
+    /// appropriately, and show the confetti and save the game. If this method is called, it
+    /// must be called _before_ `checkTheStopwatch`, because the latter depends upon changes
+    /// we may make here. Therefore _we_ call it here. Do not call _both_ `checkGame` and
+    /// `checkStopwatch`.
+    func checkGameEndAndStopwatch(action: GameAction) async {
+        // these are the only actions for which "win the game" makes sense; we should not have
+        // to check this (i.e. `receive` should call only from the correct actions) but this is
+        // an extra safety check
+        switch action {
+        case .autoplay, .tapped:
+            if state.gameIsOver {
+                await stopwatch.stop()
+                if state.gameProgress == .inProgress {
+                    state.gameProgress = .waitingForDeal
+                    saveGame(won: true)
+                    Task {
+                        await presenter?.receive(.confetti)
+                    }
+                }
             }
+        default: break
         }
+        await checkStopwatch()
+    }
+
+    /// Based on the game progress and the state of the stopwatch, set the game progress and
+    /// and the stopwatch. Must be called only _after_ `checkGameEnd`, which therefore calls it.
+    func checkStopwatch() async {
         if state.gameProgress == .waitingForDeal { // only `deal` can change this
             return
         }
@@ -564,6 +598,29 @@ final class GameProcessor: Processor {
             await stopwatch.advance()
         case .stopped:
             await stopwatch.start()
+        }
+    }
+
+    /// Save the game into the stats.
+    /// - Parameter won: Whether the game was won or lost.
+    func saveGame(won: Bool) {
+        let codes = (state.undoStack + [state.layout]).compactMap { $0.moveCode }
+        let stat = Stat(
+            dateFinished: (services.date.init() as? Date) ?? Date.distantPast,
+            won: won,
+            // if user ever moved and never undid all the way, the initial layout is sitting
+            // at the start of the undo stack; but otherwise it is the _current_ layout
+            initialLayout: state.undoStack.first ?? state.layout,
+            movesCount: codes.count,
+            timeTaken: stopwatch.elapsedTime,
+            codes: codes
+        )
+        Task { // because the actual saving may be time consuming
+            do {
+                try await services.stats.saveStat(stat)
+            } catch {
+                print(error) // TODO: Do something real here?
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 import UIKit
-@testable import FreeCell
+@testable import TTFreeCell
 
 final class MockRootCoordinator: RootCoordinatorType {
 

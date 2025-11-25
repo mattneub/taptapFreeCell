@@ -1,5 +1,5 @@
 import Testing
-@testable import FreeCell
+@testable import TTFreeCell
 import UIKit
 
 struct CGRectTest {
