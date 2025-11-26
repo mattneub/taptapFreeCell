@@ -890,22 +890,40 @@ struct LayoutTests {
 
     @Test("tableauDescription looks right")
     func tableauDescription() {
-        var subject = Layout()
-        subject.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
-        subject.columns[1].cards = [
-            Card(rank: .queen, suit: .diamonds),
-            Card(rank: .jack, suit: .clubs),
-            Card(rank: .ten, suit: .hearts),
-            Card(rank: .nine, suit: .clubs),
-            Card(rank: .eight, suit: .hearts),
-            Card(rank: .seven, suit: .clubs),
-            Card(rank: .six, suit: .hearts),
-            Card(rank: .five, suit: .clubs),
-            Card(rank: .four, suit: .hearts),
-            Card(rank: .three, suit: .clubs),
-            Card(rank: .two, suit: .hearts)
-        ]
-        var expected = """
+        do {
+            var subject = Layout()
+            subject.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
+            subject.columns[1].cards = [
+                Card(rank: .queen, suit: .diamonds),
+                Card(rank: .jack, suit: .clubs),
+            ]
+            subject.columns[7].cards = [
+                Card(rank: .ten, suit: .hearts),
+            ]
+            let expected = """
+            QH QD                TH
+               JC\n
+            """
+            let result = subject.tableauDescription
+            #expect(result == expected)
+        }
+        do {
+            var subject = Layout()
+            subject.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
+            subject.columns[1].cards = [
+                Card(rank: .queen, suit: .diamonds),
+                Card(rank: .jack, suit: .clubs),
+                Card(rank: .ten, suit: .hearts),
+                Card(rank: .nine, suit: .clubs),
+                Card(rank: .eight, suit: .hearts),
+                Card(rank: .seven, suit: .clubs),
+                Card(rank: .six, suit: .hearts),
+                Card(rank: .five, suit: .clubs),
+                Card(rank: .four, suit: .hearts),
+                Card(rank: .three, suit: .clubs),
+                Card(rank: .two, suit: .hearts)
+            ]
+            let expected = """
             QH QD
                JC
                TH
@@ -918,10 +936,13 @@ struct LayoutTests {
                3C
                2H\n
             """
-        var result = subject.tableauDescription
-        #expect(result == expected)
-        subject.deal(Deck())
-        expected = """
+            let result = subject.tableauDescription
+            #expect(result == expected)
+        }
+        do {
+            var subject = Layout()
+            subject.deal(Deck())
+            let expected = """
             AH AD AS AC 2H 2D 2S 2C
             3H 3D 3S 3C 4H 4D 4S 4C
             5H 5D 5S 5C 6H 6D 6S 6C
@@ -930,8 +951,44 @@ struct LayoutTests {
             JH JD JS JC QH QD QS QC
             KH KD KS KC\n
             """
-        result = subject.tableauDescription
-        #expect(result == expected)
+            let result = subject.tableauDescription
+            #expect(result == expected)
+        }
+    }
+
+    @Test("old style tableau description translates into new style tableau description")
+    func oldToNewTableauDescription() {
+        // we need to know this because we are going to do it to the stats dictionary
+        func toOldTableauDescription(_ layout: Layout) -> String {
+            var output = ""
+            var maxempty = 0
+            var row = 0
+            loop: while true {
+                for column in layout.columns {
+                    if column.cards.count > row {
+                        output.write(column.cards[row].description)
+                        maxempty = 0
+                    } else {
+                        output.write("  ")
+                        maxempty += 1
+                    }
+                    output.write(" ")
+                    if maxempty > layout.columns.count {
+                        break loop
+                    }
+                }
+                row += 1
+                output.write("\n")
+            }
+            return output // without trimming
+        }
+        var layout = Layout()
+        var deck = Deck()
+        deck.shuffle()
+        layout.deal(deck)
+        let oldDesc = toOldTableauDescription(layout)
+        let newDesc = layout.tableauDescription
+        #expect(oldDesc.trimmingWhitespacesFromLineEnds == newDesc)
     }
 
     @Test("Shlomi tableau description is correct")

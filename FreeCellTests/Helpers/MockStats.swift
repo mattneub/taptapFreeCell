@@ -10,6 +10,10 @@ actor MockStats: StatsType {
         methodsCalled.append(#function)
     }
 
+    func doMigration3() {
+        methodsCalled.append(#function)
+    }
+
     func saveStat(_ stat: Stat) async throws {
         methodsCalled.append(#function)
         self.stat = stat

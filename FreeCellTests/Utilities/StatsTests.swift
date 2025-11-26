@@ -47,4 +47,22 @@ struct StatsTests {
         let result = try #require(stats[layout.tableauDescription])
         #expect(result == stat)
     }
+
+    @Test("doMigration3: rewrites the stat keys as expected")
+    func doMigration3() async throws {
+        let bundle = Bundle(for: MockFileManager.self)
+        let url = try #require(bundle.url(forResource: "stats", withExtension: nil))
+        fileManager.documentsURLtoReturn = url
+        await subject.loadStats() // unmigrated stats
+        let keys = await subject.stats.keys
+        let sampleKey = Array(keys)[0]
+        let value = await subject.stats[sampleKey]
+        let expectedMigratedKeys = Set(keys.map { $0.trimmingWhitespacesFromLineEnds })
+        // this is the test
+        await subject.doMigration3()
+        let migratedKeys = await subject.stats.keys
+        #expect(Set(migratedKeys) == expectedMigratedKeys)
+        let newValue = await subject.stats[sampleKey.trimmingWhitespacesFromLineEnds]
+        #expect(newValue == value)
+    }
 }

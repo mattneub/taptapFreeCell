@@ -183,14 +183,29 @@ struct GameProcessorTests {
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
     }
 
-    @Test("receive didInitialLayout: sets up the lifetime listener task, tells stats to load stats")
+    @Test("receive didInitialLayout: sets up the lifetime listener task, tells stats to load stats, migrates stats if needed")
     func didInitialLayout() async {
+        persistence.migrationToReturn = false
+        #expect(subject.listenForEventTask == nil)
+        await subject.receive(.didInitialLayout)
+        await #while(subject.listenForEventTask == nil)
+        #expect(subject.listenForEventTask != nil)
+        await #while(stats.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled == ["loadStats()", "doMigration3()"])
+        #expect(persistence.migrationSet == true)
+        subject.listenForEventTask?.cancel()
+    }
+
+    @Test("receive didInitialLayout: if stats do not need migration, does not migrate stats")
+    func didInitialLayoutNoMigrationNeeded() async {
+        persistence.migrationToReturn = true // *
         #expect(subject.listenForEventTask == nil)
         await subject.receive(.didInitialLayout)
         await #while(subject.listenForEventTask == nil)
         #expect(subject.listenForEventTask != nil)
         await #while(stats.methodsCalled.isEmpty)
         #expect(stats.methodsCalled == ["loadStats()"])
+        #expect(persistence.migrationSet == nil)
         subject.listenForEventTask?.cancel()
     }
 
@@ -220,6 +235,7 @@ struct GameProcessorTests {
 
     @Test("receive didInitialLayout: setting the lifetime's enterBackground sends remove confetti, tells persistence to save game")
     func didInitialLayoutEnterBackground() async {
+        persistence.migrationToReturn = true
         await subject.receive(.didInitialLayout)
         await #while(subject.listenForEventTask == nil)
         Task {

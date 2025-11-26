@@ -15,4 +15,9 @@ final class MockUserDefaults: UserDefaultsType {
         methodsCalled.append(#function)
         return thingsToReturn[forKey] as? Data
     }
+
+    func bool(forKey: String) -> Bool {
+        methodsCalled.append(#function)
+        return thingsToReturn[forKey] as? Bool ?? false
+    }
 }

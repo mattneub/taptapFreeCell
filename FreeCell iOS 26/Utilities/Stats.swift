@@ -5,6 +5,7 @@ protocol StatsType: Actor {
 
     func loadStats() async
     func saveStat(_ stat: Stat) async throws
+    func doMigration3()
 }
 
 /// Actor who loads and saves the stats dictionary. This involves use of a property list
@@ -25,6 +26,14 @@ actor Stats: StatsType {
                 print(error)
             }
         }
+    }
+
+    /// Intended to be called _once_ in the lifetime of the _user_! Convert the keys of `stats`
+    /// dictionary to the newer style of layout description. No great harm if we ever do this
+    /// a second time; it will take time but it will make no change. I describe this as
+    /// migration 3 because there were two earlier migrations, now removed from the code.
+    func doMigration3() {
+        stats = stats.mapKeys { $0.trimmingWhitespacesFromLineEnds }
     }
 
     /// Intended to be called when a game ends by win or loss. Save the given Stat into the

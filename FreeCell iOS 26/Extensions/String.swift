@@ -1,5 +1,6 @@
 import Foundation
 
+nonisolated
 extension String {
     var trimmingWhitespacesFromLineEnds: String {
         self

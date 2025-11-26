@@ -21,6 +21,7 @@ struct PersistenceTests {
             timeTaken: 3
         )
         subject.saveGame(savedGame)
+        #expect(defaults.methodsCalled == ["set(_:forKey:)"])
         let data = try #require(defaults.thingsSet["currentGame"] as? Data)
         let result = try PropertyListDecoder().decode(SavedGame.self, from: data)
         #expect(result == savedGame)
@@ -39,6 +40,7 @@ struct PersistenceTests {
         let data = try PropertyListEncoder().encode(savedGame)
         defaults.thingsToReturn["currentGame"] = data
         let result = try #require(subject.loadGame())
+        #expect(defaults.methodsCalled == ["data(forKey:)"])
         #expect(result == savedGame)
     }
 
@@ -49,6 +51,30 @@ struct PersistenceTests {
         defaults.thingsToReturn["currentGame"] = Data()
         let result2 = subject.loadGame()
         #expect(result2 == nil)
+    }
+
+    @Test("setDidMigration3: sets bool value for migration3")
+    func setDidMigration3() {
+        subject.setDidMigration3(true)
+        #expect(defaults.methodsCalled == ["set(_:forKey:)"])
+        #expect(defaults.thingsSet["migration3"] as? Bool == true)
+        defaults.methodsCalled = []
+        subject.setDidMigration3(false)
+        #expect(defaults.methodsCalled == ["set(_:forKey:)"])
+        #expect(defaults.thingsSet["migration3"] as? Bool == false)
+    }
+
+    @Test("didMigration3: returns bool value for migration3")
+    func didMigration3() {
+        defaults.thingsToReturn["migration3"] = false
+        var result = subject.didMigration3()
+        #expect(result == false)
+        #expect(defaults.methodsCalled == ["bool(forKey:)"])
+        defaults.methodsCalled = []
+        defaults.thingsToReturn["migration3"] = true
+        result = subject.didMigration3()
+        #expect(result == true)
+        #expect(defaults.methodsCalled == ["bool(forKey:)"])
     }
 
 }

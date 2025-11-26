@@ -271,7 +271,9 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
         }
     }
 
-    /// Vertical portrait of the columns, just like the way the game itself looks.
+    /// Vertical portrait of the columns, just like the way the game itself looks. This is used
+    /// as unique the identifier for a game, because the initial layout when a deal is dealt
+    /// consists entirely of columns; thus it is the key in the stats dictionary.
     var tableauDescription: String {
         var output = ""
         // kind of tricky: write until you've hit seven empties in a row
@@ -357,7 +359,8 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
     }
     */
 
-    /// Full "official" description of the layout. Mostly for debugging purposes.
+    /// Full "official" human-readable description of the layout.
+    /// Besides being useful for debugging, this is also the basis of Layout equality.
     var description: String {
         var output = ""
         output.write("FOUNDATIONS: ")

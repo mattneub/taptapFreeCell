@@ -101,6 +101,10 @@ final class GameProcessor: Processor {
             // read stats
             Task { // may be very time consuming, but that's no problem since we don't need a result
                 await services.stats.loadStats()
+                if !services.persistence.didMigration3() {
+                    await services.stats.doMigration3()
+                    services.persistence.setDidMigration3(true)
+                }
             }
         case .hint:
             state.firstTapLocation = nil
