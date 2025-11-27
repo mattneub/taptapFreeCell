@@ -58,6 +58,8 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Game"
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "Game")
 
         let dealButton = UIBarButtonItem(
             title: nil,
@@ -67,7 +69,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         )
         let menuButton = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis"),
-            menu: gameViewMenuBuilder?.buildMenu()
+            menu: gameViewMenuBuilder?.buildMenu(processor: processor)
         )
         navigationItem.leftBarButtonItems = [dealButton, menuButton]
 

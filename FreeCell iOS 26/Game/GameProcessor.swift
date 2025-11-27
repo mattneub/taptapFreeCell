@@ -98,14 +98,7 @@ final class GameProcessor: Processor {
                 await stopwatch.reset(to: game.timeTaken)
                 // the stopwatch is now _stopped_ at the loaded time
             }
-            // read stats
-            Task { // may be very time consuming, but that's no problem since we don't need a result
-                await services.stats.loadStats()
-                if !services.persistence.didMigration3() {
-                    await services.stats.doMigration3()
-                    services.persistence.setDidMigration3(true)
-                }
-            }
+            await services.stats.loadStats() // actor, interface not blocked
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()
@@ -142,6 +135,9 @@ final class GameProcessor: Processor {
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkStopwatch()
+        case .showStats:
+            await stopwatch.pause()
+            coordinator?.showStats()
         case .tapBackground:
             // user can always tap the background to get out of any "mode"
             await ensureNeutralState()

@@ -1,0 +1,1 @@
+enum StatsEffect: Equatable {}

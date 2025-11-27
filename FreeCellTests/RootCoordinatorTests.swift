@@ -39,4 +39,16 @@ struct RootCoordinatorTests {
         await #while(result == nil)
         #expect(result == "button1")
     }
+
+    @Test("showStats constructs the stats module, pushes stats view controller")
+    func showStats() async throws {
+        let navigationController = UINavigationController()
+        subject.rootViewController = navigationController
+        subject.showStats()
+        let processor = try #require(subject.statsProcessor as? StatsProcessor)
+        #expect(processor.coordinator === subject)
+        let viewController = try #require(processor.presenter as? StatsViewController)
+        #expect(viewController.processor === processor)
+        #expect(navigationController.children.first == viewController)
+    }
 }

@@ -7,6 +7,7 @@ enum GameAction: Equatable {
     case longPressEnded
     case redo
     case redoAll
+    case showStats
     case tapBackground
     case tapped(Location)
     case undo

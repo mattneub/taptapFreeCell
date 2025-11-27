@@ -2,11 +2,11 @@
 import UIKit
 
 final class MockPersistence: PersistenceType {
-    var methodsCalled = [String]()
-    var savedGame: SavedGame?
-    var savedGameToReturn: SavedGame?
-    var migrationSet: Bool?
-    var migrationToReturn: Bool?
+    nonisolated(unsafe) var methodsCalled = [String]()
+    nonisolated(unsafe) var savedGame: SavedGame?
+    nonisolated(unsafe) var savedGameToReturn: SavedGame?
+    nonisolated(unsafe) var migrationSet: Bool?
+    nonisolated(unsafe) var migrationToReturn: Bool?
 
     func saveGame(_ savedGame: SavedGame) {
         methodsCalled.append(#function)

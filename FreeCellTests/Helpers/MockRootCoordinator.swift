@@ -23,4 +23,7 @@ final class MockRootCoordinator: RootCoordinatorType {
         return buttonTitleToReturn
     }
 
+    func showStats() {
+        methodsCalled.append(#function)
+    }
 }

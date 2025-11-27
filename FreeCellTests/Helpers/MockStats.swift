@@ -3,7 +3,7 @@ import Foundation
 
 actor MockStats: StatsType {
     nonisolated(unsafe) var methodsCalled = [String]()
-    var stats: StatsDictionary = [:]
+    nonisolated(unsafe) var stats: StatsDictionary = [:]
     nonisolated(unsafe) var stat: Stat?
 
     func loadStats() async {

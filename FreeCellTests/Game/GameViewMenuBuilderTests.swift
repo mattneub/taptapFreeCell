@@ -1,11 +1,13 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
+import WaitWhile
 
 struct GameViewMenuBuilderTests {
     @Test("menu is correctly built")
-    func build() throws {
-        let result = GameViewMenuBuilder().buildMenu()
+    func build() async throws {
+        let processor = MockReceiver<GameAction>()
+        let result = GameViewMenuBuilder().buildMenu(processor: processor)
         #expect(result.title == "")
         #expect(result.children.count == 5)
         do {
@@ -22,6 +24,9 @@ struct GameViewMenuBuilderTests {
             let action = try #require(result.children[2] as? UIAction)
             #expect(action.title == "Statistics")
             #expect(action.image == UIImage(systemName: "pencil.and.list.clipboard"))
+            (action as? MyUIAction)?.handler?(action)
+            await #while(processor.thingsReceived.isEmpty)
+            #expect(processor.thingsReceived == [.showStats])
         }
         do {
             let action = try #require(result.children[3] as? UIAction)

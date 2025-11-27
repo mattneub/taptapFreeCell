@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_0" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="StatCellContentView" customModule="TTFreeCell" customModuleProvider="target">
+            <connections>
+                <outlet property="dateLabel" destination="YGi-4B-LIp" id="76j-sR-18c"/>
+                <outlet property="movesLabel" destination="joQ-wl-AHf" id="phS-pt-SyL"/>
+                <outlet property="supplementaryLabel" destination="VHC-ih-Kfz" id="r89-Se-frh"/>
+                <outlet property="timeLabel" destination="h1u-9b-5jL" id="17F-y0-YzB"/>
+                <outlet property="wonLabel" destination="Pux-MK-SSG" id="IkX-UE-BXu"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="712" height="242"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsLetterSpacingToFitWidth="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YGi-4B-LIp" userLabel="Date Label">
+                    <rect key="frame" x="8" y="8" width="177.5" height="16"/>
+                    <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="h1u-9b-5jL" userLabel="Time Label">
+                    <rect key="frame" x="193.5" y="8" width="222.5" height="16"/>
+                    <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="joQ-wl-AHf" userLabel="Moves Label">
+                    <rect key="frame" x="424" y="8" width="222" height="16"/>
+                    <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Pux-MK-SSG" userLabel="Won Label">
+                    <rect key="frame" x="654" y="8" width="50" height="16"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="50" id="3lM-Iz-D6m"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VHC-ih-Kfz" userLabel="Supplementary Label">
+                    <rect key="frame" x="8" y="28" width="696" height="210"/>
+                    <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="12"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="YGi-4B-LIp" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="8" id="AL1-BI-OGU"/>
+                <constraint firstAttribute="bottom" secondItem="VHC-ih-Kfz" secondAttribute="bottom" priority="999" constant="4" id="AS4-8Y-8Lu"/>
+                <constraint firstItem="joQ-wl-AHf" firstAttribute="top" secondItem="h1u-9b-5jL" secondAttribute="top" id="GHd-Kj-VVf"/>
+                <constraint firstItem="VHC-ih-Kfz" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="8" id="Ghe-qD-PVy"/>
+                <constraint firstItem="Pux-MK-SSG" firstAttribute="leading" secondItem="joQ-wl-AHf" secondAttribute="trailing" constant="8" id="HXG-Aj-nEE"/>
+                <constraint firstItem="h1u-9b-5jL" firstAttribute="width" secondItem="YGi-4B-LIp" secondAttribute="width" multiplier="1.25" id="Ohw-gI-IUQ"/>
+                <constraint firstAttribute="trailing" secondItem="Pux-MK-SSG" secondAttribute="trailing" constant="8" id="QWA-VS-rJr"/>
+                <constraint firstItem="VHC-ih-Kfz" firstAttribute="top" secondItem="YGi-4B-LIp" secondAttribute="bottom" constant="4" id="SzP-tg-32L"/>
+                <constraint firstAttribute="trailing" secondItem="VHC-ih-Kfz" secondAttribute="trailing" constant="8" id="TCZ-pZ-57V"/>
+                <constraint firstItem="h1u-9b-5jL" firstAttribute="bottom" secondItem="YGi-4B-LIp" secondAttribute="bottom" id="Vbu-t4-bJL"/>
+                <constraint firstItem="Pux-MK-SSG" firstAttribute="top" secondItem="joQ-wl-AHf" secondAttribute="top" id="WQl-Pa-pZ1"/>
+                <constraint firstItem="h1u-9b-5jL" firstAttribute="top" secondItem="YGi-4B-LIp" secondAttribute="top" id="aEO-2K-ZBz"/>
+                <constraint firstItem="YGi-4B-LIp" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="8" id="fKk-Q3-U33"/>
+                <constraint firstItem="Pux-MK-SSG" firstAttribute="bottom" secondItem="joQ-wl-AHf" secondAttribute="bottom" id="ksp-xf-wM4"/>
+                <constraint firstItem="h1u-9b-5jL" firstAttribute="leading" secondItem="YGi-4B-LIp" secondAttribute="trailing" constant="8" id="toV-vX-OcR"/>
+                <constraint firstItem="joQ-wl-AHf" firstAttribute="leading" secondItem="h1u-9b-5jL" secondAttribute="trailing" constant="8" id="ul7-rO-KEm"/>
+                <constraint firstItem="joQ-wl-AHf" firstAttribute="width" secondItem="h1u-9b-5jL" secondAttribute="width" id="ybh-tm-LEQ"/>
+                <constraint firstItem="joQ-wl-AHf" firstAttribute="bottom" secondItem="h1u-9b-5jL" secondAttribute="bottom" id="za1-rj-QKc"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="416.25" y="-66.549295774647888"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

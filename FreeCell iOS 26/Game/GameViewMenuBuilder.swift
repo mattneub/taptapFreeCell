@@ -1,12 +1,12 @@
 import UIKit
 
 protocol GameViewMenuBuilderType {
-    func buildMenu() -> UIMenu
+    func buildMenu(processor: (any Receiver<GameAction>)?) -> UIMenu
 }
 
 /// Helper object that builds the popdown menu for the second bar button item.
 struct GameViewMenuBuilder: GameViewMenuBuilderType {
-    func buildMenu() -> UIMenu {
+    func buildMenu(processor: (any Receiver<GameAction>)?) -> UIMenu {
         let rulesAction = UIAction(
             title: "Rules",
             image: UIImage(systemName: "lightbulb")
@@ -15,10 +15,14 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             title: "About",
             image: UIImage(systemName: "questionmark.circle")
         ) { _ in }
-        let statsAction = UIAction(
-            title: "Statistics",
+        let statsAction = MyUIAction(
+            myTitle: "Statistics",
             image: UIImage(systemName: "pencil.and.list.clipboard")
-        ) { _ in }
+        ) { [weak processor] _ in
+            Task {
+                await processor?.receive(.showStats)
+            }
+        }
         let prefsAction = UIAction(
             title: "Settings",
             image: UIImage(systemName: "gear")

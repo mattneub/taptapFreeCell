@@ -4,6 +4,7 @@ import UIKit
 protocol RootCoordinatorType: AnyObject {
     func createInterface(window: UIWindow)
     func showAlert(title: String?, message: String?, buttonTitles: [String]) async -> String?
+    func showStats()
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -11,6 +12,7 @@ final class RootCoordinator: RootCoordinatorType {
     weak var rootViewController: UIViewController?
 
     var gameProcessor: (any Processor<GameAction, GameState, GameEffect>)?
+    var statsProcessor: (any Processor<StatsAction, StatsState, StatsEffect>)?
 
     func createInterface(window: UIWindow) {
         let processor = GameProcessor()
@@ -43,5 +45,14 @@ final class RootCoordinator: RootCoordinatorType {
         }
     }
 
+    func showStats() {
+        let processor = StatsProcessor()
+        self.statsProcessor = processor
+        let viewController = StatsViewController()
+        processor.presenter = viewController
+        processor.coordinator = self
+        viewController.processor = processor
+        (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
+    }
 
 }

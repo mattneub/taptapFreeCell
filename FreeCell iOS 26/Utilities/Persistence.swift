@@ -13,7 +13,7 @@ struct SavedGame: Codable, Equatable {
     let timeTaken: TimeInterval
 }
 
-protocol PersistenceType {
+protocol PersistenceType: Sendable {
     func saveGame(_: SavedGame)
     func loadGame() -> SavedGame?
     func setDidMigration3(_: Bool)

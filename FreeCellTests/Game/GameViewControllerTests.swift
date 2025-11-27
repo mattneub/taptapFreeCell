@@ -50,6 +50,8 @@ struct GameViewControllerTests {
     @Test("viewDidLoad: configures bar button items, adds image view, tap gesture recognizers")
     func viewDidLoad() throws {
         subject.loadViewIfNeeded()
+        #expect(subject.title == "Game")
+        #expect(subject.navigationItem.backBarButtonItem?.title == "Game")
         let lefts = try #require(subject.navigationItem.leftBarButtonItems)
         #expect(lefts.count == 2)
         #expect(lefts[0].title == nil)
@@ -61,7 +63,8 @@ struct GameViewControllerTests {
         #expect(lefts[1].target == nil)
         #expect(lefts[1].action == nil)
         #expect(lefts[1].menu?.title == "title")
-        #expect(builder.methodsCalled == ["buildMenu()"])
+        #expect(builder.methodsCalled == ["buildMenu(processor:)"])
+        #expect(builder.processor === processor)
         let rights = try #require(subject.navigationItem.rightBarButtonItems)
         #expect(rights.count == 2)
         #expect(rights[0].title == nil)
