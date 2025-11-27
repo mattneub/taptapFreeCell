@@ -67,9 +67,9 @@ struct DeckTests {
     func shuffle() {
         var subject = Deck()
         let unshuffled = Deck()
-        #expect(subject == unshuffled)
+        #expect(subject.cards == unshuffled.cards)
         subject.shuffle()
-        #expect(subject != unshuffled)
+        #expect(subject.cards != unshuffled.cards)
         #expect(Set(subject.cards) == Set(unshuffled.cards))
     }
 

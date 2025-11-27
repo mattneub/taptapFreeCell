@@ -9,7 +9,7 @@ struct StopwatchTests {
 
     init() {
         subject = Stopwatch(delegate: delegate)
-        services.date = MockDate.self
+        services.dateType = MockDate.self
         subject.state = .running
         MockDate.timeIntervalToReturn = 100
         subject.elapsedTime = 50

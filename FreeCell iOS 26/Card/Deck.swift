@@ -1,8 +1,27 @@
 import Foundation
 
+/// Protocol describing the public face of Deck, so we can mock it for testing.
+protocol DeckType {
+    var isEmpty: Bool { get }
+    mutating func shuffle()
+    mutating func deal() -> Card
+}
+
+/// Protocol describing the public face of DeckFactory, so we can mock it for testing.
+protocol DeckFactoryType {
+    func makeDeck() -> any DeckType
+}
+
+/// Class that makes a new deck, so we can make a mock deck during testing.
+final class DeckFactory: DeckFactoryType {
+    func makeDeck() -> any DeckType {
+        return Deck()
+    }
+}
+
 /// The full deck of cards. The reason this can be a struct is that we only ever deal out _all_
 /// the cards, once, and then we're done with it, so there is no need to keep a master reference.
-struct Deck: CustomStringConvertible, Codable, Equatable {
+struct Deck: DeckType {
     var cards = [Card]()
 
     var isEmpty: Bool { cards.isEmpty }
@@ -15,7 +34,7 @@ struct Deck: CustomStringConvertible, Codable, Equatable {
         }
     }
 
-    init(microsoftDealNumber:Int) {
+    init(microsoftDealNumber: Int) {
         for i in (0..<52).reversed() {
             self.cards.append(Card(microsoftIndex: i))
         }
@@ -36,11 +55,7 @@ struct Deck: CustomStringConvertible, Codable, Equatable {
         self.cards.shuffle()
     }
 
-    var description: String {
-        return String(describing: cards)
-    }
-
-    var dealDescription: String { // as if dealt into 8 columns
+    var dealDescription: String { // as if dealt into 8 columns; used only in tests
         var output = ""
         for (index, card) in cards.enumerated() {
             output.write(String(describing: card))

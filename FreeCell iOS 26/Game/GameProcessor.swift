@@ -68,9 +68,12 @@ final class GameProcessor: Processor {
                 }
                 saveGame(won: false)
             }
-            var deck = Deck()
-            deck.shuffle()
-            state.layout.deal(deck)
+            let stats = await services.stats.stats
+            var deck: DeckType = services.deckFactory.makeDeck()
+            repeat {
+                deck.shuffle()
+                state.layout.deal(deck)
+            } while stats[state.layout.tableauDescription] != nil
             state.undoStack = []
             state.redoStack = []
             state.layout.moveCode = nil
@@ -606,7 +609,7 @@ final class GameProcessor: Processor {
     func saveGame(won: Bool) {
         let codes = (state.undoStack + [state.layout]).compactMap { $0.moveCode }
         let stat = Stat(
-            dateFinished: (services.date.init() as? Date) ?? Date.distantPast,
+            dateFinished: (services.dateType.init() as? Date) ?? Date.distantPast,
             won: won,
             // if user ever moved and never undid all the way, the initial layout is sitting
             // at the start of the undo stack; but otherwise it is the _current_ layout

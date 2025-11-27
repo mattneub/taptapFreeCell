@@ -12,6 +12,7 @@ struct GameProcessorTests {
     let persistence = MockPersistence()
     let coordinator = MockRootCoordinator()
     let stats = MockStats()
+    let deckFactory = MockDeckFactory()
 
     init() {
         subject.coordinator = coordinator
@@ -21,7 +22,8 @@ struct GameProcessorTests {
         services.lifetime = lifetime
         services.persistence = persistence
         services.stats = stats
-        services.date = MockDate.self
+        services.dateType = MockDate.self
+        services.deckFactory = deckFactory
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -100,6 +102,9 @@ struct GameProcessorTests {
 
     @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it, empties undo/redo")
     func deal() async {
+        let deck = MockDeck()
+        deckFactory.mockDeckToReturn = deck
+        deck.cardsToDeal = [Card(rank: .jack, suit: .hearts)]
         subject.state.gameProgress = .waitingForDeal
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.undoStack = [Layout(), Layout()]
@@ -107,8 +112,7 @@ struct GameProcessorTests {
         subject.state.layout.moveCode = "yoho"
         #expect(subject.state.layout == Layout())
         await subject.receive(.deal)
-        let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
-        #expect(tableau.count == 104) // fifty two cards
+        #expect(deck.methodsCalled == ["shuffle()", "deal()"])
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])
@@ -139,8 +143,33 @@ struct GameProcessorTests {
         #expect(stats.methodsCalled.isEmpty)
     }
 
+    @Test("receive deal: deals repeatedly until layout tableau description is not in stats")
+    func dealRepeatedly() async {
+        let deck = MockDeck()
+        deckFactory.mockDeckToReturn = deck
+        deck.cardsToDeal = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .queen, suit: .hearts),
+            Card(rank: .king, suit: .hearts)
+        ]
+        var stats = StatsDictionary()
+        let stat = Stat(dateFinished: Date.now, won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1)
+        var layout = Layout()
+        layout.columns[0].cards = [deck.cardsToDeal[0]]
+        stats[layout.tableauDescription] = stat
+        layout.columns[0].cards = [deck.cardsToDeal[1]]
+        stats[layout.tableauDescription] = stat
+        // okay, we've stacked the deck (ha ha), here comes the test
+        self.stats.stats = stats
+        await subject.receive(.deal)
+        #expect(deck.methodsCalled == ["shuffle()", "deal()", "shuffle()", "deal()", "shuffle()", "deal()"])
+    }
+
     @Test("receive deal: if game is not waitingForDeal, puts up alert; if user does not cancel, saves lost game, proceeds to deal")
     func dealNotWaitingForDealUserSaysDeal() async {
+        let deck = MockDeck()
+        deckFactory.mockDeckToReturn = deck
+        deck.cardsToDeal = [Card(rank: .jack, suit: .hearts)]
         stopwatch.elapsedTime = 200
         subject.state.gameProgress = .inProgress
         coordinator.buttonTitleToReturn = "Deal"
@@ -167,8 +196,7 @@ struct GameProcessorTests {
             timeTaken: 200,
             codes: ["hey", "ho"]
         ))
-        let tableau = subject.state.layout.shlomiTableauDescription.replacing(/[\s\n]/, with: "")
-        #expect(tableau.count == 104) // fifty two cards
+        #expect(deck.methodsCalled == ["shuffle()", "deal()"])
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])

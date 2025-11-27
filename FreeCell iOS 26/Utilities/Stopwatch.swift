@@ -48,8 +48,8 @@ final class Stopwatch: StopwatchType {
         guard let whenWeLastUpdated else {
             return
         }
-        elapsedTime += services.date.init().timeIntervalSince(whenWeLastUpdated)
-        self.whenWeLastUpdated = services.date.init()
+        elapsedTime += services.dateType.init().timeIntervalSince(whenWeLastUpdated)
+        self.whenWeLastUpdated = services.dateType.init()
         await delegate?.stopwatchDidUpdate(elapsedTime)
     }
 
@@ -66,7 +66,7 @@ final class Stopwatch: StopwatchType {
     func reset(to elapsedTime: TimeInterval = 0) async {
         state = .stopped
         self.elapsedTime = elapsedTime
-        whenWeLastUpdated = services.date.init()
+        whenWeLastUpdated = services.dateType.init()
         await delegate?.stopwatchDidUpdate(elapsedTime)
     }
 
@@ -87,7 +87,7 @@ final class Stopwatch: StopwatchType {
             return
         }
         state = .running
-        whenWeLastUpdated = services.date.init()
+        whenWeLastUpdated = services.dateType.init()
         await delegate?.stopwatchDidUpdate(elapsedTime)
     }
 
@@ -95,7 +95,7 @@ final class Stopwatch: StopwatchType {
     /// In this way, the user sees immediately that the stopwatch is running.
     func start() async {
         state = .running
-        whenWeLastUpdated = services.date.init()
+        whenWeLastUpdated = services.dateType.init()
         await delegate?.stopwatchDidUpdate(elapsedTime)
         try? await unlessTesting {
             try? await Task.sleep(for: .seconds(1))

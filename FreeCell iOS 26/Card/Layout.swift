@@ -133,7 +133,7 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
         return result
     }
 
-    mutating func deal(_ deck: Deck) {
+    mutating func deal(_ deck: DeckType) {
         var deck = deck
         foundations.modifyEach {
             $0.cards = []
