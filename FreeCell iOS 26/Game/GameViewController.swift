@@ -30,7 +30,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     var confettiTime: Double = 10 // so we can inject a shorter time for testing
 
-    var confettiTask: Task<(), Error>?
+    var confettiTask: Task<(), any Error>?
 
     /// Imaginary point off the top of the screen representing the location of the deck.
     /// Deal is animated from this point.

@@ -36,14 +36,14 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
     }
 
     var numberOfCardsRemaining: Int { // i.e. remaining in play — not in the foundations
-        (freeCells as [Source] + columns as [Source]).reduce(0) { $0 + $1.cards.count }
+        (freeCells as [any Source] + columns as [any Source]).reduce(0) { $0 + $1.cards.count }
     }
     
     /// Convert from a location to its corresponding `card`.
     /// - Parameter location: The location in the layout.
     /// - Returns: The card, or `nil` if the location is empty.
     func card(at location: Location) -> Card? {
-        let group: [Destination] = switch location.category {
+        let group: [any Destination] = switch location.category {
         case .foundation: foundations
         case .freeCell: freeCells
         case .column: columns
@@ -60,7 +60,7 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
         if internalIndex == -1 {
             return card(at: location)
         }
-        let group: [Destination] = switch location.category {
+        let group: [any Destination] = switch location.category {
         case .foundation: foundations
         case .freeCell: freeCells
         case .column: columns
@@ -133,7 +133,7 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
         return result
     }
 
-    mutating func deal(_ deck: DeckType) {
+    mutating func deal(_ deck: any DeckType) {
         var deck = deck
         foundations.modifyEach {
             $0.cards = []

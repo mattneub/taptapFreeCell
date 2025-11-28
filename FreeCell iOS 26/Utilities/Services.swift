@@ -1,11 +1,11 @@
 import Foundation
 
 final class Services {
-    var fileManager: FileManagerType = FileManager.default
-    var dateType: DateType.Type = Date.self
-    var deckFactory: DeckFactoryType = DeckFactory()
-    var lifetime: LifetimeType = Lifetime()
-    var persistence: PersistenceType = Persistence()
-    var stats: StatsType = Stats()
-    var userDefaults: UserDefaultsType = UserDefaults.standard
+    var fileManager: any FileManagerType = FileManager.default
+    var dateType: any DateType.Type = Date.self
+    var deckFactory: any DeckFactoryType = DeckFactory()
+    var lifetime: any LifetimeType = Lifetime()
+    var persistence: any PersistenceType = Persistence()
+    var stats: any StatsType = Stats()
+    var userDefaults: any UserDefaultsType = UserDefaults.standard
 }

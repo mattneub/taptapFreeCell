@@ -4,12 +4,12 @@ import Foundation
 protocol DateType: Sendable {
     init()
     static var timeIntervalToReturn: TimeInterval { get }
-    func timeIntervalSince(_ date: DateType) -> TimeInterval
+    func timeIntervalSince(_ date: any DateType) -> TimeInterval
 }
 
 extension Date: DateType {
     static var timeIntervalToReturn: TimeInterval { 0 }
-    func timeIntervalSince(_ date: DateType) -> TimeInterval {
+    func timeIntervalSince(_ date: any DateType) -> TimeInterval {
         if let realDate = date as? Date {
             return timeIntervalSince(realDate)
         }

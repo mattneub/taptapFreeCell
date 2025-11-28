@@ -5,9 +5,9 @@ final class GameProcessor: Processor {
 
     weak var presenter: (any ReceiverPresenter<GameEffect, GameState>)?
 
-    lazy var stopwatch: StopwatchType = Stopwatch(delegate: self)
+    lazy var stopwatch: any StopwatchType = Stopwatch(delegate: self)
 
-    lazy var animator: AnimatorType = Animator(processor: self)
+    lazy var animator: any AnimatorType = Animator(processor: self)
 
     var state = GameState()
 
@@ -69,7 +69,7 @@ final class GameProcessor: Processor {
                 saveGame(won: false)
             }
             let stats = await services.stats.stats
-            var deck: DeckType = services.deckFactory.makeDeck()
+            var deck: any DeckType = services.deckFactory.makeDeck()
             repeat {
                 deck.shuffle()
                 state.layout.deal(deck)

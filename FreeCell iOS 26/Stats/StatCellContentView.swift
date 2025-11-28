@@ -15,7 +15,7 @@ class StatCellContentView: UIView, UIContentView {
     var appliedConfiguration: StatCellContentConfiguration!
 
     /// Boilerplate.
-    var configuration: UIContentConfiguration {
+    var configuration: any UIContentConfiguration {
         get { appliedConfiguration }
         set {
             guard let newConfig = newValue as? StatCellContentConfiguration else { return }
