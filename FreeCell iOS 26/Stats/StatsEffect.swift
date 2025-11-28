@@ -1,1 +1,3 @@
-enum StatsEffect: Equatable {}
+enum StatsEffect: Equatable {
+    case segmentSelected(Int)
+}

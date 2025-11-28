@@ -2,13 +2,15 @@ import UIKit
 
 /// Protocol describing the view controller's interaction with the datasource, so we can
 /// mock it for testing.
-protocol StatsDatasourceType<State>: Presenter, UITableViewDelegate {
+protocol StatsDatasourceType<Received, State>: ReceiverPresenter, UITableViewDelegate {
     associatedtype State
+    associatedtype Received
 }
 
 /// Table view data source and delegate for the view controller's table view.
 final class StatsDatasource: NSObject, StatsDatasourceType {
     typealias State = StatsState
+    typealias Received = StatsEffect
 
     /// Processor to whom we can send action messages.
     weak var processor: (any Receiver<StatsAction>)?
@@ -18,6 +20,9 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
 
     /// Reuse identifier for the table view cells we will be creating.
     private let reuseIdentifier = "reuseIdentifier"
+
+    /// Currently selected index of the sort segmented control.
+    var selectedIndex = 0
 
     init(tableView: UITableView, processor: (any Receiver<StatsAction>)?) {
         self.tableView = tableView
@@ -36,7 +41,18 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
         await configureData(data: state.stats)
     }
 
+    func receive(_ effect: StatsEffect) async {
+        switch effect {
+        case .segmentSelected(let index):
+            await sortAndUpdateTable(index: index)
+        }
+    }
+
+    /// Our underlying data. It is a dictionary, so we can do fast lookup of a Stat by layout key.
     var data = StatsDictionary()
+
+    /// The data fed to the table view. It is an array, so we can order it and thus order the table.
+    var sortedData = Array(StatsDictionary())
 
     /// Type alias for the type of the data source, for convenience.
     typealias DatasourceType = UITableViewDiffableDataSource<String, String>
@@ -60,15 +76,18 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
             return
         }
         self.data = data
+        self.sortedData = Array(data)
+        baseSort()
         snapshot.appendSections(["dummy"])
-        snapshot.appendItems(Array(data)
-            .sorted {
-                $0.value.dateFinished > $1.value.dateFinished
-            }.map {
-                $0.key
-            }
-        )
-        // TODO: but this is not _real_ sorting, it's just so I can see something useful for now
+        snapshot.appendItems(sortedData.map { $0.key })
+        await datasource?.apply(snapshot, animatingDifferences: false)
+    }
+
+    func updateTable() async {
+        var snapshot = datasource.snapshot()
+        snapshot.deleteAllItems()
+        snapshot.appendSections(["dummy"])
+        snapshot.appendItems(sortedData.map { $0.key })
         await datasource?.apply(snapshot, animatingDifferences: false)
     }
 
@@ -80,6 +99,30 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
         let contentConfiguration = StatCellContentConfiguration(stat: stat)
         cell.contentConfiguration = contentConfiguration
         return cell
+    }
+
+    func baseSort() {
+        sortedData = sortedData.sorted { $0.value.dateFinished > $1.value.dateFinished }
+    }
+
+    func sortAndUpdateTable(index: Int) async {
+        if index == selectedIndex {
+            sortedData = sortedData.reversed()
+        } else {
+            baseSort()
+            switch index {
+            case 0: break
+            case 1:
+                sortedData = sortedData.sorted { $0.value.timeTaken < $1.value.timeTaken }
+            case 2:
+                sortedData = sortedData.sorted { $0.value.movesCount < $1.value.movesCount }
+            case 3:
+                sortedData = sortedData.sorted { !$0.value.won && $1.value.won }
+            default: break
+            }
+            selectedIndex = index
+        }
+        await updateTable()
     }
 
 }

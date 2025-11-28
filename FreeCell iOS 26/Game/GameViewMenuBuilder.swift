@@ -20,6 +20,9 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             image: UIImage(systemName: "pencil.and.list.clipboard")
         ) { [weak processor] _ in
             Task {
+                try? await unlessTesting {
+                    try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
+                }
                 await processor?.receive(.showStats)
             }
         }
