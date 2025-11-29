@@ -27,6 +27,7 @@ struct StatsViewControllerTests {
     @Test("sortSegmentedControl is correctly constructed")
     func sortSegmentedControl() async throws {
         let seg = subject.sortSegmentedControl
+        #expect(seg.numberOfSegments == 4)
         #expect(seg.titleForSegment(at: 0) == "Date")
         #expect(seg.titleForSegment(at: 1) == "Time")
         #expect(seg.titleForSegment(at: 2) == "Moves")
@@ -39,7 +40,7 @@ struct StatsViewControllerTests {
         #expect(height.firstAttribute == .height)
         seg.sendActions(for: .valueChanged)
         await #while(datasource.thingsReceived.isEmpty)
-        #expect(datasource.thingsReceived == [.segmentSelected(-1)])
+        #expect(datasource.thingsReceived == [.sort(.date)])
     }
 
     @Test("tableHeaderView is correctly constructed")
@@ -65,11 +66,15 @@ struct StatsViewControllerTests {
         #expect(subject.spinner.frame.center == subject.spinnerContainer.bounds.center)
     }
 
-    @Test("viewDidLoad: sets the spinner container as table view's background view, starts spinning; adds table header view")
-    func viewDidLoad() {
+    @Test("viewDidLoad: sets the spinner container as table view's background view, starts spinning; adds right button, table header view")
+    func viewDidLoad() async throws {
         subject.loadViewIfNeeded()
         #expect(subject.tableView.backgroundView === subject.spinnerContainer)
         #expect(subject.spinner.isAnimating)
+        let button = try #require(subject.navigationItem.rightBarButtonItem)
+        #expect(button.title == "Numbered")
+        #expect(button.target === subject)
+        #expect(button.action == #selector(subject.doMicrosofts))
         #expect(subject.tableView.tableHeaderView === subject.tableHeaderView)
     }
 
@@ -101,21 +106,24 @@ struct StatsViewControllerTests {
         #expect(processor.thingsReceived == [.initialData]) // just the one
     }
 
-    @Test("present: configures recordLabel text, shows table header view")
-    func present() async {
-        subject.tableHeaderView.isHidden = true
-        await subject.present(StatsState(stats: [
-            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 3),
-            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: true, initialLayout: Layout(), movesCount: 3, timeTaken: 2),
-            "ha": Stat(dateFinished: Date(timeIntervalSince1970: 4), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 1)
-        ]))
-        #expect(subject.tableHeaderView.isHidden == false)
-        #expect(subject.recordLabel.text == "Played 3, Won 2")
-    }
-
     @Test("present: passes state on to datasource")
     func presentDatasource() async {
         await subject.present(StatsState())
         #expect(datasource.statesPresented == [StatsState()])
+    }
+
+    @Test("receive totalChanged: shows table header view, configures record label")
+    func totalChanged() async {
+        subject.tableHeaderView.isHidden = true
+        await subject.receive(.totalChanged(total: 2, won: 3))
+        #expect(subject.tableHeaderView.isHidden == false)
+        #expect(subject.recordLabel.text == "Played 2, Won 3")
+    }
+
+    @Test("doMicrosofts: sends toggleMicrosofts")
+    func doMicrosofts() async {
+        subject.doMicrosofts()
+        await #while(datasource.thingsReceived.isEmpty)
+        #expect(datasource.thingsReceived == [.toggleMicrosofts])
     }
 }

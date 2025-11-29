@@ -61,7 +61,7 @@ class StatCellContentView: UIView, UIContentView {
         wonLabel.text = newConfiguration.won ? "✅" : "🚫"
         movesLabel.text = newConfiguration.won ? String(newConfiguration.movesCount) + " moves" : ""
         timeLabel.text = Stopwatch.timeTakenFormatter.string(from: newConfiguration.time)
-        supplementaryLabel.text = nil
+        supplementaryLabel.text = newConfiguration.microsoftDeal.flatMap { "Microsoft deal \($0)" } ?? nil
     }
 }
 
@@ -73,6 +73,7 @@ struct StatCellContentConfiguration: UIContentConfiguration, Equatable {
     var won: Bool
     var movesCount: Int
     var time: TimeInterval
+    var microsoftDeal: Int?
 
     // boilerplate
 
@@ -92,5 +93,6 @@ extension StatCellContentConfiguration {
         self.won = stat.won
         self.movesCount = stat.movesCount
         self.time = stat.timeTaken
+        self.microsoftDeal = stat.microsoftDealNumber
     }
 }

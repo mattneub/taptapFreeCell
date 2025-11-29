@@ -46,5 +46,7 @@ struct Stat: Equatable, nonisolated Codable { // don't ask
     var codes: [String]? = nil
     // Ditto
     var undoStack: [Layout]? = nil
+    // shortcut
+    var microsoftDealNumber: Int? { initialLayout.microsoftDealNumber }
 }
 

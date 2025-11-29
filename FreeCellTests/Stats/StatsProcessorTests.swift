@@ -22,5 +22,11 @@ struct StatsProcessorTests {
         await subject.receive(.initialData)
         #expect(presenter.statesPresented.last?.stats == statsDictionary)
     }
+
+    @Test("receive totalChanged sends totalChanged")
+    func totalChanged() async {
+        await subject.receive(.totalChanged(total: 3, won: 2))
+        #expect(presenter.thingsReceived == [.totalChanged(total: 3, won: 2)])
+    }
 }
 

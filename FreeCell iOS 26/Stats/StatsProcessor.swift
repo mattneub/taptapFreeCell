@@ -13,6 +13,8 @@ final class StatsProcessor: Processor {
             let stats = await services.stats.stats
             state.stats = stats
             await presenter?.present(state)
+        case .totalChanged(let total, let won):
+            await presenter?.receive(.totalChanged(total: total, won: won))
         }
     }
 }

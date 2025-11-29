@@ -19,7 +19,7 @@ struct StatsDatasourceTests {
         #expect(tableView.estimatedRowHeight == 50)
     }
 
-    @Test("present: configures the contents of the datasource")
+    @Test("present: configures the contents of the datasource, sends totalChanged")
     func present() async {
         let stats: StatsDictionary = [
             "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
@@ -32,9 +32,10 @@ struct StatsDatasourceTests {
         #expect(snapshot.sectionIdentifiers == ["dummy"])
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["ho", "hey"]) // date order, newest first
         #expect(subject.sortedData.map { $0.key } == ["ho", "hey"])
+        #expect(processor.thingsReceived == [.totalChanged(total: 2, won: 2)])
     }
 
-    @Test("receive segmentSelected: sorts the snapshot items")
+    @Test("receive segmentSelected: sorts the snapshot items, sends totalChanged")
     func segmentSelected() async {
         let stats: StatsDictionary = [
             "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 3),
@@ -45,30 +46,70 @@ struct StatsDatasourceTests {
         var snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["ha", "ho", "hey"])
         #expect(subject.sortedData.map { $0.key } == ["ha", "ho", "hey"])
-        await subject.receive(.segmentSelected(0)) // reverse
+        await subject.receive(.sort(.date)) // reverse
         snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["hey", "ho", "ha"])
         #expect(subject.sortedData.map { $0.key } == ["hey", "ho", "ha"])
-        await subject.receive(.segmentSelected(1)) // time taken
+        await subject.receive(.sort(.time)) // time taken
         snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["ha", "ho", "hey"])
         #expect(subject.sortedData.map { $0.key } == ["ha", "ho", "hey"])
-        await subject.receive(.segmentSelected(2)) // moves count
+        await subject.receive(.sort(.moves)) // moves count
         snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["hey", "ha", "ho"])
         #expect(subject.sortedData.map { $0.key } == ["hey", "ha", "ho"])
-        await subject.receive(.segmentSelected(2)) // reverse
+        await subject.receive(.sort(.moves)) // reverse
         snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["ho", "ha", "hey"])
         #expect(subject.sortedData.map { $0.key } == ["ho", "ha", "hey"])
-        await subject.receive(.segmentSelected(3)) // won/lost
+        await subject.receive(.sort(.won)) // won/lost
         snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["ha", "ho", "hey"])
         #expect(subject.sortedData.map { $0.key } == ["ha", "ho", "hey"])
-        await subject.receive(.segmentSelected(3)) // reverse
+        await subject.receive(.sort(.won)) // reverse
         snapshot = subject.datasource.snapshot()
         #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["hey", "ho", "ha"])
         #expect(subject.sortedData.map { $0.key } == ["hey", "ho", "ha"])
+        #expect(processor.thingsReceived.allSatisfy { $0 == .totalChanged(total: 3, won: 2) })
+        #expect(processor.thingsReceived.count == 7)
+    }
+
+    @Test("receive .toggleMicrosoft filters and sorts on microsoft deal number, or unfilters and sorts on date")
+    func microsoft() async {
+        var layout1 = Layout()
+        layout1.microsoftDealNumber = 10
+        var layout2 = Layout()
+        layout2.microsoftDealNumber = 20
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: layout1, movesCount: 1, timeTaken: 3),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: true, initialLayout: layout2, movesCount: 3, timeTaken: 2),
+            "ha": Stat(dateFinished: Date(timeIntervalSince1970: 4), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 1)
+        ]
+        await subject.present(StatsState(stats: stats))
+        await subject.receive(.toggleMicrosofts)
+        var snapshot = subject.datasource.snapshot()
+        #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["hey", "ho"])
+        await subject.receive(.toggleMicrosofts)
+        snapshot = subject.datasource.snapshot()
+        #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["ha", "ho", "hey"])
+    }
+
+    @Test("receive .segmentSelected when toggled for microsoft sorts as expect for that segment")
+    func microsoftAndThenSegment() async {
+        var layout1 = Layout()
+        layout1.microsoftDealNumber = 10
+        var layout2 = Layout()
+        layout2.microsoftDealNumber = 20
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: layout1, movesCount: 1, timeTaken: 3),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: true, initialLayout: layout2, movesCount: 3, timeTaken: 2),
+            "ha": Stat(dateFinished: Date(timeIntervalSince1970: 4), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 1)
+        ]
+        await subject.present(StatsState(stats: stats))
+        await subject.receive(.toggleMicrosofts)
+        await subject.receive(.sort(.moves)) // moves count
+        let snapshot = subject.datasource.snapshot()
+        #expect(snapshot.itemIdentifiers(inSection: "dummy") == ["hey", "ha", "ho"])
     }
 
     @Test("cells are correctly constructed")

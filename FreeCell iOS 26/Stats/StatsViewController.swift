@@ -16,7 +16,9 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
         $0.heightAnchor.constraint(equalToConstant: 30).isActive = true
     }
 
-    lazy var sortSegmentedControl = UISegmentedControl(items: ["Date", "Time", "Moves", "Won"]).applying { seg in
+    lazy var sortSegmentedControl = UISegmentedControl(
+        items:  StatsSorting.allCases.dropLast().map {$0.text} // tee-hee, have to drop microsoft case
+    ).applying { seg in
         seg.heightAnchor.constraint(equalToConstant: 22).isActive = true
         seg.isMomentary = true
         seg.selectedSegmentIndex = UISegmentedControl.noSegment
@@ -59,6 +61,13 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Statistics"
+        let microsoftButton = UIBarButtonItem(
+            title: "Numbered",
+            style: .plain,
+            target: self,
+            action: #selector(doMicrosofts)
+        )
+        self.navigationItem.rightBarButtonItem = microsoftButton
         tableView.backgroundView = spinnerContainer
         tableView.tableHeaderView = tableHeaderView
         spinner.startAnimating()
@@ -88,18 +97,27 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
     }
 
     func present(_ state: StatsState) async {
-        let total = state.stats.count
-        let won = state.stats.values.filter { $0.won }.count
-        recordLabel.text = "Played \(total), Won \(won)"
-        tableHeaderView.isHidden = false
         await datasource.present(state)
     }
 
-    func receive(_ effect: StatsEffect) async {}
+    func receive(_ effect: StatsEffect) async {
+        switch effect {
+        case .totalChanged(let total, let won):
+            recordLabel.text = "Played \(total), Won \(won)"
+            tableHeaderView.isHidden = false
+        default: break
+        }
+    }
 
     func doSegmentedControl(_ seg: UISegmentedControl) {
         Task {
-            await datasource.receive(.segmentSelected(seg.selectedSegmentIndex))
+            await datasource.receive(.sort(StatsSorting(rawValue: seg.selectedSegmentIndex) ?? .date))
+        }
+    }
+
+    @objc func doMicrosofts() {
+        Task {
+            await datasource.receive(.toggleMicrosofts)
         }
     }
 }

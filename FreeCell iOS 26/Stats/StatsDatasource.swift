@@ -21,8 +21,8 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
     /// Reuse identifier for the table view cells we will be creating.
     private let reuseIdentifier = "reuseIdentifier"
 
-    /// Currently selected index of the sort segmented control.
-    var selectedIndex = 0
+    /// Current sort type. We do not bother to state whether this is a reverse sort.
+    var sort: StatsSorting = .date
 
     init(tableView: UITableView, processor: (any Receiver<StatsAction>)?) {
         self.tableView = tableView
@@ -43,16 +43,25 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
 
     func receive(_ effect: StatsEffect) async {
         switch effect {
-        case .segmentSelected(let index):
-            await sortAndUpdateTable(index: index)
+        case .sort(let sort):
+            await sortAndUpdateTable(sort: sort)
+        case .totalChanged:
+            break // handled by view controller
+        case .toggleMicrosofts:
+            await toggleMicrosofts(sort: .date) // user tapped Numbered button, so resort to base sort
         }
     }
 
     /// Our underlying data. It is a dictionary, so we can do fast lookup of a Stat by layout key.
     var data = StatsDictionary()
 
-    /// The data fed to the table view. It is an array, so we can order it and thus order the table.
-    var sortedData = Array(StatsDictionary())
+    /// The data fed to the table view. It is an array of key-value pairs,
+    /// so we can order it by value and thus order the table by key. Clever, eh?
+    var sortedData = [Dictionary<String, Stat>.Element]()
+
+    /// The unfiltered version of `sortedData`. If it is `nil`, we are not filtering, and vice
+    /// versa.
+    var unfilteredData: [Dictionary<String, Stat>.Element]?
 
     /// Type alias for the type of the data source, for convenience.
     typealias DatasourceType = UITableViewDiffableDataSource<String, String>
@@ -60,6 +69,7 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
     /// Retain the diffable data source.
     var datasource: DatasourceType!
 
+    /// Create the data source for the table view. Done just once, at `init` time.
     func createDataSource(tableView: UITableView) -> DatasourceType {
         let datasource = DatasourceType(
             tableView: tableView
@@ -69,26 +79,32 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
         return datasource
     }
 
+    /// The data have arrived for the first time. Create the properties to hold the data
+    /// and update the table. Done just once, at `present` time.
     func configureData(data: StatsDictionary) async {
         // We only need to do this once.
-        var snapshot = NSDiffableDataSourceSnapshot<String, String>()
+        let snapshot = NSDiffableDataSourceSnapshot<String, String>()
         guard snapshot.itemIdentifiers.isEmpty else {
             return
         }
         self.data = data
         self.sortedData = Array(data)
         baseSort()
-        snapshot.appendSections(["dummy"])
-        snapshot.appendItems(sortedData.map { $0.key })
-        await datasource?.apply(snapshot, animatingDifferences: false)
+        await updateTable()
     }
 
+    /// Bottleneck routine, to be run every time the data changes by sorting or filtering. It is
+    /// assumed that `sortedData` contains the data to be displayed. Display that data, and let
+    /// the processor know the current totals.
     func updateTable() async {
         var snapshot = datasource.snapshot()
         snapshot.deleteAllItems()
         snapshot.appendSections(["dummy"])
         snapshot.appendItems(sortedData.map { $0.key })
         await datasource?.apply(snapshot, animatingDifferences: false)
+        let total = sortedData.count
+        let won = sortedData.filter { $0.value.won }.count
+        await processor?.receive(.totalChanged(total: total, won: won))
     }
 
     func cellProvider(_ tableView: UITableView, _ indexPath: IndexPath, _ identifier: String) -> UITableViewCell? {
@@ -101,28 +117,53 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
         return cell
     }
 
+    /// The fallback order, and effectively underlying all others, is date, newest first.
     func baseSort() {
+        sort = .date
         sortedData = sortedData.sorted { $0.value.dateFinished > $1.value.dateFinished }
     }
-
-    func sortAndUpdateTable(index: Int) async {
-        if index == selectedIndex {
+    
+    /// Sort the table as instructed.
+    /// - Parameters:
+    ///   - sort: The sort order. This must _never_ be `.microsoft`!
+    func sortAndUpdateTable(sort: StatsSorting) async {
+        guard unfilteredData == nil else { // we are filtered, pass this on to the unfiltering method
+            await toggleMicrosofts(sort: sort)
+            return
+        }
+        if sort == self.sort { // we are already sorted this way, so just reverse it and stop
             sortedData = sortedData.reversed()
         } else {
             baseSort()
-            switch index {
-            case 0: break
-            case 1:
+            switch sort {
+            case .date: break
+            case .time:
                 sortedData = sortedData.sorted { $0.value.timeTaken < $1.value.timeTaken }
-            case 2:
+            case .moves:
                 sortedData = sortedData.sorted { $0.value.movesCount < $1.value.movesCount }
-            case 3:
+            case .won:
                 sortedData = sortedData.sorted { !$0.value.won && $1.value.won }
-            default: break
+            case .microsoft:
+                break // shouldn't happen
             }
-            selectedIndex = index
+            self.sort = sort
         }
         await updateTable()
+    }
+
+    func toggleMicrosofts(sort: StatsSorting) async {
+        if let unfilteredData { // we are filtered; unfilter, and sort as instructed
+            sortedData = unfilteredData
+            self.unfilteredData = nil
+            await sortAndUpdateTable(sort: sort)
+        } else {
+            unfilteredData = sortedData
+            sortedData = sortedData
+                .filter { $0.value.microsoftDealNumber != nil }
+                .sorted { $0.value.microsoftDealNumber ?? 0 < $1.value.microsoftDealNumber ?? 0 }
+            self.sort = .microsoft // so that when we come _out_ of filtering, we do not reverse
+            await updateTable()
+        }
     }
 
 }
