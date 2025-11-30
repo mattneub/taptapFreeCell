@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct SuitTests {
+private struct SuitTests {
     @Test("string raw values are correct")
     func stringRawValues() {
         do {

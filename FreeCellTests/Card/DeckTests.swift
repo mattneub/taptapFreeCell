@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct DeckTests {
+private struct DeckTests {
     @Test("initialize: makes the deck of 52 cards")
     func initialize() {
         let subject = Deck()

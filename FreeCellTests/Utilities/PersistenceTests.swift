@@ -2,7 +2,7 @@
 import Testing
 import Foundation
 
-struct PersistenceTests {
+private struct PersistenceTests {
     let subject = Persistence()
     let defaults = MockUserDefaults()
 

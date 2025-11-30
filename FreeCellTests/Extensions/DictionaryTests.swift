@@ -1,7 +1,7 @@
 import Testing
 @testable import TTFreeCell
 
-struct DictionaryTests {
+private struct DictionaryTests {
     @Test("mapKeys: does what it says on the tin")
     func mapKeys() {
         let subject: [String: String] = [" manny   ": "pep1", " moe    ": "pep2"]

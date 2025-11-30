@@ -1,7 +1,7 @@
 import Testing
 @testable import TTFreeCell
 
-struct StringTests {
+private struct StringTests {
     @Test("trimming whitespaces from line ends: trims at trailing end")
     func trimming() {
         let subject = """

@@ -2,7 +2,7 @@
 import Testing
 import Foundation
 
-struct FreeCellTests {
+private struct FreeCellTests {
     @Test("card and isEmpty work")
     func cardAndIsEmpty() {
         var subject = FreeCell()

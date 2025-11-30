@@ -1,7 +1,7 @@
 import Testing
 @testable import TTFreeCell
 
-struct MutableCollectionTests {
+private struct MutableCollectionTests {
     @Test("modifyEach: works as expected")
     func modifyEach() {
         struct Person: Equatable {

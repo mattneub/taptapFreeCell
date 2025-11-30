@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import WaitWhile
 
-struct GameViewControllerTests {
+private struct GameViewControllerTests {
     let subject = GameViewController()
     let sizer = MockGameViewCardSizer()
     let constructor = MockGameViewInterfaceConstructor()

@@ -2,7 +2,7 @@
 import Testing
 import UIKit
 
-struct StatCellContentViewTests {
+private struct StatCellContentViewTests {
     @Test("Setting the content view's configuration configures the view correctly")
     func contentView() throws {
         let date = Date(timeIntervalSince1970: 0)

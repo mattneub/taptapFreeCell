@@ -2,7 +2,7 @@ import Testing
 @testable import TTFreeCell
 import UIKit
 
-struct UIViewTests {
+private struct UIViewTests {
     @Test("subviews(ofType:) returns array of type, recursing or not, including hidden or not")
     func subviewsOfType() {
         let view = UIView()

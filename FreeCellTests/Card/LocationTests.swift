@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct LocationTests {
+private struct LocationTests {
     @Test("standardNotation: gives expected result")
     func standardNotation() {
         do {

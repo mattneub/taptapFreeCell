@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct CardTests {
+private struct CardTests {
     @Test("initialize from rank and suit")
     func initializeRankSuit() {
         let result = Card(rank: .jack, suit: .hearts)

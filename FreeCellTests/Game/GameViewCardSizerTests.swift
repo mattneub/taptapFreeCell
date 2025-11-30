@@ -2,7 +2,7 @@
 import Testing
 import UIKit
 
-struct GameViewCardSizerTests {
+private struct GameViewCardSizerTests {
     @Test("card size is correct")
     func cardSize() {
         let result = GameViewCardSizer().cardSize(boardWidth: 1000)

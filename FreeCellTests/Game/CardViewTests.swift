@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import WaitWhile
 
-struct CardViewTests {
+private struct CardViewTests {
     @Test("initialize: view is born with location, translates set to false, tapper, long presser")
     func initialize() throws {
         let subject = CardView(location: Location(category: .column, index: 0))

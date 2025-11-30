@@ -2,7 +2,7 @@ import Testing
 @testable import TTFreeCell
 import UIKit
 
-struct CGRectTest {
+private struct CGRectTest {
     @Test("center: returns center point")
     func center() {
         let subject = CGRect(x: 20, y: 20, width: 100, height: 100)

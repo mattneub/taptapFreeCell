@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct RankTests {
+private struct RankTests {
     @Test("integer raw values are correct")
     func integerRawValues() {
         do {

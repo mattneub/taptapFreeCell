@@ -54,7 +54,8 @@ final class GameProcessor: Processor {
             await autoplay()
             await checkGameEndAndStopwatch(action: action)
         case .deal:
-            if state.gameProgress != .waitingForDeal {
+            // if game in progress, must lose it in order to proceed; tell the user
+            if state.gameProgress != .gameOver {
                 let result = await coordinator?.showAlert(
                     title: "Really Deal?",
                     message: """
@@ -68,34 +69,32 @@ final class GameProcessor: Processor {
                 }
                 saveGame(won: false)
             }
-            let stats = await services.stats.stats
-            var deck: any DeckType = services.deckFactory.makeDeck()
-            repeat {
-                deck.shuffle()
-                state.layout.deal(deck)
-            } while stats[state.layout.tableauDescription] != nil
-            state.undoStack = []
-            state.redoStack = []
-            state.layout.moveCode = nil
-            state.gameProgress = .waitingForFirstMove
-            await ensureNeutralState()
-            await animator.animate(oldLayout: Layout(), newLayout: state.layout, speed: state.animationSpeed)
-            await stopwatch.reset()
+            // deal, ensuring this is not a duplicate of an existing deal
+            do {
+                let stats = await services.stats.stats
+                var deck: any DeckType = services.deckFactory.makeDeck()
+                repeat {
+                    deck.shuffle()
+                    state.layout.deal(deck)
+                } while stats[state.layout.tableauDescription] != nil
+            }
+            // start game ex nihilo; `Layout()` tells the animator that this is a new deal
+            await beginGame(from: 0, oldLayout: Layout())
         case .didInitialLayout:
             // called exactly once early in the lifetime of the app
             // set up our listener tasks
             listenForEventTask = Task {
                 try await listenForEvent()
             }
-            // restore game if there was one
+            // restore game if there was one; this is a fully restorable game so cannot call `beginGame`
             if let game = services.persistence.loadGame() {
                 state.layout = game.layout
                 state.undoStack = game.undoStack
                 state.redoStack = game.redoStack
                 if state.gameIsOver {
-                    state.gameProgress = .waitingForDeal
+                    state.gameProgress = .gameOver
                 } else {
-                    state.gameProgress = .waitingForFirstMove
+                    state.gameProgress = .dealtWaitingForFirstMove
                 }
                 await ensureNeutralState()
                 await stopwatch.reset(to: game.timeTaken)
@@ -146,7 +145,7 @@ final class GameProcessor: Processor {
             await ensureNeutralState()
             await checkStopwatch()
         case .tapped(let tap):
-            if state.gameIsOver == true && state.gameProgress == .waitingForDeal {
+            if state.gameIsOver == true && state.gameProgress == .gameOver {
                 // edge case; `.tapped` comes from _card view_ so view controller never hears about it
                 // therefore _we_ have to _tell_ the view controller to remove the confetti if any
                 await presenter?.receive(.removeConfetti)
@@ -179,6 +178,23 @@ final class GameProcessor: Processor {
             }
             await checkStopwatch()
         }
+    }
+    
+    /// Animate layout and prepare for the user to make the first move. This could be because the
+    /// user said "deal" (new game) or because the user asked to replay a previous lost game (in which
+    /// case we start fresh at the opening layout but with time already on the clock).
+    /// - Parameters:
+    ///   - time: The elapsed time to which to reset the stopwatch.
+    ///   - oldLayout: The old layout preceding the current layout, so we can animate the
+    ///   former to the latter; `Layout()` means as if dealing from an offscreen deck.
+    func beginGame(from time: TimeInterval, oldLayout: Layout) async {
+        state.undoStack = []
+        state.redoStack = []
+        state.layout.moveCode = nil
+        state.gameProgress = .dealtWaitingForFirstMove
+        await ensureNeutralState()
+        await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
+        await stopwatch.reset(to: time)
     }
 
     /// This is something we do pretty often. The "neutral" state is that the game is completely
@@ -575,7 +591,7 @@ final class GameProcessor: Processor {
             if state.gameIsOver {
                 await stopwatch.stop()
                 if state.gameProgress == .inProgress {
-                    state.gameProgress = .waitingForDeal
+                    state.gameProgress = .gameOver
                     saveGame(won: true)
                     Task {
                         await presenter?.receive(.confetti)
@@ -590,7 +606,7 @@ final class GameProcessor: Processor {
     /// Based on the game progress and the state of the stopwatch, set the game progress and
     /// and the stopwatch. Must be called only _after_ `checkGameEnd`, which therefore calls it.
     func checkStopwatch() async {
-        if state.gameProgress == .waitingForDeal { // only `deal` can change this
+        if state.gameProgress == .gameOver {
             return
         }
         state.gameProgress = .inProgress
@@ -631,5 +647,19 @@ final class GameProcessor: Processor {
 extension GameProcessor: StopwatchDelegate {
     func stopwatchDidUpdate(_ timeInterval: TimeInterval) async {
         await presenter?.receive(.updateStopwatch(timeInterval))
+    }
+}
+
+extension GameProcessor: StatsDelegate {
+    func resume(stat: Stat) async {
+        await coordinator?.popToGame()
+        var oldLayout = Layout()
+        // save _current_ game if there is one
+        if state.gameProgress != .gameOver {
+            saveGame(won: false)
+            oldLayout = state.layout
+        }
+        state.layout = stat.initialLayout
+        await beginGame(from: stat.timeTaken, oldLayout: oldLayout)
     }
 }

@@ -165,5 +165,17 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
             await updateTable()
         }
     }
+}
 
+extension StatsDatasource: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
+        return !sortedData[indexPath.row].value.won
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        Task {
+            await processor?.receive(.resume(sortedData[indexPath.row].key))
+            tableView.selectRow(at: nil, animated: false, scrollPosition: .none)
+        }
+    }
 }

@@ -2,7 +2,7 @@ import Testing
 @testable import TTFreeCell
 import UIKit
 
-struct CALayerTests {
+private struct CALayerTests {
     @Test("sublayers(ofType:) returns array of type, recursing")
     func sublayersOfType() {
         let subject = CALayer()

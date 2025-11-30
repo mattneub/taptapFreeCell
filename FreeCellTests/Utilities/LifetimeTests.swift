@@ -2,7 +2,7 @@
 import Testing
 import Observation
 
-struct LifetimeTests {
+private struct LifetimeTests {
     @Test("didBecomeActive: publishes from event")
     func didBecomeActive() async {
         let subject = Lifetime()

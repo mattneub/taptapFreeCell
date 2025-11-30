@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import WaitWhile
 
-struct GameViewMenuBuilderTests {
+private struct GameViewMenuBuilderTests {
     @Test("menu is correctly built")
     func build() async throws {
         let processor = MockReceiver<GameAction>()

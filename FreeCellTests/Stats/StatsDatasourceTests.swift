@@ -1,8 +1,9 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
+import WaitWhile
 
-struct StatsDatasourceTests {
+private struct StatsDatasourceTests {
     let subject: StatsDatasource!
     let processor = MockReceiver<StatsAction>()
     let tableView = UITableView()
@@ -126,5 +127,35 @@ struct StatsDatasourceTests {
         #expect(content.won == true)
         #expect(content.movesCount == 2)
         #expect(content.time == 2)
+    }
+
+    @Test("should highlight: depends on whether the stat is won")
+    func shouldHighlight() async {
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2),
+        ]
+        await subject.present(StatsState(stats: stats))
+        var result = subject.tableView(tableView, shouldHighlightRowAt: IndexPath(row: 0, section: 0))
+        #expect(result == true)
+        result = subject.tableView(tableView, shouldHighlightRowAt: IndexPath(row: 1, section: 0))
+        #expect(result == false)
+    }
+
+    @Test("didSelectRow: sends resume to the processor, deselects")
+    func didSelect() async {
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2),
+        ]
+        await subject.present(StatsState(stats: stats))
+        processor.thingsReceived = []
+        tableView.selectRow(at: IndexPath(row: 1, section: 0), animated: false, scrollPosition: .none)
+        #expect(tableView.indexPathForSelectedRow != nil)
+        // all of that was prep, this is the test
+        subject.tableView(tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.resume("ho")])
+        #expect(tableView.indexPathForSelectedRow == nil)
     }
 }

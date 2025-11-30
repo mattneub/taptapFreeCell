@@ -2,7 +2,7 @@
 import Testing
 import Foundation
 
-struct StatsTests {
+private struct StatsTests {
     let subject = Stats()
     let fileManager = MockFileManager()
     let persistence = MockPersistence()

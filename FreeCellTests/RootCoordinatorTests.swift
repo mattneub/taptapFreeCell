@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import WaitWhile
 
-struct RootCoordinatorTests {
+private struct RootCoordinatorTests {
     let subject = RootCoordinator()
 
     @Test("createInterface: sets up root module")
@@ -17,6 +17,7 @@ struct RootCoordinatorTests {
         let navigationController = try #require(subject.rootViewController as? UINavigationController)
         #expect(navigationController.viewControllers.first === viewController)
         #expect(window.rootViewController === navigationController)
+        #expect(navigationController.delegate === subject)
         #expect(window.backgroundColor == .systemBackground)
     }
 
@@ -44,11 +45,28 @@ struct RootCoordinatorTests {
     func showStats() async throws {
         let navigationController = UINavigationController()
         subject.rootViewController = navigationController
+        let gameProcessor = GameProcessor()
+        subject.gameProcessor = gameProcessor
         subject.showStats()
         let processor = try #require(subject.statsProcessor as? StatsProcessor)
         #expect(processor.coordinator === subject)
+        #expect(processor.delegate === gameProcessor)
         let viewController = try #require(processor.presenter as? StatsViewController)
         #expect(viewController.processor === processor)
         #expect(navigationController.children.first == viewController)
+    }
+
+    @Test("popToGame: pops navigation controller back to root")
+    func popToGame() async {
+        let viewController = UIViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        subject.rootViewController = navigationController
+        navigationController.delegate = subject // omit that at your peril!
+        makeWindow(viewController: navigationController) // this too!
+        navigationController.pushViewController(UIViewController(), animated: false)
+        #expect(navigationController.children.count == 2)
+        await(subject.popToGame())
+        #expect(navigationController.children.count == 1)
+        #expect(navigationController.children.first === viewController)
     }
 }

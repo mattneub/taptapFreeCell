@@ -26,4 +26,9 @@ final class MockRootCoordinator: RootCoordinatorType {
     func showStats() {
         methodsCalled.append(#function)
     }
+
+    func popToGame() {
+        methodsCalled.append(#function)
+    }
+
 }

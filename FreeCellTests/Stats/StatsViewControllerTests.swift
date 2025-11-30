@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import WaitWhile
 
-struct StatsViewControllerTests {
+private struct StatsViewControllerTests {
     let subject = StatsViewController()
     let processor = MockReceiver<StatsAction>()
     let datasource = MockStatsDatasource()

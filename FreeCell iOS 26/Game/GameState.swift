@@ -21,7 +21,7 @@ struct GameState: Equatable {
     /// where the first tap was.
     var firstTapLocation: Location? = nil
 
-    var gameProgress: GameProgress = .waitingForDeal
+    var gameProgress: GameProgress = .gameOver
 
     var gameIsOver: Bool {
         layout.numberOfCardsRemaining == 0
@@ -60,8 +60,8 @@ struct GameState: Equatable {
     }
 
     enum GameProgress {
-        case inProgress
-        case waitingForDeal
-        case waitingForFirstMove
+        case dealtWaitingForFirstMove // dealt but no more; game started but stopwatch stopped
+        case gameOver // between games; one game is finished, next game has not been dealt
+        case inProgress // the user has made the first move, the stopwatch is watching
     }
 }

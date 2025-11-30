@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct FoundationTests {
+private struct FoundationTests {
     @Test("card and isEmpty work correctly")
     func cardAndIsEmpty() {
         var subject = Foundation(suit: .hearts)

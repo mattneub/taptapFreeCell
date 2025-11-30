@@ -2,7 +2,7 @@
 import Testing
 import UIKit
 
-struct CardLayerTests {
+private struct CardLayerTests {
     @Test("initialize sets up the layer correctly")
     func initialize() async throws {
         CardView.baseSize = CGSize(

@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct LayoutTests {
+private struct LayoutTests {
     @Test("basic layout structure is correct")
     func initialize() {
         let subject = Layout()

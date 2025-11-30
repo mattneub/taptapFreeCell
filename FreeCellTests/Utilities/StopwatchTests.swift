@@ -2,7 +2,7 @@
 import Testing
 import Foundation
 
-struct StopwatchTests {
+private struct StopwatchTests {
     fileprivate let delegate = MockStopwatchDelegate()
     var subject: Stopwatch!
     let lastUpdated = MockDate()

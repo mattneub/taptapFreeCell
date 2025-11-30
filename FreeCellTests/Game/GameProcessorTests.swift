@@ -3,7 +3,7 @@ import Testing
 import Foundation
 import WaitWhile
 
-struct GameProcessorTests {
+private struct GameProcessorTests {
     let subject = GameProcessor()
     let presenter = MockReceiverPresenter<GameEffect, GameState>()
     let stopwatch = MockStopwatch()
@@ -102,10 +102,11 @@ struct GameProcessorTests {
 
     @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it, empties undo/redo")
     func deal() async {
+        stopwatch.elapsedTime = 200
         let deck = MockDeck()
         deckFactory.mockDeckToReturn = deck
         deck.cardsToDeal = [Card(rank: .jack, suit: .hearts)]
-        subject.state.gameProgress = .waitingForDeal
+        subject.state.gameProgress = .gameOver
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.undoStack = [Layout(), Layout()]
         subject.state.redoStack = [Layout(), Layout()]
@@ -119,15 +120,16 @@ struct GameProcessorTests {
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack.isEmpty)
         #expect(subject.state.layout.moveCode == nil)
-        #expect(subject.state.gameProgress == .waitingForFirstMove)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
         #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
         #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
         #expect(animator.newLayout == subject.state.layout)
         #expect(animator.speed == subject.state.animationSpeed)
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0)
     }
 
-    @Test("receive deal: if game is not waitingForDeal, puts up alert; if user cancels, stops")
+    @Test("receive deal: if game is not gameOver, puts up alert; if user cancels, stops")
     func dealNotWaitingForDeal() async {
         subject.state.gameProgress = .inProgress
         coordinator.buttonTitleToReturn = "Cancel"
@@ -165,7 +167,7 @@ struct GameProcessorTests {
         #expect(deck.methodsCalled == ["shuffle()", "deal()", "shuffle()", "deal()", "shuffle()", "deal()"])
     }
 
-    @Test("receive deal: if game is not waitingForDeal, puts up alert; if user does not cancel, saves lost game, proceeds to deal")
+    @Test("receive deal: if game is not gameOver, puts up alert; if user does not cancel, saves lost game, proceeds to deal")
     func dealNotWaitingForDealUserSaysDeal() async {
         let deck = MockDeck()
         deckFactory.mockDeckToReturn = deck
@@ -203,12 +205,13 @@ struct GameProcessorTests {
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack.isEmpty)
         #expect(subject.state.layout.moveCode == nil)
-        #expect(subject.state.gameProgress == .waitingForFirstMove)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
         #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
         #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
         #expect(animator.newLayout == subject.state.layout)
         #expect(animator.speed == subject.state.animationSpeed)
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0)
     }
 
     @Test("receive didInitialLayout: sets up the lifetime listener task, tells stats to load stats")
@@ -272,7 +275,7 @@ struct GameProcessorTests {
         #expect(subject.state.layout == layout)
         #expect(subject.state.undoStack == [Layout(), Layout(), Layout()])
         #expect(subject.state.redoStack == [Layout(), Layout()])
-        #expect(subject.state.gameProgress == .waitingForFirstMove) // *
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove) // *
         #expect(presenter.statesPresented == [subject.state])
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
         #expect(stopwatch.resetTimeInterval == 3)
@@ -293,7 +296,7 @@ struct GameProcessorTests {
         #expect(subject.state.layout == layout)
         #expect(subject.state.undoStack == [Layout(), Layout(), Layout()])
         #expect(subject.state.redoStack == [Layout(), Layout()])
-        #expect(subject.state.gameProgress == .waitingForDeal) // *
+        #expect(subject.state.gameProgress == .gameOver) // *
         #expect(presenter.statesPresented == [subject.state])
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
         #expect(stopwatch.resetTimeInterval == 3)
@@ -1604,7 +1607,7 @@ struct GameProcessorTests {
         subject.state.gameProgress = .inProgress
         do {
             await subject.receive(.autoplay)
-            #expect(subject.state.gameProgress == .waitingForDeal)
+            #expect(subject.state.gameProgress == .gameOver)
             #expect(stopwatch.methodsCalled == ["stop()"])
             await #while(presenter.thingsReceived.isEmpty)
             #expect(presenter.thingsReceived.last == .confetti)
@@ -1615,7 +1618,7 @@ struct GameProcessorTests {
         subject.state.gameProgress = .inProgress
         do {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
-            #expect(subject.state.gameProgress == .waitingForDeal)
+            #expect(subject.state.gameProgress == .gameOver)
             #expect(stopwatch.methodsCalled == ["stop()"])
             await #while(presenter.thingsReceived.isEmpty)
             #expect(presenter.thingsReceived.last == .confetti)
@@ -1660,10 +1663,10 @@ struct GameProcessorTests {
     @Test("receive autoplay or tapped: if the layout is empty, but game not in progress, no confetti, no save")
     func receiveWhenGameOverGameNotInProgress() async {
         stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
+        subject.state.gameProgress = .gameOver
         do {
             await subject.receive(.autoplay)
-            #expect(subject.state.gameProgress == .waitingForDeal)
+            #expect(subject.state.gameProgress == .gameOver)
             #expect(stopwatch.methodsCalled == ["stop()"])
             #expect(!presenter.thingsReceived.contains(.confetti))
             #expect(stats.methodsCalled.isEmpty)
@@ -1671,10 +1674,10 @@ struct GameProcessorTests {
         presenter.thingsReceived = []
         stopwatch.methodsCalled = []
         stopwatch.state = .running
-        subject.state.gameProgress = .waitingForDeal
+        subject.state.gameProgress = .gameOver
         do {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
-            #expect(subject.state.gameProgress == .waitingForDeal)
+            #expect(subject.state.gameProgress == .gameOver)
             #expect(stopwatch.methodsCalled == ["stop()"])
             #expect(!presenter.thingsReceived.contains(.confetti))
             #expect(stats.methodsCalled.isEmpty)
@@ -1684,7 +1687,7 @@ struct GameProcessorTests {
     @Test("every `receive`, if game waiting for first move and stopwatch stopped, start")
     func receiveWhenGameOverGameWaitingForFirstMoveStopped() async {
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         subject.state.layout.columns[7].cards = [Card(rank: .six, suit: .clubs)]
         do {
             await subject.receive(.autoplay)
@@ -1692,7 +1695,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.hint)
@@ -1700,7 +1703,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.longPressEnded)
@@ -1708,7 +1711,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.redo)
@@ -1716,7 +1719,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.redoAll)
@@ -1724,7 +1727,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.tapBackground)
@@ -1732,7 +1735,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1740,7 +1743,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.undo)
@@ -1748,7 +1751,7 @@ struct GameProcessorTests {
             #expect(subject.state.gameProgress == .inProgress)
         }
         stopwatch.state = .stopped
-        subject.state.gameProgress = .waitingForFirstMove
+        subject.state.gameProgress = .dealtWaitingForFirstMove
         stopwatch.methodsCalled = []
         do {
             await subject.receive(.undoAll)
@@ -1879,5 +1882,82 @@ struct GameProcessorTests {
     func stopwatchDidUpdate() async {
         await subject.stopwatchDidUpdate(32)
         #expect(presenter.thingsReceived == [.updateStopwatch(32)])
+    }
+
+    @Test("resumeStat: calls coordinator popToGame")
+    func resumeStatPop() async {
+        await subject.resume(stat: Stat(dateFinished: Date.now, won: false, initialLayout: Layout(), movesCount: 3, timeTaken: 200))
+        #expect(coordinator.methodsCalled == ["popToGame()"])
+        print("test")
+    }
+
+    @Test("resumeStat: exactly like deal if game is over")
+    func resumeStat() async {
+        var layout = Layout()
+        layout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = layout
+        subject.state.gameProgress = .gameOver
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [Layout(), Layout()]
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        var statLayout = Layout()
+        statLayout.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
+        await subject.resume(stat: Stat(dateFinished: Date.now, won: false, initialLayout: statLayout, movesCount: 3, timeTaken: 200))
+        #expect(subject.state.layout == statLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == Layout()) // animated as if dealing
+        #expect(animator.newLayout == statLayout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 200)
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(stats.methodsCalled.isEmpty)
+    }
+
+    @Test("resumeStat: if game progress is not gameOver, saves current game as lost, animates from it")
+    func resumeStatGameNotOver() async {
+        var oldLayout = Layout()
+        oldLayout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = oldLayout
+        subject.state.gameProgress = .inProgress // *
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [oldLayout, Layout()] // teehee
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        var statLayout = Layout()
+        statLayout.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
+        await subject.resume(stat: Stat(dateFinished: Date.now, won: false, initialLayout: statLayout, movesCount: 3, timeTaken: 200))
+        #expect(subject.state.layout == statLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == oldLayout) // animated from existing old game
+        #expect(animator.newLayout == statLayout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 200)
+        await #while(stats.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled == ["saveStat(_:)"])
+        #expect(stats.stat == Stat(
+            dateFinished: Date.distantPast,
+            won: false,
+            initialLayout: oldLayout,
+            movesCount: 1,
+            timeTaken: 0,
+            codes: ["yoho"]
+        ))
     }
 }

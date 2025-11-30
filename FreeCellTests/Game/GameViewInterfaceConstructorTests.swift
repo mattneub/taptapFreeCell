@@ -2,7 +2,7 @@
 import Testing
 import UIKit
 
-struct GameViewInterfaceConstructorTests {
+private struct GameViewInterfaceConstructorTests {
     @Test("interface is correctly constructed and card views are correctly returned")
     func construct() throws {
         CardView.baseSize = CGSize(width: 35, height: 60)

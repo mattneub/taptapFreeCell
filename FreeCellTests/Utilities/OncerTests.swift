@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct OncerTests {
+private struct OncerTests {
     @Test("Oncer does its thing once and then throws")
     func oncer() throws {
         var variable = 0

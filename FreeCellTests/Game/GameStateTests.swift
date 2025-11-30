@@ -2,7 +2,7 @@
 import Testing
 import Foundation
 
-struct GameStateTests {
+private struct GameStateTests {
     @Test("gameIsOver is correct")
     func gameIsOver() {
         var subject = GameState()

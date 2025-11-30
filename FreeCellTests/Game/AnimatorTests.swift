@@ -1,7 +1,7 @@
 @testable import TTFreeCell
 import Testing
 
-struct AnimatorTests {
+private struct AnimatorTests {
     @Test("animate: transforms layout pair into moves, sends to processor's presenter")
     func animate() async throws {
         enum Wrong: Error { case wrong }

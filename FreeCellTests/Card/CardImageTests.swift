@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import SnapshotTesting
 
-struct CardImageTests {
+private struct CardImageTests {
     let fileManager = MockFileManager()
 
     init() {

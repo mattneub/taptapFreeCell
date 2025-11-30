@@ -2,7 +2,7 @@
 import Testing
 import UIKit
 
-struct BorderLayerTests {
+private struct BorderLayerTests {
     @Test("initialize: sets up the border layer correctly")
     func initialize() {
         let subject = BorderLayer()
