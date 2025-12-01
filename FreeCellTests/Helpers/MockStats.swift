@@ -1,4 +1,5 @@
 import Foundation
+import BackgroundTasks
 @testable import TTFreeCell
 
 actor MockStats: StatsType {
@@ -17,5 +18,9 @@ actor MockStats: StatsType {
     func saveStat(_ stat: Stat) async throws {
         methodsCalled.append(#function)
         self.stat = stat
+    }
+
+    func cleanup(task: (any BackgroundTaskType)?) async {
+        methodsCalled.append(#function)
     }
 }

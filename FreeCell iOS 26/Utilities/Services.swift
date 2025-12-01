@@ -1,4 +1,5 @@
 import Foundation
+import BackgroundTasks
 
 final class Services {
     var fileManager: any FileManagerType = FileManager.default
@@ -7,5 +8,6 @@ final class Services {
     var lifetime: any LifetimeType = Lifetime()
     var persistence: any PersistenceType = Persistence()
     var stats: any StatsType = Stats()
+    var taskScheduler: any TaskSchedulerType = BGTaskScheduler.shared
     var userDefaults: any UserDefaultsType = UserDefaults.standard
 }
