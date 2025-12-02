@@ -8,12 +8,21 @@ protocol StatsType: Actor {
     func saveStat(_ stat: Stat) async throws
     func doMigration3() async throws
     func cleanup(task: (any BackgroundTaskType)?) async
+    func delete(key: String) async throws
 }
 
 /// Actor who loads and saves the stats dictionary. This involves use of a property list
 /// decoder / encoder, which is a slow business — which is why this is an actor.
 actor Stats: StatsType {
     var stats: StatsDictionary = [:]
+
+    /// Back door for testing purposes. We close the door simply by existing if called from real app.
+    func setStats(_ newStats: StatsDictionary) async {
+        guard !(await unlessTesting(true)) else {
+            return
+        }
+        stats = newStats
+    }
 
     /// Intended to be called once at app launch.
     /// Read stats from disk; also migrate and save if necessary. Takes about five seconds
@@ -80,6 +89,10 @@ actor Stats: StatsType {
     func saveStat(_ stat: Stat) async throws {
         let key = await stat.initialLayout.tableauDescription
         stats[key] = stat
+        try await saveStats()
+    }
+
+    func saveStats() async throws {
         if let url = await services.fileManager.urlInDocuments(name: Defaults.stats) {
             let data = try PropertyListEncoder().encode(stats)
             try data.write(to: url)
@@ -113,6 +126,11 @@ actor Stats: StatsType {
         } catch {
             task?.setTaskCompleted(success: false)
         }
+    }
+
+    func delete(key: String) async throws {
+        stats[key] = nil
+        try await saveStats()
     }
 }
 

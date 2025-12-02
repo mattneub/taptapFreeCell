@@ -43,6 +43,11 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
 
     func receive(_ effect: StatsEffect) async {
         switch effect {
+        case .delete(let row):
+            sortedData.remove(at: row)
+            await updateTable()
+            // no need to remove anything from `data`! it's just a lookup table, it's not the
+            // source for the table display
         case .sort(let sort):
             await sortAndUpdateTable(sort: sort)
         case .totalChanged:
@@ -96,12 +101,12 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
     /// Bottleneck routine, to be run every time the data changes by sorting or filtering. It is
     /// assumed that `sortedData` contains the data to be displayed. Display that data, and let
     /// the processor know the current totals.
-    func updateTable() async {
+    func updateTable(animating: Bool = false) async {
         var snapshot = datasource.snapshot()
         snapshot.deleteAllItems()
         snapshot.appendSections(["dummy"])
         snapshot.appendItems(sortedData.map { $0.key })
-        await datasource?.apply(snapshot, animatingDifferences: false)
+        await datasource?.apply(snapshot, animatingDifferences: animating)
         let total = sortedData.count
         let won = sortedData.filter { $0.value.won }.count
         await processor?.receive(.totalChanged(total: total, won: won))
@@ -174,8 +179,35 @@ extension StatsDatasource: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         Task {
-            await processor?.receive(.resume(sortedData[indexPath.row].key))
+            await processor?.receive(.resume(key: sortedData[indexPath.row].key))
             tableView.selectRow(at: nil, animated: false, scrollPosition: .none)
+        }
+    }
+
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard unfilteredData == nil else { // no swiping while we're filtered
+            return nil
+        }
+        let deleteAction = MyUIContextualAction(myStyle: .destructive, title: "Delete") { [weak self] (action, view, completion) in
+            guard let self else { return completion(false) }
+            let stat = sortedData[indexPath.row].key
+            sortedData.remove(at: indexPath.row)
+            Task {
+                await updateTable(animating: true)
+                await processor?.receive(.delete(key: stat))
+                completion(true) // looks great and the runtime is not complaining so what the heck
+            }
+        }
+        let exportAction = MyUIContextualAction(myStyle: .normal, title: "Export") { (action, view, completion) in
+            completion(true)
+        }
+        exportAction.backgroundColor = .systemGreen
+        let previewAction = MyUIContextualAction(myStyle: .normal, title: "View") { (action, view, completion) in
+            completion(true)
+        }
+        previewAction.backgroundColor = .systemBlue
+        return UISwipeActionsConfiguration(actions: [deleteAction, exportAction, previewAction]).applying {
+            $0.performsFirstActionWithFullSwipe = false
         }
     }
 }

@@ -6,6 +6,7 @@ actor MockStats: StatsType {
     nonisolated(unsafe) var methodsCalled = [String]()
     nonisolated(unsafe) var stats: StatsDictionary = [:]
     nonisolated(unsafe) var stat: Stat?
+    nonisolated(unsafe) var key: String?
 
     func loadStats() async {
         methodsCalled.append(#function)
@@ -23,4 +24,10 @@ actor MockStats: StatsType {
     func cleanup(task: (any BackgroundTaskType)?) async {
         methodsCalled.append(#function)
     }
+
+    func delete(key: String) async throws {
+        methodsCalled.append(#function)
+        self.key = key
+    }
+
 }

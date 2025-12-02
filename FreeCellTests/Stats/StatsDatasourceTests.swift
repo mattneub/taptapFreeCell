@@ -155,7 +155,52 @@ private struct StatsDatasourceTests {
         // all of that was prep, this is the test
         subject.tableView(tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
         await #while(processor.thingsReceived.isEmpty)
-        #expect(processor.thingsReceived == [.resume("ho")])
+        #expect(processor.thingsReceived == [.resume(key: "ho")])
         #expect(tableView.indexPathForSelectedRow == nil)
+    }
+
+    @Test("trailing swipe actions is nil if unfiltered data is not nil")
+    func trailingSwipeNil() async {
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2),
+        ]
+        await subject.present(StatsState(stats: stats))
+        await subject.receive(.toggleMicrosofts)
+        var result = subject.tableView(tableView, trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 0, section: 0))
+        #expect(result == nil)
+        await subject.receive(.toggleMicrosofts)
+        result = subject.tableView(tableView, trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 0, section: 0))
+        #expect(result != nil)
+        #expect(result?.performsFirstActionWithFullSwipe == false)
+        #expect(result?.actions.count == 3)
+        #expect(result?.actions[0].title == "Delete")
+        #expect(result?.actions[1].title == "Export")
+        #expect(result?.actions[2].title == "View")
+        #expect(result?.actions[0].style == .destructive)
+        #expect(result?.actions[1].backgroundColor == .systemGreen)
+        #expect(result?.actions[2].backgroundColor == .systemBlue)
+    }
+
+    @Test("trailing swipe action 0 removes row from sorted data, updates table, sends delete with key")
+    func trailingSwipeDelete() async throws {
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2),
+        ]
+        await subject.present(StatsState(stats: stats))
+        #expect(subject.sortedData.count == 2)
+        #expect(processor.thingsReceived.first == .totalChanged(total: 2, won: 1))
+        let config = subject.tableView(tableView, trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 0, section: 0))
+        let action = try #require(config?.actions.first as? MyUIContextualAction)
+        var ok: Bool?
+        func completion(_ success: Bool) { ok = success }
+        action.myHandler?(action, UIView(), completion)
+        #expect(subject.sortedData.count == 1)
+        #expect(subject.sortedData.first?.key == "hey") // "ho" was deleted
+        await #while(processor.thingsReceived.count < 3)
+        #expect(processor.thingsReceived[1] == .totalChanged(total: 1, won: 1))
+        #expect(processor.thingsReceived[2] == .delete(key: "ho"))
+        #expect(ok == true)
     }
 }

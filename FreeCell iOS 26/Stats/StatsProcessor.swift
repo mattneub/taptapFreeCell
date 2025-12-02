@@ -11,6 +11,10 @@ final class StatsProcessor: Processor {
 
     func receive(_ action: StatsAction) async {
         switch action {
+        case .delete(let key):
+            try? await services.stats.delete(key: key)
+            let stats = await services.stats.stats
+            state.stats = stats
         case .initialData:
             let stats = await services.stats.stats
             state.stats = stats

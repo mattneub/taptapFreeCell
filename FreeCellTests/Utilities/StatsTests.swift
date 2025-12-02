@@ -15,6 +15,21 @@ private struct StatsTests {
         services.taskScheduler = scheduler
     }
 
+    @Test("setStats: back door works")
+    func setStats() async {
+        #expect(await subject.stats.isEmpty)
+        let stat = Stat(
+            dateFinished: Date.distantPast,
+            won: true,
+            initialLayout: Layout(),
+            movesCount: 4,
+            timeTaken: 200,
+            codes: ["manny", "moe", "jack"]
+        )
+        await subject.setStats(["ho": stat])
+        #expect(await subject.stats == ["ho": stat])
+    }
+
     @Test("loadStats: fetches stats from documents, sets stats property")
     func loadStats() async throws {
         persistence.migrationToReturn = true
@@ -113,7 +128,7 @@ private struct StatsTests {
         #expect(newValue == value)
     }
 
-    @Test("cleanup(): gets list of documents contents, deletes all except stats, calls task completed")
+    @Test("cleanup: gets list of documents contents, deletes all except stats, calls task completed")
     func cleanup() async {
         let task = MockBackgroundTask()
         fileManager.urlsToReturn = [
@@ -131,5 +146,28 @@ private struct StatsTests {
         #expect(task.expirationHandler != nil)
         #expect(task.methodsCalled == ["setTaskCompleted(success:)"])
         #expect(task.success == true)
+    }
+
+    @Test("delete: deletes that key, saves the stats")
+    func delete() async throws {
+        let uuid = UUID().uuidString
+        let url = URL.temporaryDirectory.appendingPathComponent(uuid)
+        fileManager.documentsURLtoReturn = url
+        let stat = Stat(
+            dateFinished: Date.distantPast,
+            won: true,
+            initialLayout: Layout(),
+            movesCount: 4,
+            timeTaken: 200,
+            codes: ["manny", "moe", "jack"]
+        )
+        await subject.setStats(["ho": stat, "hey": stat])
+        try await subject.delete(key: "ho")
+        #expect(await subject.stats == ["hey": stat])
+        #expect(fileManager.methodsCalled == ["urlInDocuments(name:)"])
+        #expect(fileManager.name == "stats")
+        let data = try Data(contentsOf: url)
+        let stats = try PropertyListDecoder().decode(StatsDictionary.self, from: data)
+        #expect(stats == ["hey": stat])
     }
 }
