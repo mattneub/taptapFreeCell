@@ -40,6 +40,8 @@ actor Stats: StatsType {
         if listCount > 100 {
             let request = BGProcessingTaskRequest(identifier: "com.neuburg.matt.freecell.cleanup")
             request.requiresNetworkConnectivity = false
+            request.requiresExternalPower = false
+            request.earliestBeginDate = Date.now + 120
             do {
                 try await services.taskScheduler.submit(request)
             } catch {
