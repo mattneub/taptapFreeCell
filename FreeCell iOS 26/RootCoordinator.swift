@@ -6,6 +6,7 @@ protocol RootCoordinatorType: AnyObject {
     func showAlert(title: String?, message: String?, buttonTitles: [String]) async -> String?
     func showStats()
     func popToGame() async
+    func showMail(message: String)
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -64,6 +65,12 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         await withCheckedContinuation { [weak self] continuation in
             self?.animationContinuation = continuation
             (self?.rootViewController as? UINavigationController)?.popToRootViewController(animated: unlessTesting(true))
+        }
+    }
+
+    func showMail(message: String) {
+        if let viewController = services.mailer.mailViewController(message: message) {
+            rootViewController?.present(viewController, animated: unlessTesting(true))
         }
     }
 

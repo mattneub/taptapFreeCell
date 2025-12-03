@@ -198,8 +198,13 @@ extension StatsDatasource: UITableViewDelegate {
                 completion(true) // looks great and the runtime is not complaining so what the heck
             }
         }
-        let exportAction = MyUIContextualAction(myStyle: .normal, title: "Export") { (action, view, completion) in
-            completion(true)
+        let exportAction = MyUIContextualAction(myStyle: .normal, title: "Export") { [weak self] (action, view, completion) in
+            guard let self else { return completion(false) }
+            let stat = sortedData[indexPath.row].value
+            Task {
+                await processor?.receive(.mail(stat: stat))
+                completion(true)
+            }
         }
         exportAction.backgroundColor = .systemGreen
         let previewAction = MyUIContextualAction(myStyle: .normal, title: "View") { (action, view, completion) in

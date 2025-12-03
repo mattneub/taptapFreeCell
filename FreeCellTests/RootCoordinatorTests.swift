@@ -69,4 +69,19 @@ private struct RootCoordinatorTests {
         #expect(navigationController.children.count == 1)
         #expect(navigationController.children.first === viewController)
     }
+
+    @Test("showMail: calls Mailer to get view controller, presents it")
+    func showMail() {
+        let mailer = MockMailer()
+        mailer.viewControllerToReturn = UIViewController()
+        services.mailer = mailer
+        let viewController = UIViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        subject.rootViewController = navigationController
+        makeWindow(viewController: navigationController) // this too!
+        subject.showMail(message: "howdy")
+        #expect(mailer.methodsCalled == ["mailViewController(message:)"])
+        #expect(mailer.message == "howdy")
+        #expect(navigationController.presentedViewController === mailer.viewControllerToReturn)
+    }
 }

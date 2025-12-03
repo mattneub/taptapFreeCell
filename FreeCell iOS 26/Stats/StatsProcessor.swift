@@ -19,6 +19,9 @@ final class StatsProcessor: Processor {
             let stats = await services.stats.stats
             state.stats = stats
             await presenter?.present(state)
+        case .mail(let stat):
+            let message = services.exporter.messageText(layout: stat.initialLayout, moves: stat.codes)
+            coordinator?.showMail(message: message)
         case .resume(let key):
             let reply = await coordinator?.showAlert(
                 title: "Resume Lost Game",

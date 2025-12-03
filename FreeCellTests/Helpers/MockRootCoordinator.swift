@@ -2,7 +2,6 @@ import UIKit
 @testable import TTFreeCell
 
 final class MockRootCoordinator: RootCoordinatorType {
-
     var methodsCalled = [String]()
     var window: UIWindow?
     var title: String?
@@ -31,4 +30,8 @@ final class MockRootCoordinator: RootCoordinatorType {
         methodsCalled.append(#function)
     }
 
+    func showMail(message: String) {
+        methodsCalled.append(#function)
+        self.message = message
+    }
 }

@@ -8,12 +8,14 @@ private struct StatsProcessorTests {
     let coordinator = MockRootCoordinator()
     fileprivate let delegate = MockDelegate()
     let stats = MockStats()
+    let exporter = MockExporter()
 
     init() {
         subject.presenter = presenter
         subject.coordinator = coordinator
         subject.delegate = delegate
         services.stats = stats
+        services.exporter = exporter
     }
 
     @Test("receive delete: sends delete to stats, then fetches and stores stats")
@@ -38,6 +40,20 @@ private struct StatsProcessorTests {
         stats.stats = statsDictionary
         await subject.receive(.initialData)
         #expect(presenter.statesPresented.last?.stats == statsDictionary)
+    }
+
+    @Test("receive mail: gets message text from exporter, calls coordinator mail")
+    func mail() async {
+        var layout = Layout()
+        layout.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
+        let stat = Stat(dateFinished: Date.distantPast, won: true, initialLayout: layout, movesCount: 3, timeTaken: 200, codes: ["manny"])
+        exporter.messageToReturn = "howdy"
+        await subject.receive(.mail(stat: stat))
+        #expect(exporter.methodsCalled == ["messageText(layout:moves:)"])
+        #expect(exporter.layout == layout)
+        #expect(exporter.moves == stat.codes)
+        #expect(coordinator.methodsCalled == ["showMail(message:)"])
+        #expect(coordinator.message == "howdy")
     }
 
     @Test("receive resume: puts up an alert")

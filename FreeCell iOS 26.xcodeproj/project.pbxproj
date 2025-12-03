@@ -11,6 +11,7 @@
 		3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; };
 		3F3604412ECA267400487EF9 /* Confetti.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */; };
+		3FB2C94A2EDFBC48000FF1F0 /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 3FB2C9492EDFBC48000FF1F0 /* Algorithms */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +112,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FB2C94A2EDFBC48000FF1F0 /* Algorithms in Frameworks */,
 				3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -202,6 +204,7 @@
 			);
 			name = "FreeCell iOS 26";
 			packageProductDependencies = (
+				3FB2C9492EDFBC48000FF1F0 /* Algorithms */,
 			);
 			productName = "FreeCell iOS 26";
 			productReference = 3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */;
@@ -267,6 +270,7 @@
 			packageReferences = (
 				3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */,
+				3FB2C9482EDFBC48000FF1F0 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3FB3F2AC2EB8E76C00689661 /* Products */;
@@ -730,6 +734,14 @@
 				minimumVersion = 1.18.7;
 			};
 		};
+		3FB2C9482EDFBC48000FF1F0 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -742,6 +754,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
 			productName = SnapshotTesting;
+		};
+		3FB2C9492EDFBC48000FF1F0 /* Algorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FB2C9482EDFBC48000FF1F0 /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
