@@ -8,6 +8,7 @@ final class MockRootCoordinator: RootCoordinatorType {
     var message: String?
     var buttonTitles = [String]()
     var buttonTitleToReturn: String?
+    var stat: Stat?
 
     func createInterface(window: UIWindow) {
         methodsCalled.append(#function)
@@ -34,4 +35,10 @@ final class MockRootCoordinator: RootCoordinatorType {
         methodsCalled.append(#function)
         self.message = message
     }
+
+    func showPreview(stat: Stat) async {
+        methodsCalled.append(#function)
+        self.stat = stat
+    }
+
 }

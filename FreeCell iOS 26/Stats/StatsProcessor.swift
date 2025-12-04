@@ -31,6 +31,8 @@ final class StatsProcessor: Processor {
             if reply == "Resume", let stat = state.stats[key] {
                 await delegate?.resume(stat: stat)
             }
+        case .snapshot(let stat):
+            await coordinator?.showPreview(stat: stat)
         case .totalChanged(let total, let won):
             await presenter?.receive(.totalChanged(total: total, won: won))
         }

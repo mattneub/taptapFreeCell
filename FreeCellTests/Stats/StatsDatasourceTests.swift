@@ -221,4 +221,22 @@ private struct StatsDatasourceTests {
         #expect(processor.thingsReceived.last == .mail(stat: expected))
         #expect(ok == true)
     }
+
+    @Test("trailing swipe action 2 sends processor snapshot")
+    func trailingSwipeSnapshot() async throws {
+        let stats: StatsDictionary = [
+            "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
+            "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2),
+        ]
+        await subject.present(StatsState(stats: stats))
+        let config = subject.tableView(tableView, trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 0, section: 0))
+        let action = try #require(config?.actions[2] as? MyUIContextualAction)
+        var ok: Bool?
+        func completion(_ success: Bool) { ok = success }
+        action.myHandler?(action, UIView(), completion)
+        await #while(processor.thingsReceived.count < 2)
+        let expected = Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2)
+        #expect(processor.thingsReceived.last == .snapshot(stat: expected))
+        #expect(ok == true)
+    }
 }

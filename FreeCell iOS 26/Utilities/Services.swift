@@ -11,6 +11,7 @@ final class Services {
     var mailer: any MailerType = Mailer()
     var mailComposeViewControllerType: any MailComposeViewControllerType.Type = MFMailComposeViewController.self
     var persistence: any PersistenceType = Persistence()
+    var previewer: any PreviewerType = Previewer()
     var stats: any StatsType = Stats()
     var taskScheduler: any TaskSchedulerType = BGTaskScheduler.shared
     var userDefaults: any UserDefaultsType = UserDefaults.standard

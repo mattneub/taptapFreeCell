@@ -2,7 +2,7 @@
 import Testing
 import Foundation
 
-struct ExporterTests {
+private struct ExporterTests {
     let subject = Exporter()
 
     @Test("message text is right with no codes")

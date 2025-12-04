@@ -94,6 +94,14 @@ private struct StatsProcessorTests {
         #expect(delegate.stat == Stat(dateFinished: Date(timeIntervalSince1970: 3), won: true, initialLayout: Layout(), movesCount: 2, timeTaken: 2))
     }
 
+    @Test("receive snapshot: calls coordinator preview")
+    func snapshot() async {
+        let stat = Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1)
+        await subject.receive(.snapshot(stat: stat))
+        #expect(coordinator.methodsCalled == ["showPreview(stat:)"])
+        #expect(coordinator.stat == stat)
+    }
+
     @Test("receive totalChanged sends totalChanged")
     func totalChanged() async {
         await subject.receive(.totalChanged(total: 3, won: 2))

@@ -78,10 +78,25 @@ private struct RootCoordinatorTests {
         let viewController = UIViewController()
         let navigationController = UINavigationController(rootViewController: viewController)
         subject.rootViewController = navigationController
-        makeWindow(viewController: navigationController) // this too!
+        makeWindow(viewController: navigationController)
         subject.showMail(message: "howdy")
         #expect(mailer.methodsCalled == ["mailViewController(message:)"])
         #expect(mailer.message == "howdy")
         #expect(navigationController.presentedViewController === mailer.viewControllerToReturn)
+    }
+
+    @Test("showPreview: calls Previewer to get view controller, pushes it")
+    func showPreview() async {
+        let stat = Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1)
+        let previewer = MockPreviewer()
+        previewer.viewControllerToReturn = UIViewController()
+        services.previewer = previewer
+        let viewController = UIViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        subject.rootViewController = navigationController
+        makeWindow(viewController: navigationController)
+        await subject.showPreview(stat: stat)
+        #expect(previewer.methodsCalled == ["viewController(for:)"])
+        #expect(navigationController.topViewController === previewer.viewControllerToReturn)
     }
 }

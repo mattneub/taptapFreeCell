@@ -3,7 +3,7 @@ import Testing
 import UIKit
 import MessageUI
 
-struct MailerTests {
+private struct MailerTests {
     let subject = Mailer()
 
     init() {

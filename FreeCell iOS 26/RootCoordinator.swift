@@ -7,6 +7,7 @@ protocol RootCoordinatorType: AnyObject {
     func showStats()
     func popToGame() async
     func showMail(message: String)
+    func showPreview(stat: Stat) async
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -74,6 +75,11 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         }
     }
 
+    func showPreview(stat: Stat) async {
+        if let viewController = await services.previewer.viewController(for: stat) {
+            (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: true)
+        }
+    }
 }
 
 extension RootCoordinator: UINavigationControllerDelegate {

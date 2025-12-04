@@ -3,5 +3,6 @@ enum StatsAction: Equatable {
     case initialData
     case mail(stat: Stat)
     case resume(key: String)
+    case snapshot(stat: Stat)
     case totalChanged(total: Int, won: Int)
 }
