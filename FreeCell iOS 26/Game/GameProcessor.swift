@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 
 final class GameProcessor: Processor {
     weak var coordinator: (any RootCoordinatorType)?
@@ -101,7 +102,7 @@ final class GameProcessor: Processor {
                 // the stopwatch is now _stopped_ at the loaded time
             }
             await services.stats.loadStats() // actor, interface not blocked
-            print("stats loaded")
+            logger.log("stats loaded")
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()

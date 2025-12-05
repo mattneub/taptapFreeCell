@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.neuburg.matt.freecell.cleanup</string>
+		<string>com.neuburg.matt.FreeCell.cleanup2</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

@@ -1,5 +1,4 @@
 import Foundation
-import BackgroundTasks
 
 protocol StatsType: Actor {
     var stats: StatsDictionary { get }
@@ -7,7 +6,6 @@ protocol StatsType: Actor {
     func loadStats() async
     func saveStat(_ stat: Stat) async throws
     func doMigration3() async throws
-    func cleanup(task: (any BackgroundTaskType)?) async
     func delete(key: String) async throws
 }
 
@@ -42,19 +40,6 @@ actor Stats: StatsType {
                 await services.persistence.setDidMigration3(true)
             } catch {
                 print("failed to do migration 3")
-            }
-        }
-        // if there are a lot of things in documents, submit a background processing task to delete them
-        let listCount = await services.fileManager.countUrlsInDocuments()
-        if listCount > 100 {
-            let request = BGProcessingTaskRequest(identifier: "com.neuburg.matt.freecell.cleanup")
-            request.requiresNetworkConnectivity = false
-            request.requiresExternalPower = false
-            request.earliestBeginDate = Date.now + 120
-            do {
-                try await services.taskScheduler.submit(request)
-            } catch {
-                print(error)
             }
         }
     }
@@ -96,35 +81,6 @@ actor Stats: StatsType {
         if let url = await services.fileManager.urlInDocuments(name: Defaults.stats) {
             let data = try PropertyListEncoder().encode(stats)
             try data.write(to: url)
-        }
-    }
-
-    /// Called from app delegate if we are told to perform the background task submitted
-    /// in `loadStats`.
-    func cleanup(task: (any BackgroundTaskType)?) async {
-        // describe success as true unless the task's expiration handler is called
-        var success = true
-        task?.expirationHandler = {
-            success = false
-        }
-        // cycle thru all documents, deleting all except stats, yielding on every loop to give
-        // expiration handler a chance to run
-        do {
-            let list = try await services.fileManager.urlsInDocuments()
-            for url in list {
-                if url.lastPathComponent == "stats" {
-                    continue
-                }
-                try await services.fileManager.removeItem(at: url)
-                // every time thru the loop, yield and check for expiration
-                await Task.yield()
-                if !success {
-                    break
-                }
-            }
-            task?.setTaskCompleted(success: success)
-        } catch {
-            task?.setTaskCompleted(success: false)
         }
     }
 

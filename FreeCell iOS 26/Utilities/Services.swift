@@ -3,6 +3,7 @@ import BackgroundTasks
 import MessageUI
 
 final class Services {
+    var cleaner: any CleanerType = Cleaner()
     var fileManager: any FileManagerType = FileManager.default
     var exporter: any ExporterType = Exporter()
     var dateType: any DateType.Type = Date.self

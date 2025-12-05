@@ -40,7 +40,7 @@ private struct StatsTests {
         #expect(oldStats == [:])
         await subject.loadStats()
         #expect(persistence.methodsCalled == ["didMigration3()"])
-        #expect(fileManager.methodsCalled == ["urlInDocuments(name:)", "countUrlsInDocuments()"])
+        #expect(fileManager.methodsCalled == ["urlInDocuments(name:)"])
         #expect(fileManager.name == "stats")
         let newStats = await(subject.stats)
         #expect(newStats != [:])
@@ -72,18 +72,6 @@ private struct StatsTests {
         let newValue = await subject.stats[sampleKey.trimmingWhitespacesFromLineEnds]
         #expect(newValue == value)
         #expect(scheduler.methodsCalled.isEmpty)
-    }
-
-    @Test("loadStats: if documents count is big, schedules cleanup background task")
-    func loadStatsCleanup() async throws {
-        fileManager.countToReturn = 200
-        persistence.migrationToReturn = true
-        let bundle = Bundle(for: MockFileManager.self)
-        let url = try #require(bundle.url(forResource: "stats", withExtension: nil))
-        fileManager.documentsURLtoReturn = url
-        await subject.loadStats()
-        #expect(scheduler.methodsCalled == ["submit(_:)"])
-        #expect(scheduler.request?.identifier == "com.neuburg.matt.freecell.cleanup")
     }
 
     @Test("saveStats: saves the given stat into stats with its initial layout as key, saves to documents")
@@ -126,26 +114,6 @@ private struct StatsTests {
         #expect(Set(migratedKeys) == expectedMigratedKeys)
         let newValue = await subject.stats[sampleKey.trimmingWhitespacesFromLineEnds]
         #expect(newValue == value)
-    }
-
-    @Test("cleanup: gets list of documents contents, deletes all except stats, calls task completed")
-    func cleanup() async {
-        let task = MockBackgroundTask()
-        fileManager.urlsToReturn = [
-            URL(string: "file://whatever/manny")!,
-            URL(string: "file://whatever/moe")!,
-            URL(string: "file://whatever/jack")!,
-            URL(string: "file://whatever/stats")!,
-        ]
-        await subject.cleanup(task: task)
-        #expect(fileManager.urlsDeleted == [
-            URL(string: "file://whatever/manny")!,
-            URL(string: "file://whatever/moe")!,
-            URL(string: "file://whatever/jack")!,
-        ])
-        #expect(task.expirationHandler != nil)
-        #expect(task.methodsCalled == ["setTaskCompleted(success:)"])
-        #expect(task.success == true)
     }
 
     @Test("delete: deletes that key, saves the stats")
