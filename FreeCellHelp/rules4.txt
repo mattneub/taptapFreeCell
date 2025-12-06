@@ -1,0 +1,24 @@
+#title "Rules of FreeCell 4/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Freecells
+
+Each Freecell can hold at most one card at a time:
+
+* Any movable card may be played into an empty Freecell.
+
+* A card in a Freecell is movable.
+
+<%= imageref("exampleLayoutAnnotated") %>
+
+In the layout pictured above, two of the Freecells have had cards moved into them; those cards are movable. Two Freecells are empty, so any movable card from any Tableau Column can be played into them.
+
+

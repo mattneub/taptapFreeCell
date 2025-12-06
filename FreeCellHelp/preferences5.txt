@@ -1,0 +1,23 @@
+#title "Preferences 5/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Automove On First Tap
+
+If Automove On First Tap is _on_, then if you tap a Freecell or Column to start a [move](taptap), and only _one_ move is possible, TapTapFreeCell will complete the move for you immediately, without waiting for a second tap.
+
+### Show Clock
+
+If Show Clock is _on_, the game timer is displayed at the top of the screen. To reduce your anxiety, the timer display is not updated continuously (even though the actual timer is always counting); it is updated only after you tap somewhere.
+
+### Animations
+
+When cards move, the move can be animated. You have a choice of three animation speeds, or no animation (the cards jump).
+

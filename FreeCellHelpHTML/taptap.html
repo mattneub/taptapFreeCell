@@ -1,0 +1,74 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="generator" content="RubyFrontier" />
+<meta name="viewport" content="initial-scale=1.0" />
+
+
+<style type="text/css">
+<!--/*--><![CDATA[/*><!--*/
+img {
+    width:90%;
+    max-width:250px; 
+    height:auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+body {
+    font-family: "Georgia";
+    font-size: 1em;
+}
+
+/*]]>*/-->
+</style>
+
+
+<title>How TapTapFreeCell Works 1/4</title>
+</head>
+<body bgcolor="#FFFFEE">
+
+<div class="heart">
+
+  <h1 id="how-taptapfreecell-works-14">How TapTapFreeCell Works 1/4</h1>
+
+  <p>TapTapFreeCell is a <a href="rules.html">FreeCell</a> implementation where you <em>tap</em>, never <em>drag</em>, to indicate what you want to do.</p>
+
+  <h3 id="tap-tap-to-move">Tap-Tap to Move</h3>
+
+  <p>To make a move, you <strong>tap twice</strong>. Tap-tap!</p>
+
+  <ol>
+    <li>
+      <p>First <strong>tap</strong> a Freecell or Column to select it. TapTapFreeCell is now <em>waiting</em> for the second tap.</p>
+    </li>
+    <li>
+      <p>Then <strong>tap</strong> any legal place to <strong>move</strong> there.</p>
+
+      <p>Or <strong>tap</strong> elsewhere (such as the background) to <strong>cancel</strong>.</p>
+    </li>
+  </ol>
+
+  <p>For example, here&#8217;s a layout during a game:</p>
+
+  <p><img src="images/tap1.png" width="601" height="740" alt="image" /></p>
+
+  <p>I want to move the sequence in Column 1 (black 9-8-7-6-5) onto the red 10 in Column 2. First, I <strong>tap</strong> Column 1:</p>
+
+  <p><img src="images/tap2.png" width="596" height="735" alt="image" /></p>
+
+  <p>Because of my <a href="preferences.html">preferences</a>, Column 1 grows a little and is tinted a little, to show it&#8217;s selected; and everything is dimmed except for destinations I can legally move to. Column 2 is a legal place to move from Column 1, so it is undimmed. (Alternatively, I could move the sequence to the empty Column 7, or I could move one card to a Freecell, so they are undimmed too.)</p>
+
+  <p>To move the sequence from Column 1 to Column 2, I <strong>tap</strong> Column 2. Tap-tap!</p>
+
+  <p><img src="images/tap3.png" width="689" height="1022" alt="image" /></p>
+
+</div>
+
+</body>
+
+</html>

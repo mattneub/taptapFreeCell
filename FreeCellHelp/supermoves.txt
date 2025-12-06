@@ -1,0 +1,59 @@
+#title "Supermoves"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+Most of the time, the [maximum number of cards](rules5#why-the-freecells-matter) in a sequence that can be moved from one Column to another is _the number of empty Freecells plus one._
+
+However, when empty Columns exist, this number may increase dramatically, allowing you to make a *supermove.* Each empty Column (other than the Column you are moving to) basically *doubles* the maximum movable sequence size from what it would be based on the number of Freecells alone!
+
+<%= imageref("supermove") %>
+
+For example, in the above layout, you can move the _entire_ marked sequence in Column 2 — black J-10-9-8-7-6 — onto the red Queen in Column 8.
+
+Why? Because the empty Columns can be used as staging areas for entire subsequences of cards. There is one empty Freecell, so we can move two cards at a time:
+
+1. Two cards (7-6) from Column 2 into the empty Column 3.
+
+1. Two cards (9-8) from Column 2 into the empty Column 5.
+
+1. Two cards (J-10) from Column 2 onto the Queen in Column 8.
+
+1. Two cards (9-8) from Column 5 onto the 10 in Column 8.
+
+1. Two cards (7-6) from Column 3 onto the 8 in Column 8.
+
+In fact, with one empty Freecell and two empty Columns, we could move as many as _eight_ cards in sequence from one Column to another!
+
+<!--
+
+Imagine we have black J-10-9-8-7-6-5-4 to move onto a red Queen:
+
+1. Two cards (5-4) from the source column, to the first empty column.
+
+2. Two cards (7-6) from the source column, to the second empty column.
+
+3. The two cards (5-4) moved in Step 1, onto the two cards (7-6) moved in Step 2 — thus giving us one empty column and one staging column with four cards in it (7-6-5-4).
+
+4. Two cards from the source column (9-8) to the empty column.
+
+5. Two cards from the source column (J-10) onto the Queen in the destination column! We have now moved eight cards out of the source column.
+
+6. The two cards (9-8) moved in Step 4, onto the 10 in the destination column, giving us an empty column.
+
+7. The two cards (5-4) moved in Step 3, to the empty column.
+
+8. The two cards moved (7-6) in Step 2, onto the 8 in the the destination column.
+
+9. The two cards (5-4) moved in step 7, onto the 6 in the destination column.
+
+-->
+
+Because of supermoves, emptying at least one Column is an important part of the [basic strategy](strategy) for playing FreeCell.
+
+(Supermoves are similar, but not identical, to the [Tower of Hanoi](https://en.wikipedia.org/wiki/Tower_of_Hanoi) technique.)
+

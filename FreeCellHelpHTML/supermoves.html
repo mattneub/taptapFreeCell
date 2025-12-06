@@ -1,0 +1,101 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="generator" content="RubyFrontier" />
+<meta name="viewport" content="initial-scale=1.0" />
+
+
+<style type="text/css">
+<!--/*--><![CDATA[/*><!--*/
+img {
+    width:90%;
+    max-width:250px; 
+    height:auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+body {
+    font-family: "Georgia";
+    font-size: 1em;
+}
+
+/*]]>*/-->
+</style>
+
+
+<title>Supermoves</title>
+</head>
+<body bgcolor="#FFFFEE">
+
+<div class="heart">
+
+  <h1>Supermoves</h1>
+
+  <p>Most of the time, the <a href="rules5.html#why-the-freecells-matter">maximum number of cards</a> in a sequence that can be moved from one Column to another is <em>the number of empty Freecells plus one.</em></p>
+
+  <p>However, when empty Columns exist, this number may increase dramatically, allowing you to make a <em>supermove.</em> Each empty Column (other than the Column you are moving to) basically <em>doubles</em> the maximum movable sequence size from what it would be based on the number of Freecells alone!</p>
+
+  <p><img src="images/supermove.png" width="599" height="834" alt="image" /></p>
+
+  <p>For example, in the above layout, you can move the <em>entire</em> marked sequence in Column 2 — black J-10-9-8-7-6 — onto the red Queen in Column 8.</p>
+
+  <p>Why? Because the empty Columns can be used as staging areas for entire subsequences of cards. There is one empty Freecell, so we can move two cards at a time:</p>
+
+  <ol>
+    <li>
+      <p>Two cards (7-6) from Column 2 into the empty Column 3.</p>
+    </li>
+    <li>
+      <p>Two cards (9-8) from Column 2 into the empty Column 5.</p>
+    </li>
+    <li>
+      <p>Two cards (J-10) from Column 2 onto the Queen in Column 8.</p>
+    </li>
+    <li>
+      <p>Two cards (9-8) from Column 5 onto the 10 in Column 8.</p>
+    </li>
+    <li>
+      <p>Two cards (7-6) from Column 3 onto the 8 in Column 8.</p>
+    </li>
+  </ol>
+
+  <p>In fact, with one empty Freecell and two empty Columns, we could move as many as <em>eight</em> cards in sequence from one Column to another!</p>
+
+  <!--
+
+Imagine we have black J-10-9-8-7-6-5-4 to move onto a red Queen:
+
+1. Two cards (5-4) from the source column, to the first empty column.
+
+2. Two cards (7-6) from the source column, to the second empty column.
+
+3. The two cards (5-4) moved in Step 1, onto the two cards (7-6) moved in Step 2 — thus giving us one empty column and one staging column with four cards in it (7-6-5-4).
+
+4. Two cards from the source column (9-8) to the empty column.
+
+5. Two cards from the source column (J-10) onto the Queen in the destination column! We have now moved eight cards out of the source column.
+
+6. The two cards (9-8) moved in Step 4, onto the 10 in the destination column, giving us an empty column.
+
+7. The two cards (5-4) moved in Step 3, to the empty column.
+
+8. The two cards moved (7-6) in Step 2, onto the 8 in the the destination column.
+
+9. The two cards (5-4) moved in step 7, onto the 6 in the destination column.
+
+-->
+
+  <p>Because of supermoves, emptying at least one Column is an important part of the <a href="strategy.html">basic strategy</a> for playing FreeCell.</p>
+
+  <p>(Supermoves are similar, but not identical, to the <a href="https://en.wikipedia.org/wiki/Tower_of_Hanoi">Tower of Hanoi</a> technique.)</p>
+
+</div>
+
+</body>
+
+</html>

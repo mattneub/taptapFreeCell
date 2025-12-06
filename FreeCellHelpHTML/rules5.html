@@ -1,0 +1,77 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="generator" content="RubyFrontier" />
+<meta name="viewport" content="initial-scale=1.0" />
+
+
+<style type="text/css">
+<!--/*--><![CDATA[/*><!--*/
+img {
+    width:90%;
+    max-width:250px; 
+    height:auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+body {
+    font-family: "Georgia";
+    font-size: 1em;
+}
+
+/*]]>*/-->
+</style>
+
+
+<title>Rules of FreeCell 5/5</title>
+</head>
+<body bgcolor="#FFFFEE">
+
+<div class="heart">
+
+  <h1 id="rules-of-freecell-55">Rules of FreeCell 5/5</h1>
+
+  <h3 id="why-the-freecells-matter">Why the Freecells Matter</h3>
+
+  <p>Thanks to the Freecells, entire sequences can be moved from one Column to another. This is because empty Freecells act as intermediate staging points.</p>
+
+  <p>For example, consider the same layout once again:</p>
+
+  <p><img src="images/exampleLayoutAnnotated.png" width="609" height="655" alt="image" /></p>
+
+  <p>Column 1 ends with a sequence: red 9-8-7. The <em>entire sequence</em> can be moved onto the black 10 at the end of Column 5 or Column 8.</p>
+
+  <p>That sounds like we are moving multiple cards at a time, which is <a href="rules2.html#movable-cards">illegal</a>. But in fact we are moving <em>one</em> card at a time, using the two empty Freecells as intermediate stages:</p>
+
+  <ol>
+    <li>
+      <p>First we move the 7 of Hearts into an empty Freecell.</p>
+    </li>
+    <li>
+      <p>Now the 8 of Clubs is exposed and movable, and we move it into the other empty Freecell.</p>
+    </li>
+    <li>
+      <p>Now the 9 of Diamonds is exposed and movable! Thus it can be moved onto the 10 of Spades or the 10 of Clubs.</p>
+    </li>
+    <li>
+      <p>Now we move the 8 of Clubs out of its Freecell and back onto the 9 of Diamonds in its new location.</p>
+    </li>
+    <li>
+      <p>Finally we move the 7 of Hearts out of its Freecell and back onto the 8 of Clubs in its new location.</p>
+    </li>
+  </ol>
+
+  <p>Thus, in general, you can move a movable sequence from one Column to another, up to a maximum sequence length that is <em>the number of empty Freecells plus one</em>.</p>
+
+  <p>Empty Columns can be used as intermediate staging points too. In fact, empty Columns can greatly <em>increase</em> the maximum movable sequence size, because you might be able to perform a <em><a href="supermoves.html">supermove</a></em>.</p>
+
+</div>
+
+</body>
+
+</html>

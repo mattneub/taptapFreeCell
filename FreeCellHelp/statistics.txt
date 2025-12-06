@@ -1,0 +1,46 @@
+#title "Statistics"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+The Statistics pane lists your played games. You can resume a lost game, view a game's deal, and [export](otherfeatures#export) a game.
+
+To access the Statistics pane, tap the "hamburger" button and choose Statistics.
+
+### Games List
+
+Games are listed along with these features:
+
+* **Date**. The date and time when the game was played.
+
+* **Time**. How long the game took to complete. The timer starts as soon as the cards are dealt. The timer pauses and resumes when you leave the game and return to it.
+
+* **Moves**. The number of moves you made. [Sequence moves](preferences#sequence-moves) and [supermoves](preferences#supermoves) performed by TapTapFreeCell count as a single move. Undo and redo do not count as moves. [Automove-to-Foundation](taptap2#automove-to-foundations) performed by TapTapFreeCell do not count as moves.
+
+* **Won**. Whether the game was won or lost. Time and Moves are not displayed for a lost game.
+
+To *sort* the list, tap a column title at the top of the list. To reverse the sort order, tap the same column title again.
+
+You can *filter* the list to display only [numbered Microsoft deals](taptap4#deal). Tap the Numbered button. Numbered deals are displayed in numerical order. To unfilter, tap the Numbered button again.
+
+You can *delete* a game from the list. Swipe left and tap Delete.
+
+### Resume
+
+You can resume a lost game. Tap the game to resume it. 
+
+(To replay a won game, [export](#export) the game, mail it to yourself, and import it.)
+
+### View
+
+You can view a game's deal as an image of the Tableau. Swipe left and tap View.
+
+### Export
+
+You can [export](otherfeatures#export) a game by emailing it. Swipe left and tap Export.

@@ -8,6 +8,8 @@ protocol RootCoordinatorType: AnyObject {
     func popToGame() async
     func showMail(message: String)
     func showPreview(stat: Stat) async
+    func showHelp(_: HelpState.HelpType)
+    func showSafari(url: URL)
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -16,6 +18,7 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
 
     var gameProcessor: (any Processor<GameAction, GameState, GameEffect>)?
     var statsProcessor: (any Processor<StatsAction, StatsState, StatsEffect>)?
+    var helpProcessor: (any Processor<HelpAction, HelpState, HelpEffect>)?
 
     func createInterface(window: UIWindow) {
         let processor = GameProcessor()
@@ -79,6 +82,23 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         if let viewController = await services.previewer.viewController(for: stat) {
             (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: true)
         }
+    }
+
+    func showHelp(_ helpType: HelpState.HelpType) {
+        let processor = HelpProcessor()
+        processor.state = HelpState(helpType: helpType)
+        self.helpProcessor = processor
+        let viewController = HelpViewController()
+        processor.presenter = viewController
+        processor.coordinator = self
+        viewController.processor = processor
+        (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
+    }
+
+    func showSafari(url: URL) {
+        let viewController = services.safariProvider.provide(for: url)
+        viewController.modalPresentationStyle = .overCurrentContext
+        rootViewController?.present(viewController, animated: unlessTesting(true))
     }
 }
 

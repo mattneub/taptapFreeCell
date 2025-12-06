@@ -1,0 +1,36 @@
+#title "Preferences 4/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Automove to Foundations
+
+If Automove to Foundations is _on_, then after every move of yours, TapTapFreeCell will attempt to perform a safe [Automove-to-Foundations](taptap2#automove-to-foundations), _automatically_.
+
+Even if Automove to Foundations is _off_, you can ask for a safe [Automove-to-Foundations](taptap2#automove-to-foundations) at any time by double-tapping on the background.
+
+### Early Endgame
+
+If Early Endgame is _on_, then after every [Automove-to-Foundations](taptap2#automove-to-foundations), TapTapFreeCell will attempt to distribute the remaining cards into empty Freecells and Columns in such a way that _another_ round of [Automove-to-Foundations](taptap2#automove-to-foundations) will win the game.
+
+Here's a case in point:
+
+<%= imageref("early1") %>
+
+We move the red 10-9-8 from Column 4 onto the black Jack in Column 3. At that moment, the 5 of Clubs is exposed, Automove-to-Foundations is performed, and a lot of cards go flying up to the Foundations, leaving us in this situation:
+
+<%= imageref("early2") %>
+
+At this point, Automove-to-Foundations can go no further, because the Queen of Hearts is covering the Jack of Hearts. But if Early Endgame is *on*, TapTapFreeCell will now deal the Queen of Hearts and the Jack of Hearts into the empty Freecells, like this:
+
+<%= imageref("early3") %>
+
+TapTapFreeCell then performs _another_ round of Automove-to-Foundations, and this time the game ends.
+
+

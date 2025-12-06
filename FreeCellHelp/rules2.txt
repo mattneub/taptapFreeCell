@@ -1,0 +1,24 @@
+#title "Rules of FreeCell 2/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Movable Cards
+
+Cards must be moved _one at a time_. The only cards you can move are:
+
+* A card in a Freecell.
+
+* The *last (bottom) card* in a Column.
+
+<%= imageref("exampleLayoutAnnotated") %>
+
+(A card played to the Foundations cannot be moved thereafter.)
+
+Looking at the first Column in the layout pictured above, the 7 of Hearts may be moved but the 8 of Clubs may not — and so on, for all the Columns. Cards in Freecells are movable, so the 6 of Spades and the 7 of Clubs may be moved.

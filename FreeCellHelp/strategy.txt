@@ -1,0 +1,18 @@
+#title "Basic FreeCell Strategy"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+The basic strategy for playing a game of Freecell is:
+
+* In the Columns, keep constructing sequences of cards in descending order and alternating colors. Building sequences is just as important as moving cards to the Foundations: sequences are movable between Columns, and can trivially be moved to the Foundations at the end of the game.
+
+* Use the Freecells temporarily but free them up again as soon as you can. The more Freecells you have open, the longer the sequences you can move between Columns.
+
+* Try to empty a Column temporarily. An empty Column is even more important than an empty Freecell, because it can accept a sequence or help you perform a [supermove](supermoves).
+
+Here's a great [beginner tutorial](http://www.solitairelaboratory.com/tutorial.html) by Michael Keller.

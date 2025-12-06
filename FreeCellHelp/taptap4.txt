@@ -1,0 +1,18 @@
+#title "How TapTapFreeCell Works 4/4"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Deal
+
+When you win a game, all action comes to a halt until you tap the Deal button. At that point, the deck is shuffled and a new game begins.
+
+If you tap the Deal button while a game is still going on, you lose the current game. The lost game is [saved](statistics), so you can resume it later and try to win it.
+
+To deal a numbered Microsoft deal, _long press_ on the Deal button.

@@ -1,0 +1,67 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="generator" content="RubyFrontier" />
+<meta name="viewport" content="initial-scale=1.0" />
+
+
+<style type="text/css">
+<!--/*--><![CDATA[/*><!--*/
+img {
+    width:90%;
+    max-width:250px; 
+    height:auto;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+body {
+    font-family: "Georgia";
+    font-size: 1em;
+}
+
+/*]]>*/-->
+</style>
+
+
+<title>Preferences 4/5</title>
+</head>
+<body bgcolor="#FFFFEE">
+
+<div class="heart">
+
+  <h1 id="preferences-45">Preferences 4/5</h1>
+
+  <h3 id="automove-to-foundations">Automove to Foundations</h3>
+
+  <p>If Automove to Foundations is <em>on</em>, then after every move of yours, TapTapFreeCell will attempt to perform a safe <a href="taptap2.html#automove-to-foundations">Automove-to-Foundations</a>, <em>automatically</em>.</p>
+
+  <p>Even if Automove to Foundations is <em>off</em>, you can ask for a safe <a href="taptap2.html#automove-to-foundations">Automove-to-Foundations</a> at any time by double-tapping on the background.</p>
+
+  <h3 id="early-endgame">Early Endgame</h3>
+
+  <p>If Early Endgame is <em>on</em>, then after every <a href="taptap2.html#automove-to-foundations">Automove-to-Foundations</a>, TapTapFreeCell will attempt to distribute the remaining cards into empty Freecells and Columns in such a way that <em>another</em> round of <a href="taptap2.html#automove-to-foundations">Automove-to-Foundations</a> will win the game.</p>
+
+  <p>Here&#8217;s a case in point:</p>
+
+  <p><img src="images/early1.png" width="593" height="602" alt="image" /></p>
+
+  <p>We move the red 10-9-8 from Column 4 onto the black Jack in Column 3. At that moment, the 5 of Clubs is exposed, Automove-to-Foundations is performed, and a lot of cards go flying up to the Foundations, leaving us in this situation:</p>
+
+  <p><img src="images/early2.png" width="584" height="415" alt="image" /></p>
+
+  <p>At this point, Automove-to-Foundations can go no further, because the Queen of Hearts is covering the Jack of Hearts. But if Early Endgame is <em>on</em>, TapTapFreeCell will now deal the Queen of Hearts and the Jack of Hearts into the empty Freecells, like this:</p>
+
+  <p><img src="images/early3.png" width="597" height="323" alt="image" /></p>
+
+  <p>TapTapFreeCell then performs <em>another</em> round of Automove-to-Foundations, and this time the game ends.</p>
+
+</div>
+
+</body>
+
+</html>

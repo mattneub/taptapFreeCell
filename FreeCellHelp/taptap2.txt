@@ -1,0 +1,27 @@
+#title "How TapTapFreeCell Works 2/4"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Automove-to-Foundations
+
+Tap _twice_ (double-tap) on the background to ask for Automove-to-Foundations. Tap-tap! All movable cards that can be moved _safely_ to the Foundations will be moved.
+
+A card can be moved "safely" to the Foundations if it isn't needed to form a sequence. For example, the 4 of Hearts is not safe to move to the Foundations if the 3 of Clubs is not already in the Foundations — unless the 2 of Clubs _is_ in the Foundations.
+
+Of course, if a card can be moved to the Foundations, but _not_ safely in this sense, you are free to move it anyway. Tap the card, then tap a Foundation. Tap-tap!
+
+There is also a [preference](preferences4#automove-to-foundations) to perform Automove-to-Foundations *automatically*.
+
+### Undo and Redo
+
+The Undo and Redo buttons are at the top right. Tap one to undo or redo the most recent move. 
+
+_Long press_ on the Undo or Redo button (i.e. hold your finger down on it for about 1 second) to undo or redo _all_ moves.
+

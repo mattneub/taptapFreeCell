@@ -1,0 +1,25 @@
+#title "Rules of FreeCell 3/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Moving Cards Onto Columns
+
+The rules for moving cards **onto Columns in the Tableau** are:
+
+* If a Column is empty, _any_ movable card may be moved onto it.
+
+* Otherwise, look at the last card in the Column: only a movable card _one rank lower_ and of the _opposite color_ may be moved onto it.
+
+<%= imageref("exampleLayoutAnnotated") %>
+
+In the layout pictured above, the 6 of Spades (in the first Freecell) may be moved onto the 7 of Hearts (in Column 1), and the 7 of Clubs (in the second Freecell) may be moved onto the 8 of Hearts (in Column 7).
+
+In this way, you form _sequences_ of alternating colors in descending order. In the layout, Column 1 ends with a sequence 9-8-7 of alternating colors.
+

@@ -1,0 +1,144 @@
+@testable import TTFreeCell
+import Testing
+import UIKit
+import WaitWhile
+
+private struct HelpViewControllerTests {
+    let subject = HelpViewController()
+    let processor = MockReceiver<HelpAction>()
+    let datasource: MockDatasource!
+    let pageViewController = UIPageViewController()
+
+    init() {
+        subject.processor = processor
+        datasource = MockDatasource(pageViewController: pageViewController, processor: processor)
+        subject.datasource = datasource
+    }
+
+    @Test("pageViewController is correctly constructed")
+    func pageViewControllerTest() {
+        let subject = HelpViewController()
+        let processor = MockReceiver<HelpAction>()
+        subject.processor = processor
+        let pageViewController = subject.pageViewController
+        #expect(pageViewController.children.count == 1)
+        #expect(pageViewController.navigationOrientation == .horizontal)
+        #expect(pageViewController.transitionStyle == .scroll)
+        #expect(pageViewController.spineLocation == UIPageViewController.SpineLocation.none)
+    }
+
+    @Test("datasource is correctly constructed")
+    func datasourceConstruction() throws {
+        let subject = HelpViewController()
+        let processor = MockReceiver<HelpAction>()
+        subject.processor = processor
+        let datasource = try #require(subject.datasource as? HelpDatasource)
+        #expect(datasource.processor === processor)
+        #expect(datasource.pvc === subject.pageViewController)
+    }
+
+    @Test("viewDidLoad: does all the things")
+    func viewDidLoad() async throws {
+        subject.pageViewController = pageViewController
+        subject.loadViewIfNeeded()
+        #expect(subject.title == "Help")
+        #expect(subject.view.backgroundColor == UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0))
+        let undoItem = try #require(subject.navigationItem.leftBarButtonItem)
+        #expect(undoItem.image == UIImage(systemName: "arrow.uturn.backward"))
+        #expect(undoItem.target === subject)
+        #expect(undoItem.action == #selector(subject.doUndo))
+        #expect(subject.navigationItem.leftItemsSupplementBackButton == true)
+        let leftItem = try #require(subject.navigationItem.rightBarButtonItems?[1])
+        #expect(leftItem.image == UIImage(systemName: "arrowshape.left"))
+        #expect(leftItem.target === subject)
+        #expect(leftItem.action == #selector(subject.goLeft))
+        let rightItem = try #require(subject.navigationItem.rightBarButtonItems?[0])
+        #expect(rightItem.image == UIImage(systemName: "arrowshape.right"))
+        #expect(rightItem.target === subject)
+        #expect(rightItem.action == #selector(subject.goRight))
+        #expect(pageViewController.view.isDescendant(of: subject.view))
+        #expect(pageViewController.dataSource === subject.datasource)
+        #expect(pageViewController.delegate === subject.datasource)
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.initialData])
+    }
+
+    @Test("viewDidAppear: turns off nav controller interactive pop gestures")
+    func viewDidAppear() {
+        let navigationController = UINavigationController(rootViewController: subject)
+        subject.viewDidAppear(false)
+        #expect(navigationController.interactivePopGestureRecognizer?.isEnabled == false)
+        #expect(navigationController.interactiveContentPopGestureRecognizer?.isEnabled == false)
+    }
+
+    @Test("viewWillDisappear: turns on nav controller interactive pop gestures")
+    func viewWillDisappear() {
+        let navigationController = UINavigationController(rootViewController: subject)
+        subject.viewWillDisappear(false)
+        #expect(navigationController.interactivePopGestureRecognizer?.isEnabled == true)
+        #expect(navigationController.interactiveContentPopGestureRecognizer?.isEnabled == true)
+    }
+
+    @Test("present: passes state on to datasource")
+    func present() async {
+        await subject.present(HelpState(helpType: .help))
+        #expect(datasource.state == HelpState(helpType: .help))
+    }
+
+    @Test("receive: passes effect on to datasource")
+    func receive() async {
+        await subject.receive(.navigate(to: "hello"))
+        #expect(datasource.effect == .navigate(to: "hello"))
+    }
+
+    @Test("goLeft: sends .goLeft to processor")
+    func goLeft() async {
+        subject.goLeft()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.goLeft])
+    }
+
+    @Test("goRight: sends .goRight to processor")
+    func goRight() async {
+        subject.goRight()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.goRight])
+    }
+}
+
+private final class MockDatasource: NSObject, PageViewControllerDatasourceType {
+    typealias ProcessorActionType = HelpAction
+    typealias EffectType = HelpEffect
+    typealias DataType = String
+    typealias StateType = HelpState
+
+    var processor: (any Receiver<TTFreeCell.HelpAction>)?
+    var data: [String]
+
+    var methodsCalled = [String]()
+    var state: HelpState?
+    var effect: HelpEffect?
+
+    init(pageViewController: UIPageViewController, processor: (any Receiver<HelpAction>)?) {
+        self.data = []
+    }
+
+    func present(_ state: HelpState) async {
+        methodsCalled.append(#function)
+        self.state = state
+    }
+    
+    func receive(_ effect: HelpEffect) async {
+        methodsCalled.append(#function)
+        self.effect = effect
+    }
+
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        return nil
+    }
+
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        return nil
+    }
+
+}

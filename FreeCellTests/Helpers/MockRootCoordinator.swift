@@ -9,6 +9,8 @@ final class MockRootCoordinator: RootCoordinatorType {
     var buttonTitles = [String]()
     var buttonTitleToReturn: String?
     var stat: Stat?
+    var helpType: HelpState.HelpType?
+    var url: URL?
 
     func createInterface(window: UIWindow) {
         methodsCalled.append(#function)
@@ -39,6 +41,16 @@ final class MockRootCoordinator: RootCoordinatorType {
     func showPreview(stat: Stat) async {
         methodsCalled.append(#function)
         self.stat = stat
+    }
+
+    func showHelp(_ helpType: HelpState.HelpType) {
+        methodsCalled.append(#function)
+        self.helpType = helpType
+    }
+
+    func showSafari(url: URL) {
+        methodsCalled.append(#function)
+        self.url = url
     }
 
 }

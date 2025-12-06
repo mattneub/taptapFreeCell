@@ -244,6 +244,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
+    @objc func doMicrosoftDeal() {
+        // TODO: don't forget to implement this feature!
+    }
+
     @objc func doUndo() {
         ensureNoConfetti()
         Task {
@@ -344,7 +348,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     func animate(_ moves: [Move], duration: Double) async {
         // when testing, it helps to insert a fake duration, e.g. `let duration = 1.0`, so you
         // can get a good look at the animation
-        view.isUserInteractionEnabled = false
+        navigationController?.view.isUserInteractionEnabled = false
         // before doing anything else, collect all the different ranks of all the moving cards;
         // we will need this in order to stagger the launch of cards moving to foundations
         let ranks = Set(moves.map { $0.destination.card.rank }).sorted { $0.rawValue < $1.rawValue }
@@ -480,6 +484,6 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         infos.forEach {
             $0.layer.removeFromSuperlayer()
         }
-        view.isUserInteractionEnabled = true
+        navigationController?.view.isUserInteractionEnabled = true
     }
 }

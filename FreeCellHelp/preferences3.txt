@@ -1,0 +1,33 @@
+#title "Preferences 3/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+
+
+### Grow Tapped Card
+
+If Grow Tapped Card is _on_, the Freecell or Column you tap on the _first_ tap of a [move](taptap) grows slightly, to indicate that it is selected.
+
+### Tint Tapped Card
+
+If Tint Tapped Card is _on_, the Freecell or Column you tap on the _first_ tap of a [move](taptap) is tinted slightly, to indicate that it is selected.
+
+### Highlight Destinations
+
+If Highlight Destinations is _on_, then after the _first_ tap of a [move](taptap), selecting a Freecell or Column you want to move _from_, all Foundations, Freecells, and Columns are dimmed, except those that you can legally move _to_ — thus showing where you can perform the _second_ tap.
+
+(The meaning of "legally" depends on your Sequence Moves and Supermoves settings.)
+
+In this layout, I've tapped on Column 1, and Sequence Moves is _on_, so we can move to Column 2. Highlight Destinations is _on_, so Column 2 is undimmed:
+
+<%= imageref("tap2") %>
+
+**WARNING:** If you turn *off* Grow Tapped Card _and_ Tint Tapped Card _and_ Highlight Destinations, there will be _no_ indication of what was selected by the first tap of a move, or even that you have _performed_ the first tap and that TapTapFreeCell is waiting for the second tap. That's not a good interface! You can do that, but don't.
+

@@ -1,0 +1,23 @@
+#title "Preferences 2/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Show Sequences
+
+If Show Sequences is _on_, the last cards of every Column are outlined to show the longest sequence (cards in descending order in alternating colors). At a minimum, the last card is outlined.
+
+With Show Sequences off:
+
+<%= imageref("showSequencesOff") %>
+
+With Show Sequences on:
+
+<%= imageref("showSequencesOn") %>
+

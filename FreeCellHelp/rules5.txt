@@ -1,0 +1,37 @@
+#title "Rules of FreeCell 5/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Why the Freecells Matter
+
+Thanks to the Freecells, entire sequences can be moved from one Column to another. This is because empty Freecells act as intermediate staging points.
+
+For example, consider the same layout once again:
+
+<%= imageref("exampleLayoutAnnotated") %>
+
+Column 1 ends with a sequence: red 9-8-7. The _entire sequence_ can be moved onto the black 10 at the end of Column 5 or Column 8.
+
+That sounds like we are moving multiple cards at a time, which is [illegal](rules2#movable-cards). But in fact we are moving _one_ card at a time, using the two empty Freecells as intermediate stages:
+
+1. First we move the 7 of Hearts into an empty Freecell.
+
+2. Now the 8 of Clubs is exposed and movable, and we move it into the other empty Freecell.
+
+3. Now the 9 of Diamonds is exposed and movable! Thus it can be moved onto the 10 of Spades or the 10 of Clubs. 
+
+4. Now we move the 8 of Clubs out of its Freecell and back onto the 9 of Diamonds in its new location.
+
+5. Finally we move the 7 of Hearts out of its Freecell and back onto the 8 of Clubs in its new location.
+
+Thus, in general, you can move a movable sequence from one Column to another, up to a maximum sequence length that is _the number of empty Freecells plus one_.
+
+Empty Columns can be used as intermediate staging points too. In fact, empty Columns can greatly *increase* the maximum movable sequence size, because you might be able to perform a _[supermove](supermoves)_.
+

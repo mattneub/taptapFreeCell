@@ -1,0 +1,29 @@
+#title "Preferences 1/5"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+TapTapFreeCell's preferences are designed to make your FreeCell play fast and efficient, while customizing the game action to suit your tastes.
+
+To access TapTapFreeCell's preferences, tap the "hamburger" button and choose Preferences.
+
+The ability to change a preference (other than animation speed) is a [Power Pack](propack) feature.
+
+### Sequence Moves
+
+If Sequence Moves are _on_, TapTapFreeCell knows about using empty Freecells and Columns as [intermediate stages](rules5#why-the-freecells-matter) when moving sequences from one Column to another. You can move an entire sequence of cards _all at once_.
+
+If Sequence Moves are _off_, TapTapFreeCell enforces the strict letter of the [law](rules2#movable-cards): you can move only one card at a time.
+
+### Supermoves
+
+If Supermoves are _on_, TapTapFreeCell knows about [supermoves](supermoves). You can move an entire sequence of cards _all at once_ from one Column to another, *automatically* taking advantage of empty Columns as staging areas for intermediate subsequences.
+
+If Supermoves are _off_, TapTapFreeCell is ignorant of supermoves. To perform the equivalent of a supermove, you must *manually* play out the intermediate subsequence moves.
+

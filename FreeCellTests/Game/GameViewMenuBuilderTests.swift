@@ -21,12 +21,20 @@ private struct GameViewMenuBuilderTests {
             let action = try #require(result.children[0] as? UIAction)
             #expect(action.title == "Rules")
             #expect(action.image == UIImage(systemName: "lightbulb"))
+            (action as? MyUIAction)?.handler?(action)
+            await #while(processor.thingsReceived.isEmpty)
+            #expect(processor.thingsReceived == [.showRules])
         }
+        processor.thingsReceived = []
         do {
             let action = try #require(result.children[1] as? UIAction)
             #expect(action.title == "About")
             #expect(action.image == UIImage(systemName: "questionmark.circle"))
+            (action as? MyUIAction)?.handler?(action)
+            await #while(processor.thingsReceived.isEmpty)
+            #expect(processor.thingsReceived == [.showHelp])
         }
+        processor.thingsReceived = []
         do {
             let action = try #require(result.children[2] as? UIAction)
             #expect(action.title == "Statistics")
@@ -35,6 +43,7 @@ private struct GameViewMenuBuilderTests {
             await #while(processor.thingsReceived.isEmpty)
             #expect(processor.thingsReceived == [.showStats])
         }
+        processor.thingsReceived = []
         do {
             #expect(mockBuilder.handler != nil)
             #expect(mockBuilder.methodsCalled == ["build(_:)"])
@@ -44,11 +53,13 @@ private struct GameViewMenuBuilderTests {
             #expect(action.image == UIImage(systemName: "tray.full"))
             #expect(action.attributes == .hidden) // because there was only 1 file in documents
         }
+        processor.thingsReceived = []
         do {
             let action = try #require(result.children[4] as? UIAction)
             #expect(action.title == "Import / Export")
             #expect(action.image == UIImage(systemName: "arrow.up.arrow.down.circle"))
         }
+        processor.thingsReceived = []
         do {
             let action = try #require(result.children[5] as? UIAction)
             #expect(action.title == "Settings")

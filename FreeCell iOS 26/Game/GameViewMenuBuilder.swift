@@ -12,14 +12,28 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
     var deferredMenuItemBuilder: DeferredMenuItemBuilder = DeferredMenuItemBuilder()
 
     func buildMenu(processor: (any Receiver<GameAction>)?) -> UIMenu {
-        let rulesAction = UIAction(
-            title: "Rules",
+        let rulesAction = MyUIAction(
+            myTitle: "Rules",
             image: UIImage(systemName: "lightbulb")
-        ) { _ in }
-        let tapTapAction = UIAction(
-            title: "About",
+        ) { [weak processor] _ in
+            Task {
+                try? await unlessTesting {
+                    try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
+                }
+                await processor?.receive(.showRules)
+            }
+        }
+        let tapTapAction = MyUIAction(
+            myTitle: "About",
             image: UIImage(systemName: "questionmark.circle")
-        ) { _ in }
+        ) { [weak processor] _ in
+            Task {
+                try? await unlessTesting {
+                    try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
+                }
+                await processor?.receive(.showHelp)
+            }
+        }
         let statsAction = MyUIAction(
             myTitle: "Statistics",
             image: UIImage(systemName: "pencil.and.list.clipboard")

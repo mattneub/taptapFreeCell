@@ -139,6 +139,12 @@ final class GameProcessor: Processor {
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkStopwatch()
+        case .showHelp:
+            await stopwatch.pause()
+            coordinator?.showHelp(.help)
+        case .showRules:
+            await stopwatch.pause()
+            coordinator?.showHelp(.rules)
         case .showStats:
             await stopwatch.pause()
             coordinator?.showStats()

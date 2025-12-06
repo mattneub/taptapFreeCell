@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3F01D77D2EBE3F180075B216 /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F01D77C2EBE3F180075B216 /* WaitWhile */; };
+		3F058ED02EE32BF6000BB938 /* FreeCellHelpHTML in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F058ECF2EE32BF6000BB938 /* FreeCellHelpHTML */; };
 		3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; };
 		3F3604412ECA267400487EF9 /* Confetti.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */; };
@@ -32,6 +33,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		3F058E6E2EE32B38000BB938 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				3F058ED02EE32BF6000BB938 /* FreeCellHelpHTML in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3F3604452ECA267400487EF9 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -46,12 +57,73 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3F058ECF2EE32BF6000BB938 /* FreeCellHelpHTML */ = {isa = PBXFileReference; lastKnownFileType = folder; path = FreeCellHelpHTML; sourceTree = "<group>"; };
 		3F36043A2ECA267400487EF9 /* Confetti.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Confetti.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FreeCell iOS 26.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FB3F4B12EB8F8E600689661 /* FreeCellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FreeCellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3F058EAB2EE32BB5000BB938 /* Exceptions for "FreeCellHelp" folder in "FreeCell iOS 26" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"#autoglossary.yaml",
+				"#filters/cssFilter.rb",
+				"#filters/finalFilter.rb",
+				"#filters/firstFilter.rb",
+				"#filters/pageFilter.rb",
+				"#filters/postMacroFilter.rb",
+				"#ftpSite.yaml",
+				"#glossary.yaml",
+				"#images/early1.png",
+				"#images/early2.png",
+				"#images/early3.png",
+				"#images/exampleLayout.png",
+				"#images/exampleLayoutAnnotated.png",
+				"#images/layout.png",
+				"#images/movables.png",
+				"#images/movablesOutlined.png",
+				"#images/rubyFrontierLogo.png",
+				"#images/showSequencesOff.png",
+				"#images/showSequencesOn.png",
+				"#images/supermove.png",
+				"#images/tap1.png",
+				"#images/tap2.png",
+				"#images/tap3.png",
+				"#nextPrevs.txt",
+				"#prefs.yaml",
+				"#stylesheets/s1.css",
+				"#stylesheets/s2.css",
+				"#stylesheets/styles.css",
+				"#template.txt",
+				"#templates/secondtemplate.txt",
+				"#templates/template.txt",
+				"#templates/thirdtemplate.txt",
+				"#tools/blurb.txt",
+				"#tools/nextprevlinks.rb",
+				"#tools/section.rb",
+				otherfeatures.txt,
+				preferences.txt,
+				preferences2.txt,
+				preferences3.txt,
+				preferences4.txt,
+				preferences5.txt,
+				propack.txt,
+				rules.txt,
+				rules2.txt,
+				rules3.txt,
+				rules4.txt,
+				rules5.txt,
+				statistics.txt,
+				strategy.txt,
+				supermoves.txt,
+				taptap.txt,
+				taptap2.txt,
+				taptap3.txt,
+				taptap4.txt,
+			);
+			target = 3FB3F2AA2EB8E76C00689661 /* FreeCell iOS 26 */;
+		};
 		3FB3F2BD2EB8E76D00689661 /* Exceptions for "FreeCell iOS 26" folder in "FreeCell iOS 26" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -76,6 +148,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3F058EAA2EE32BB5000BB938 /* FreeCellHelp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F058EAB2EE32BB5000BB938 /* Exceptions for "FreeCellHelp" folder in "FreeCell iOS 26" target */,
+			);
+			path = FreeCellHelp;
+			sourceTree = "<group>";
+		};
 		3F36043B2ECA267400487EF9 /* Confetti */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Confetti;
@@ -132,6 +212,8 @@
 		3FB3F2A22EB8E76C00689661 = {
 			isa = PBXGroup;
 			children = (
+				3F058ECF2EE32BF6000BB938 /* FreeCellHelpHTML */,
+				3F058EAA2EE32BB5000BB938 /* FreeCellHelp */,
 				3FB3F2AD2EB8E76C00689661 /* FreeCell iOS 26 */,
 				3FB3F4B22EB8F8E600689661 /* FreeCellTests */,
 				3F36043B2ECA267400487EF9 /* Confetti */,
@@ -192,6 +274,7 @@
 				3FB3F2A72EB8E76C00689661 /* Sources */,
 				3FB3F2A82EB8E76C00689661 /* Frameworks */,
 				3FB3F2A92EB8E76C00689661 /* Resources */,
+				3F058E6E2EE32B38000BB938 /* CopyFiles */,
 				3F3604452ECA267400487EF9 /* Embed Frameworks */,
 			);
 			buildRules = (
@@ -200,6 +283,7 @@
 				3F36043F2ECA267400487EF9 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				3F058EAA2EE32BB5000BB938 /* FreeCellHelp */,
 				3FB3F2AD2EB8E76C00689661 /* FreeCell iOS 26 */,
 			);
 			name = "FreeCell iOS 26";

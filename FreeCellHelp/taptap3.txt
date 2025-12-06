@@ -1,0 +1,27 @@
+#title "How TapTapFreeCell Works 3/4"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+### Hint
+
+To see what moves are possible, ask for a hint: tap with _two fingers_ on the background. Everything is dimmed except Freecells and Columns with cards that can be moved _onto a Foundation or a nonempty Column_.
+
+(If there is an empty Freecell or Column, _any_ movable card can be moved onto it, so you don't need a hint about that.)
+
+If you ask for a hint and _all_ cards are dimmed, and there are no empty Freecells or Columns, _you are stuck_. Use Undo to backtrack!
+
+Hints are a [Power Pack](propack) feature.
+
+### Card Finding
+
+_Long press_ on any card to highlight _all_ cards of that rank. For example, if you want to know where all the Aces are, long press on _any_ Ace.
+
+Card finding is a [Power Pack](propack) feature.
+

@@ -99,4 +99,32 @@ private struct RootCoordinatorTests {
         #expect(previewer.methodsCalled == ["viewController(for:)"])
         #expect(navigationController.topViewController === previewer.viewControllerToReturn)
     }
+
+    @Test("showHelp: constructs module, pushes it")
+    func showHelp() async throws {
+        let navigationController = UINavigationController()
+        subject.rootViewController = navigationController
+        let helpProcessor = HelpProcessor()
+        subject.helpProcessor = helpProcessor
+        subject.showHelp(.help)
+        let processor = try #require(subject.helpProcessor as? HelpProcessor)
+        #expect(processor.coordinator === subject)
+        #expect(processor.state.helpType == .help) // *
+        let viewController = try #require(processor.presenter as? HelpViewController)
+        #expect(viewController.processor === processor)
+        #expect(navigationController.children.first == viewController)
+    }
+
+    @Test("showSafari: asks safari provider for view controller, presents it over current context")
+    func showSafari() {
+        let provider = MockSafariProvider()
+        services.safariProvider = provider
+        let viewController = UIViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        subject.rootViewController = navigationController
+        makeWindow(viewController: navigationController)
+        subject.showSafari(url: URL(string: "manny")!)
+        #expect(provider.methodsCalled == ["provide(for:)"])
+        #expect(navigationController.presentedViewController is MockSafariViewController)
+    }
 }

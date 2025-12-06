@@ -446,6 +446,22 @@ private struct GameProcessorTests {
         }
     }
 
+    @Test("receive showHelp: pauses the stopwatch, tells coordinator")
+    func showHelp() async {
+        await subject.receive(.showHelp)
+        #expect(stopwatch.methodsCalled == ["pause()"])
+        #expect(coordinator.methodsCalled == ["showHelp(_:)"])
+        #expect(coordinator.helpType == .help)
+    }
+
+    @Test("receive showRules: pauses the stopwatch, tells coordinator")
+    func showRules() async {
+        await subject.receive(.showRules)
+        #expect(stopwatch.methodsCalled == ["pause()"])
+        #expect(coordinator.methodsCalled == ["showHelp(_:)"])
+        #expect(coordinator.helpType == .rules)
+    }
+
     @Test("receive showStats: pauses the stopwatch, tells coordinator")
     func showStats() async {
         await subject.receive(.showStats)
