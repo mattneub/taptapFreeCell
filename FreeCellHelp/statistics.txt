@@ -11,7 +11,7 @@
 
 The Statistics pane lists your played games. You can resume a lost game, view a game's deal, and [export](otherfeatures#export) a game.
 
-To access the Statistics pane, tap the "hamburger" button and choose Statistics.
+To access the Statistics pane, tap the "ellipsis" button and choose Statistics.
 
 ### Games List
 
@@ -19,9 +19,9 @@ Games are listed along with these features:
 
 * **Date**. The date and time when the game was played.
 
-* **Time**. How long the game took to complete. The timer starts as soon as the cards are dealt. The timer pauses and resumes when you leave the game and return to it.
+* **Time**. How long the game took to complete. After a deal, the timer starts as soon as you make perform any action (such as making a move). The timer pauses when you leave the game, and resumes when you return to it and perform any action.
 
-* **Moves**. The number of moves you made. [Sequence moves](preferences#sequence-moves) and [supermoves](preferences#supermoves) performed by TapTapFreeCell count as a single move. Undo and redo do not count as moves. [Automove-to-Foundation](taptap2#automove-to-foundations) performed by TapTapFreeCell do not count as moves.
+* **Moves**. The number of moves you made. [Sequence moves](preferences#sequence-moves) and [supermoves](preferences#supermoves) performed by TapTapFreeCell count as a single move. [Undo and redo](taptap2) do not count as moves. [Automove-to-Foundation](taptap2#automove-to-foundations) performed by TapTapFreeCell do not count as moves.
 
 * **Won**. Whether the game was won or lost. Time and Moves are not displayed for a lost game.
 
@@ -29,13 +29,15 @@ To *sort* the list, tap a column title at the top of the list. To reverse the so
 
 You can *filter* the list to display only [numbered Microsoft deals](taptap4#deal). Tap the Numbered button. Numbered deals are displayed in numerical order. To unfilter, tap the Numbered button again.
 
-You can *delete* a game from the list. Swipe left and tap Delete.
-
 ### Resume
 
 You can resume a lost game. Tap the game to resume it. 
 
 (To replay a won game, [export](#export) the game, mail it to yourself, and import it.)
+
+### Delete
+
+You can delete a game from the list. Swipe left and tap Delete.
 
 ### View
 

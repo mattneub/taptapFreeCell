@@ -11,7 +11,7 @@
 
 You can export or import a game *as text*. Export is performed via email. A typical scenario is that you export a game by emailing it to yourself or a friend, and the recipient copies the game out of the email and imports it to play it.
 
-To access the Import / Export pane, tap the "hamburger" button and choose Import / Export.
+To access the Import / Export pane, tap the "ellipsis" button and choose Import / Export.
 
 ### Export
 
@@ -19,7 +19,7 @@ Games are exported through email (which you might well send to yourself). The em
 
 * The game's **initial deal**, expressed in fc-solve format. This is useful for import, or for pasting into an online solver such as [Shlomi Fish's solver](https://fc-solve.shlomifish.org/js-fc-solve/text/). You might do that, for example, if you are unsure whether the game is solvable.
 
-* The game's **moves**, expressed in the [standard format](https://freecellgamesolutions.com/notation.html) usually attributed to Andrey Tsouladze. Only moves that you made are included.
+* The game's **moves**, expressed in [standard notation](https://www.solitairelaboratory.com/solutioncatalog.html). Only moves that you made are included.
 
 You can also construct this email by exporting a past game from the [Statistics](statistics) pane. 
 

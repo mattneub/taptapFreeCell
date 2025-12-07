@@ -29,7 +29,7 @@ I want to move the sequence in Column 1 (black 9-8-7-6-5) onto the red 10 in Col
 
 <%= imageref("tap2") %>
 
-Because of my [preferences](preferences), Column 1 grows a little and is tinted a little, to show it's selected; and everything is dimmed except for destinations I can legally move to. Column 2 is a legal place to move from Column 1, so it is undimmed. (Alternatively, I could move the sequence to the empty Column 7, or I could move one card to a Freecell, so they are undimmed too.)
+Because of my [settings](preferences), Column 1 grows a little and is tinted a little, to show it's selected; and everything is dimmed except for destinations I can legally move to. Column 2 is a legal place to move from Column 1, so it is undimmed. (Alternatively, I could move the sequence to the empty Column 7, or I could move one card to a Freecell, so they are undimmed too.)
 
 To move the sequence from Column 1 to Column 2, I **tap** Column 2. Tap-tap!
 

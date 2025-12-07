@@ -1,4 +1,4 @@
-#title "Preferences 5/5"
+#title "Settings 5/5"
 #kramdown 1
 #template "template"
 #hamltemplate true

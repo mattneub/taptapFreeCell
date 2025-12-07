@@ -16,4 +16,4 @@ preferences4
 preferences5
 statistics
 otherfeatures
-propack
+cleanup

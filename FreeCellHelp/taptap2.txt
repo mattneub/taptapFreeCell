@@ -17,7 +17,7 @@ A card can be moved "safely" to the Foundations if it isn't needed to form a seq
 
 Of course, if a card can be moved to the Foundations, but _not_ safely in this sense, you are free to move it anyway. Tap the card, then tap a Foundation. Tap-tap!
 
-There is also a [preference](preferences4#automove-to-foundations) to perform Automove-to-Foundations *automatically*.
+There is also a [setting](preferences4#automove-to-foundations) to perform Automove-to-Foundations *automatically*.
 
 ### Undo and Redo
 

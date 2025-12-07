@@ -57,9 +57,9 @@ private struct ExporterTests {
         
         
         
-        These are your moves in standard format:
+        These are your moves in standard notation:
         
-        https://freecellgamesolutions.com/notation.html
+        https://www.solitairelaboratory.com/solutioncatalog.html
         
         aa aa aa aa aa aa aa aa aa aa
         aa aa aa aa aa aa aa aa aa aa

@@ -1,4 +1,4 @@
-#title "Preferences 1/5"
+#title "Settings 1/5"
 #kramdown 1
 #template "template"
 #hamltemplate true
@@ -9,11 +9,9 @@
 
 {::options auto_ids="true" /}
 
-TapTapFreeCell's preferences are designed to make your FreeCell play fast and efficient, while customizing the game action to suit your tastes.
+TapTapFreeCell's settings are designed to make your FreeCell play fast and efficient, while customizing the game action to suit your tastes.
 
-To access TapTapFreeCell's preferences, tap the "hamburger" button and choose Preferences.
-
-The ability to change a preference (other than animation speed) is a [Power Pack](propack) feature.
+To access TapTapFreeCell's settings, tap the "ellipsis" button and choose Settings.
 
 ### Sequence Moves
 

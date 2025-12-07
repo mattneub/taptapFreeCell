@@ -20,7 +20,7 @@ struct HelpState: Equatable {
     preferences5
     statistics
     otherfeatures
-    propack
+    cleanup
     """
 
     var helpType: HelpType

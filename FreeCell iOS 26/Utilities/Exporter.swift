@@ -25,9 +25,9 @@ final class Exporter: ExporterType {
         if let moves, moves.count > 0 {
             let chunks = moves.chunks(ofCount: 10)
             output += """
-            These are your moves in standard format:
+            These are your moves in standard notation:
             
-            https://freecellgamesolutions.com/notation.html
+            https://www.solitairelaboratory.com/solutioncatalog.html
             
             
             """

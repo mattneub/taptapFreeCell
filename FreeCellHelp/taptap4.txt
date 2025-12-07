@@ -11,7 +11,7 @@
 
 ### Deal
 
-When you win a game, all action comes to a halt until you tap the Deal button. At that point, the deck is shuffled and a new game begins.
+When you win a game, there is a shower of confetti, and all action comes to a halt until you tap the Deal button (top left). At that point, the deck is shuffled and a new game begins.
 
 If you tap the Deal button while a game is still going on, you lose the current game. The lost game is [saved](statistics), so you can resume it later and try to win it.
 

@@ -15,13 +15,9 @@ To see what moves are possible, ask for a hint: tap with _two fingers_ on the ba
 
 (If there is an empty Freecell or Column, _any_ movable card can be moved onto it, so you don't need a hint about that.)
 
-If you ask for a hint and _all_ cards are dimmed, and there are no empty Freecells or Columns, _you are stuck_. Use Undo to backtrack!
-
-Hints are a [Power Pack](propack) feature.
+If you ask for a hint and _all_ cards are dimmed, and there are no empty Freecells or Columns, _you are stuck_. Use [Undo](taptap2) to backtrack!
 
 ### Card Finding
 
 _Long press_ on any card to highlight _all_ cards of that rank. For example, if you want to know where all the Aces are, long press on _any_ Ace.
-
-Card finding is a [Power Pack](propack) feature.
 

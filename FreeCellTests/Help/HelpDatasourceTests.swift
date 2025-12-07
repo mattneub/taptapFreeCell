@@ -64,7 +64,7 @@ private struct HelpDatasourceTests {
     func goLeftImpossible() async throws {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
-        initialViewController.currentPageName = "rules"
+        initialViewController.currentPageName = subject.data.first ?? "dummy"
         pvc.addChild(initialViewController)
         await subject.receive(.goLeft)
         #expect(pvc.viewController == nil)
@@ -92,7 +92,7 @@ private struct HelpDatasourceTests {
     func goRightImpossible() async throws {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
-        initialViewController.currentPageName = "propack" // TODO: Careful, this will be deleted
+        initialViewController.currentPageName = subject.data.last ?? "dummy"
         pvc.addChild(initialViewController)
         await subject.receive(.goRight)
         #expect(pvc.viewController == nil)

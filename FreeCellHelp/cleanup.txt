@@ -1,0 +1,18 @@
+#title "Cleanup"
+#kramdown 1
+#template "template"
+#hamltemplate true
+#embedstylesheet "styles"
+#metaviewport "initial-scale=1.0"
+
+# <%= title %>
+
+{::options auto_ids="true" /}
+
+If you see the Cleanup menu item in the "ellipsis" button menu, that means you are a long-time user of an earlier version of TapTapFreeCell, whose way of storing played game information (as displayed on the [Statistics](statistics) pane) occupied a lot of space on your device.
+
+This version of TapTapFreeCell uses a much more compact way of storing game information. Conversion from the old way to the new way takes a little time, so TapTapFreeCell doesn't perform the conversion automatically. Instead, it's up to you to choose Cleanup. TapTapFreeCell will clean up the old information, significantly reducing the amount of storage it uses on your device.
+
+Afterwards, you won't see the Cleanup menu again.
+
+(If you don't see the Cleanup menu item in the "ellipsis" button menu, then don't worry about it. You'll never see it, because TapTapFreeCell isn't using very much space on your device.)
