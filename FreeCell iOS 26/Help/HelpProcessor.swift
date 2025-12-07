@@ -11,16 +11,27 @@ final class HelpProcessor: Processor {
 
     func receive(_ action: HelpAction) async {
         switch action {
+        case .goBack:
+            if let name = state.undoStack.popLast() {
+                await presenter?.receive(.navigate(to: name))
+            }
         case .goLeft:
             await presenter?.receive(.goLeft)
+            state.undoStack.removeAll()
         case .goRight:
             await presenter?.receive(.goRight)
+            state.undoStack.removeAll()
         case .initialData:
             await presenter?.present(state)
-        case .navigate(let name):
-            await presenter?.receive(.navigate(to: name))
+        case .navigate(let target, let source):
+            await presenter?.receive(.navigate(to: target))
+            if let source {
+                state.undoStack.append(source)
+            }
         case .showSafari(let url):
             coordinator?.showSafari(url: url)
+        case .userSwiped:
+            state.undoStack.removeAll()
         }
     }
 }

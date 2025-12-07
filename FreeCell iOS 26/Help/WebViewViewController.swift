@@ -63,7 +63,7 @@ extension WebViewViewController: WKNavigationDelegate {
                 return .allow
             }
             Task {
-                await processor?.receive(.navigate(to: targetPageName))
+                await processor?.receive(.navigate(to: targetPageName, from: currentPageName))
             }
             // and fallthrough to return `.cancel`; we will handle this in our own way
         }

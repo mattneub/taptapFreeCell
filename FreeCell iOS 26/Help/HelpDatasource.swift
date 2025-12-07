@@ -67,7 +67,10 @@ final class HelpDatasource: NSObject, PageViewControllerDatasourceType {
         }
     }
     
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+    func pageViewController(
+        _ pageViewController: UIPageViewController,
+        viewControllerBefore viewController: UIViewController
+    ) -> UIViewController? {
         guard let viewController = viewController as? WebViewViewController else { return nil }
         guard let index = data.firstIndex(of: viewController.currentPageName) else { return nil }
         guard index > 0 else { return nil }
@@ -77,7 +80,10 @@ final class HelpDatasource: NSObject, PageViewControllerDatasourceType {
         return webViewViewController
     }
     
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+    func pageViewController(
+        _ pageViewController: UIPageViewController,
+        viewControllerAfter viewController: UIViewController
+    ) -> UIViewController? {
         guard let viewController = viewController as? WebViewViewController else { return nil }
         guard let index = data.firstIndex(of: viewController.currentPageName) else { return nil }
         guard index < data.count - 1 else { return nil }
@@ -85,5 +91,16 @@ final class HelpDatasource: NSObject, PageViewControllerDatasourceType {
         webViewViewController.processor = processor
         webViewViewController.loadPage(name: data[index + 1])
         return webViewViewController
+    }
+
+    func pageViewController(
+        _ pageViewController: UIPageViewController,
+        didFinishAnimating finished: Bool,
+        previousViewControllers: [UIViewController],
+        transitionCompleted completed: Bool
+    ) {
+        Task {
+            await processor?.receive(.userSwiped)
+        }
     }
 }

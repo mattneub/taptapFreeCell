@@ -36,6 +36,8 @@ struct HelpState: Equatable {
         }
     }
 
+    var undoStack = [String]()
+
     enum HelpType {
         case help
         case rules

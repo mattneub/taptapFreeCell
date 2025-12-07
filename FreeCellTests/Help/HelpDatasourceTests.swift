@@ -132,6 +132,13 @@ private struct HelpDatasourceTests {
         #expect(pvc.animated == true)
         #expect(pvc.completion == nil)
     }
+
+    @Test("didFinishAnimating: sends userSwiped to processor")
+    func didFinish() async {
+        subject.pageViewController(pvc, didFinishAnimating: true, previousViewControllers: [UIViewController()], transitionCompleted: true)
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.userSwiped])
+    }
 }
 
 final class MockWebViewViewController: WebViewViewController {

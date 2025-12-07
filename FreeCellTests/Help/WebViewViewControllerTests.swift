@@ -84,7 +84,7 @@ private struct WebViewViewControllerTests {
         #expect(result == .allow)
     }
 
-    @Test("decidePolicy: if url scheme is file, if page name is not current page name, cancels and sends navigate")
+    @Test("decidePolicy: if url scheme is file, if page name is not current page name, cancels and sends navigate with both pages")
     func decideOtherPage() async {
         subject.webViewType = MockWebView.self
         subject.loadViewIfNeeded()
@@ -94,7 +94,7 @@ private struct WebViewViewControllerTests {
         let result = await subject.webView(subject.webView!, decidePolicyFor: action)
         #expect(result == .cancel)
         await #while(processor.thingsReceived.isEmpty)
-        #expect(processor.thingsReceived == [.navigate(to: "moe")])
+        #expect(processor.thingsReceived == [.navigate(to: "moe", from: "manny")])
     }
 }
 

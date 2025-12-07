@@ -46,7 +46,7 @@ private struct HelpViewControllerTests {
         let undoItem = try #require(subject.navigationItem.leftBarButtonItem)
         #expect(undoItem.image == UIImage(systemName: "arrow.uturn.backward"))
         #expect(undoItem.target === subject)
-        #expect(undoItem.action == #selector(subject.doUndo))
+        #expect(undoItem.action == #selector(subject.goBack))
         #expect(subject.navigationItem.leftItemsSupplementBackButton == true)
         let leftItem = try #require(subject.navigationItem.rightBarButtonItems?[1])
         #expect(leftItem.image == UIImage(systemName: "arrowshape.left"))
@@ -103,6 +103,13 @@ private struct HelpViewControllerTests {
         subject.goRight()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.goRight])
+    }
+
+    @Test("goBack: sends .goBack to processor")
+    func goBack() async {
+        subject.goBack()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.goBack])
     }
 }
 

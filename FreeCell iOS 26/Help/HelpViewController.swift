@@ -23,8 +23,8 @@ final class HelpViewController: UIViewController, ReceiverPresenter {
         super.viewDidLoad()
         title = "Help"
         view.backgroundColor = UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0)
-        let undoItem = UIBarButtonItem(title: nil, image: UIImage(systemName: "arrow.uturn.backward"), target: self, action: #selector(doUndo))
-        navigationItem.leftBarButtonItem = undoItem
+        let goBackItem = UIBarButtonItem(title: nil, image: UIImage(systemName: "arrow.uturn.backward"), target: self, action: #selector(goBack))
+        navigationItem.leftBarButtonItem = goBackItem
         navigationItem.leftItemsSupplementBackButton = true
         let leftItem = UIBarButtonItem(title: nil, image: UIImage(systemName: "arrowshape.left"), target: self, action: #selector(goLeft))
         let rightItem = UIBarButtonItem(title: nil, image: UIImage(systemName: "arrowshape.right"), target: self, action: #selector(goRight))
@@ -71,7 +71,10 @@ final class HelpViewController: UIViewController, ReceiverPresenter {
         await datasource.receive(effect)
     }
 
-    @objc func doUndo() {
+    @objc func goBack() {
+        Task {
+            await processor?.receive(.goBack)
+        }
     }
 
     @objc func goLeft() {
