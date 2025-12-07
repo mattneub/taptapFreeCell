@@ -85,6 +85,20 @@ private struct HelpViewControllerTests {
         #expect(datasource.state == HelpState(helpType: .help))
     }
 
+    @Test("present: enablement of left bar button item depends on undo stack")
+    func presentLeftBarButtonItem() async {
+        subject.loadViewIfNeeded()
+        var state = HelpState(helpType: .help)
+        await subject.present(state)
+        #expect(subject.navigationItem.leftBarButtonItem?.isEnabled == false)
+        state.undoStack = ["howdy"]
+        await subject.present(state)
+        #expect(subject.navigationItem.leftBarButtonItem?.isEnabled == true)
+        state.undoStack = []
+        await subject.present(state)
+        #expect(subject.navigationItem.leftBarButtonItem?.isEnabled == false)
+    }
+
     @Test("receive: passes effect on to datasource")
     func receive() async {
         await subject.receive(.navigate(to: "hello"))

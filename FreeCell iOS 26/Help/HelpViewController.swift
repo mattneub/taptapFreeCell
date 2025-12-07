@@ -65,6 +65,7 @@ final class HelpViewController: UIViewController, ReceiverPresenter {
 
     func present(_ state: HelpState) async {
         await datasource.present(state)
+        navigationItem.leftBarButtonItem?.isEnabled = !state.undoStack.isEmpty
     }
 
     func receive(_ effect: HelpEffect) async {

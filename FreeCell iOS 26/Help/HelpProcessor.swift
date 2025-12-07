@@ -15,12 +15,15 @@ final class HelpProcessor: Processor {
             if let name = state.undoStack.popLast() {
                 await presenter?.receive(.navigate(to: name))
             }
+            await presenter?.present(state)
         case .goLeft:
             await presenter?.receive(.goLeft)
             state.undoStack.removeAll()
+            await presenter?.present(state)
         case .goRight:
             await presenter?.receive(.goRight)
             state.undoStack.removeAll()
+            await presenter?.present(state)
         case .initialData:
             await presenter?.present(state)
         case .navigate(let target, let source):
@@ -28,10 +31,12 @@ final class HelpProcessor: Processor {
             if let source {
                 state.undoStack.append(source)
             }
+            await presenter?.present(state)
         case .showSafari(let url):
             coordinator?.showSafari(url: url)
         case .userSwiped:
             state.undoStack.removeAll()
+            await presenter?.present(state)
         }
     }
 }
