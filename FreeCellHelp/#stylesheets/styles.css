@@ -10,3 +10,14 @@ body {
     font-family: "Georgia";
     font-size: 1em;
 }
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: black;
+        color: white;
+    }
+    a {
+        color: pink;
+        background-color: transparent;
+        text-decoration: underline;
+    }
+}

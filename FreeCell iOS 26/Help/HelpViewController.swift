@@ -22,7 +22,14 @@ final class HelpViewController: UIViewController, ReceiverPresenter {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Help"
-        view.backgroundColor = UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0)
+        view.backgroundColor = UIColor {traits in
+            switch traits.userInterfaceStyle {
+            case .dark: .black
+            case .light: UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0)
+            case .unspecified: UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0)
+            @unknown default: UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0)
+            }
+        }
         let goBackItem = UIBarButtonItem(title: nil, image: UIImage(systemName: "arrow.uturn.backward"), target: self, action: #selector(goBack))
         navigationItem.leftBarButtonItem = goBackItem
         navigationItem.leftItemsSupplementBackButton = true

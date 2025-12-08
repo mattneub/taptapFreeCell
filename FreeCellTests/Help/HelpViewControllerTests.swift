@@ -42,7 +42,12 @@ private struct HelpViewControllerTests {
         subject.pageViewController = pageViewController
         subject.loadViewIfNeeded()
         #expect(subject.title == "Help")
-        #expect(subject.view.backgroundColor == UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0))
+        #expect(subject.view.backgroundColor?.resolvedColor(
+            with: UITraitCollection(userInterfaceStyle: .light)
+        ) == UIColor(red: 1,  green: 1,  blue: 238.0/255.0, alpha: 1.0))
+        #expect(subject.view.backgroundColor?.resolvedColor(
+            with: UITraitCollection(userInterfaceStyle: .dark)
+        ) == UIColor.black)
         let undoItem = try #require(subject.navigationItem.leftBarButtonItem)
         #expect(undoItem.image == UIImage(systemName: "arrow.uturn.backward"))
         #expect(undoItem.target === subject)
