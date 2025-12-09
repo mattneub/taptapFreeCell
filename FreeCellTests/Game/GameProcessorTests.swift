@@ -13,6 +13,7 @@ private struct GameProcessorTests {
     let coordinator = MockRootCoordinator()
     let stats = MockStats()
     let deckFactory = MockDeckFactory()
+    let exporter = MockExporter()
 
     init() {
         subject.coordinator = coordinator
@@ -24,6 +25,7 @@ private struct GameProcessorTests {
         services.stats = stats
         services.dateType = MockDate.self
         services.deckFactory = deckFactory
+        services.exporter = exporter
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -460,6 +462,13 @@ private struct GameProcessorTests {
         #expect(stopwatch.methodsCalled == ["pause()"])
         #expect(coordinator.methodsCalled == ["showHelp(_:)"])
         #expect(coordinator.helpType == .rules)
+    }
+
+    @Test("receive showImportExport: pauses the stopwatch, tells coordinator")
+    func showImportExport() async {
+        await subject.receive(.showImportExport)
+        #expect(stopwatch.methodsCalled == ["pause()"])
+        #expect(coordinator.methodsCalled == ["showImportExport()"])
     }
 
     @Test("receive showStats: pauses the stopwatch, tells coordinator")
@@ -1900,13 +1909,6 @@ private struct GameProcessorTests {
         #expect(presenter.thingsReceived == [.updateStopwatch(32)])
     }
 
-    @Test("resumeStat: calls coordinator popToGame")
-    func resumeStatPop() async {
-        await subject.resume(stat: Stat(dateFinished: Date.now, won: false, initialLayout: Layout(), movesCount: 3, timeTaken: 200))
-        #expect(coordinator.methodsCalled == ["popToGame()"])
-        print("test")
-    }
-
     @Test("resumeStat: exactly like deal if game is over")
     func resumeStat() async {
         var layout = Layout()
@@ -1919,7 +1921,7 @@ private struct GameProcessorTests {
         subject.state.layout.moveCode = "yoho"
         var statLayout = Layout()
         statLayout.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
-        await subject.resume(stat: Stat(dateFinished: Date.now, won: false, initialLayout: statLayout, movesCount: 3, timeTaken: 200))
+        await subject.resume(initialLayout: statLayout, timeTaken: 200)
         #expect(subject.state.layout == statLayout)
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
@@ -1950,7 +1952,7 @@ private struct GameProcessorTests {
         subject.state.layout.moveCode = "yoho"
         var statLayout = Layout()
         statLayout.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
-        await subject.resume(stat: Stat(dateFinished: Date.now, won: false, initialLayout: statLayout, movesCount: 3, timeTaken: 200))
+        await subject.resume(initialLayout: statLayout, timeTaken: 200)
         #expect(subject.state.layout == statLayout)
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
@@ -1975,5 +1977,120 @@ private struct GameProcessorTests {
             timeTaken: 0,
             codes: ["yoho"]
         ))
+    }
+
+    @Test("exportCurrentGame: gathers initial layout and codes for exporter, calls showMail with message text")
+    func exportCurrentGame() async throws {
+        var layout1 = Layout()
+        layout1.columns[0].cards = [Card(rank: .jack, suit: .hearts)]
+        layout1.moveCode = "hey"
+        subject.state.undoStack = [layout1]
+        var layout2 = Layout()
+        layout2.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
+        layout2.moveCode = "ho"
+        subject.state.layout = layout2
+        exporter.messageToReturn = "teehee"
+        // here's the test
+        subject.exportCurrentGame()
+        #expect(exporter.methodsCalled == ["messageText(layout:moves:)"])
+        #expect(exporter.layout == layout1)
+        #expect(exporter.moves == ["hey", "ho"])
+        #expect(coordinator.methodsCalled == ["showMail(message:)"])
+        #expect(coordinator.message == "teehee")
+    }
+
+    @Test("importGame: initializes layout from text, behaves just like resumeStat: if game is over")
+    func importGameGameOver() async throws {
+        var layout = Layout()
+        layout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = layout
+        subject.state.gameProgress = .gameOver
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [Layout(), Layout()]
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        var dealLayout = Layout()
+        dealLayout.deal(Deck())
+        let text = dealLayout.shlomiTableauDescription
+        await subject.importGame(text)
+        #expect(subject.state.layout == dealLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == Layout()) // animated as if dealing
+        #expect(animator.newLayout == dealLayout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0) // this is the only difference from resume
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(stats.methodsCalled.isEmpty)
+    }
+
+    @Test("importGame: initializes layout from text, behaves just like resumeStat: if game is not over")
+    func importGameGameNotOver() async throws {
+        var oldLayout = Layout()
+        oldLayout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = oldLayout
+        subject.state.gameProgress = .inProgress // *
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [oldLayout, Layout()] // teehee
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        var dealLayout = Layout()
+        dealLayout.deal(Deck())
+        let text = dealLayout.shlomiTableauDescription
+        await subject.importGame(text)
+        #expect(subject.state.layout == dealLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == oldLayout) // animated from existing old game
+        #expect(animator.newLayout == dealLayout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0)
+        await #while(stats.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled == ["saveStat(_:)"])
+        #expect(stats.stat == Stat(
+            dateFinished: Date.distantPast,
+            won: false,
+            initialLayout: oldLayout,
+            movesCount: 1,
+            timeTaken: 0,
+            codes: ["yoho"]
+        ))
+    }
+
+    @Test("importGame: if cannot initialize layout from text, nothing happens")
+    func importGameBadText() async throws {
+        var oldLayout = Layout()
+        oldLayout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = oldLayout
+        subject.state.gameProgress = .inProgress // *
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [oldLayout, Layout()] // teehee
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        await subject.importGame("hey babu riba")
+        #expect(subject.state.layout == oldLayout)
+        #expect(presenter.statesPresented.isEmpty)
+        #expect(subject.state.undoStack == [oldLayout, Layout()])
+        #expect(subject.state.redoStack == [Layout(), Layout()])
+        #expect(subject.state.layout.moveCode == "yoho")
+        #expect(subject.state.gameProgress == .inProgress)
+        #expect(animator.methodsCalled.isEmpty)
+        #expect(stopwatch.methodsCalled.isEmpty)
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(stats.methodsCalled.isEmpty)
     }
 }

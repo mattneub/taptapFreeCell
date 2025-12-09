@@ -10,6 +10,8 @@ protocol RootCoordinatorType: AnyObject {
     func showPreview(stat: Stat) async
     func showHelp(_: HelpState.HelpType)
     func showSafari(url: URL)
+    func showImportExport()
+    func dismiss() async
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -19,6 +21,7 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
     var gameProcessor: (any Processor<GameAction, GameState, GameEffect>)?
     var statsProcessor: (any Processor<StatsAction, StatsState, StatsEffect>)?
     var helpProcessor: (any Processor<HelpAction, HelpState, HelpEffect>)?
+    var exportProcessor: (any Processor<ExportAction, ExportState, Void>)?
 
     func createInterface(window: UIWindow) {
         let processor = GameProcessor()
@@ -99,6 +102,25 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         let viewController = services.safariProvider.provide(for: url)
         viewController.modalPresentationStyle = .overCurrentContext
         rootViewController?.present(viewController, animated: unlessTesting(true))
+    }
+
+    func showImportExport() {
+        let processor = ExportProcessor()
+        self.exportProcessor = processor
+        let viewController = ExportViewController()
+        processor.presenter = viewController
+        processor.coordinator = self
+        processor.delegate = gameProcessor as? any ExportDelegate
+        viewController.processor = processor
+        rootViewController?.present(viewController, animated: unlessTesting(true))
+    }
+
+    func dismiss() async {
+        await withCheckedContinuation { [weak self] continuation in
+            self?.rootViewController?.dismiss(animated: unlessTesting(true)) {
+                continuation.resume(returning: ())
+            }
+        }
     }
 }
 

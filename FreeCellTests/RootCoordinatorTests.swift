@@ -104,8 +104,6 @@ private struct RootCoordinatorTests {
     func showHelp() async throws {
         let navigationController = UINavigationController()
         subject.rootViewController = navigationController
-        let helpProcessor = HelpProcessor()
-        subject.helpProcessor = helpProcessor
         subject.showHelp(.help)
         let processor = try #require(subject.helpProcessor as? HelpProcessor)
         #expect(processor.coordinator === subject)
@@ -126,5 +124,33 @@ private struct RootCoordinatorTests {
         subject.showSafari(url: URL(string: "manny")!)
         #expect(provider.methodsCalled == ["provide(for:)"])
         #expect(navigationController.presentedViewController is MockSafariViewController)
+    }
+
+    @Test("showImportExport: constructs the module and presents it")
+    func showImportExport() async throws {
+        let rootViewController = UIViewController()
+        makeWindow(viewController: rootViewController)
+        subject.rootViewController = rootViewController
+        let gameProcessor = GameProcessor()
+        subject.gameProcessor = gameProcessor
+        subject.showImportExport()
+        let processor = try #require(subject.exportProcessor as? ExportProcessor)
+        await #while(rootViewController.presentedViewController == nil)
+        #expect(processor.coordinator === subject)
+        #expect(processor.delegate === gameProcessor)
+        let viewController = try #require(processor.presenter as? ExportViewController)
+        #expect(viewController.processor === processor)
+        #expect(rootViewController.presentedViewController === viewController)
+    }
+
+    @Test("dismiss: dismisses presented view controller")
+    func dismiss() async throws {
+        let rootViewController = UIViewController()
+        subject.rootViewController = rootViewController
+        let presentedViewController = UIViewController()
+        rootViewController.present(presentedViewController, animated: false)
+        await subject.dismiss()
+        #expect(presentedViewController.presentingViewController == nil)
+        #expect(rootViewController.presentedViewController == nil)
     }
 }

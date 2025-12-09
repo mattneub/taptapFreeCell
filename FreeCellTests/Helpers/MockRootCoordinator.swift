@@ -53,4 +53,11 @@ final class MockRootCoordinator: RootCoordinatorType {
         self.url = url
     }
 
+    func showImportExport() {
+        methodsCalled.append(#function)
+    }
+
+    func dismiss() async {
+        methodsCalled.append(#function)
+    }
 }

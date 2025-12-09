@@ -108,7 +108,6 @@
 				preferences3.txt,
 				preferences4.txt,
 				preferences5.txt,
-				propack.txt,
 				rules.txt,
 				rules2.txt,
 				rules3.txt,

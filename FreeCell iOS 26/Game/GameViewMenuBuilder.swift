@@ -46,13 +46,20 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             }
         }
         let cleanupAction = deferredMenuItemBuilder.build(buildCleanupActionProvider)
+        let importExportAction = MyUIAction(
+            myTitle: "Import / Export",
+            image: UIImage(systemName: "arrow.up.arrow.down.circle")
+        ) { [weak processor] _ in
+            Task {
+                try? await unlessTesting {
+                    try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
+                }
+                await processor?.receive(.showImportExport)
+            }
+        }
         let prefsAction = UIAction(
             title: "Settings",
             image: UIImage(systemName: "gear")
-        ) { _ in }
-        let importExportAction = UIAction(
-            title: "Import / Export",
-            image: UIImage(systemName: "arrow.up.arrow.down.circle")
         ) { _ in }
         return UIMenu(title: "", children: [
             rulesAction,

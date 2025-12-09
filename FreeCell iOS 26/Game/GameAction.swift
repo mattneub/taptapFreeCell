@@ -8,6 +8,7 @@ enum GameAction: Equatable {
     case redo
     case redoAll
     case showHelp
+    case showImportExport
     case showRules
     case showStats
     case tapBackground

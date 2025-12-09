@@ -90,8 +90,9 @@ private struct StatsProcessorTests {
         subject.state.stats = statsDictionary
         coordinator.buttonTitleToReturn = "Resume"
         await subject.receive(.resume(key: "ho"))
-        #expect(delegate.methodsCalled == ["resume(stat:)"])
-        #expect(delegate.stat == Stat(dateFinished: Date(timeIntervalSince1970: 3), won: true, initialLayout: Layout(), movesCount: 2, timeTaken: 2))
+        #expect(delegate.methodsCalled == ["resume(initialLayout:timeTaken:)"])
+        #expect(delegate.initialLayout == Layout())
+        #expect(delegate.timeTaken == 2)
     }
 
     @Test("receive snapshot: calls coordinator preview")
@@ -111,10 +112,13 @@ private struct StatsProcessorTests {
 
 fileprivate final class MockDelegate: StatsDelegate {
     var methodsCalled = [String]()
-    var stat: Stat?
-    func resume(stat: Stat) async {
+    var initialLayout: Layout?
+    var timeTaken: TimeInterval?
+
+    func resume(initialLayout: Layout, timeTaken: TimeInterval) async {
         methodsCalled.append(#function)
-        self.stat = stat
+        self.initialLayout = initialLayout
+        self.timeTaken = timeTaken
     }
 }
 

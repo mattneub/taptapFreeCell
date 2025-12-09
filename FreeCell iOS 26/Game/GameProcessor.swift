@@ -142,6 +142,9 @@ final class GameProcessor: Processor {
         case .showHelp:
             await stopwatch.pause()
             coordinator?.showHelp(.help)
+        case .showImportExport:
+            await stopwatch.pause()
+            coordinator?.showImportExport()
         case .showRules:
             await stopwatch.pause()
             coordinator?.showHelp(.rules)
@@ -650,6 +653,21 @@ final class GameProcessor: Processor {
             }
         }
     }
+    
+    /// Interrupt the current game, saving it as lost if it hasn't been won, and deal a new game
+    /// using the given initial layout and time taken.
+    /// - Parameters:
+    ///   - initialLayout: The layout for the initial deal of the new game.
+    ///   - timeTaken: Elapsed time to put on the stopwatch.
+    func replaceGame(initialLayout: Layout, timeTaken: TimeInterval) async {
+        var oldLayout = Layout() // by default, deal as if from a deck
+        if state.gameProgress != .gameOver { // if there is a current game...
+            saveGame(won: false) // ... save it
+            oldLayout = state.layout // instead of deck deal, rearrange existing cards
+        }
+        state.layout = initialLayout
+        await beginGame(from: timeTaken, oldLayout: oldLayout)
+    }
 }
 
 extension GameProcessor: StopwatchDelegate {
@@ -659,15 +677,23 @@ extension GameProcessor: StopwatchDelegate {
 }
 
 extension GameProcessor: StatsDelegate {
-    func resume(stat: Stat) async {
-        await coordinator?.popToGame()
-        var oldLayout = Layout()
-        // save _current_ game if there is one
-        if state.gameProgress != .gameOver {
-            saveGame(won: false)
-            oldLayout = state.layout
-        }
-        state.layout = stat.initialLayout
-        await beginGame(from: stat.timeTaken, oldLayout: oldLayout)
+    func resume(initialLayout: Layout, timeTaken: TimeInterval) async {
+        await replaceGame(initialLayout: initialLayout, timeTaken: timeTaken)
+    }
+}
+
+extension GameProcessor: ExportDelegate {
+    func exportCurrentGame() {
+        // info we need to gather is exactly like `saveGame`
+        let codes = (state.undoStack + [state.layout]).compactMap { $0.moveCode }
+        let initialLayout = state.undoStack.first ?? state.layout
+        let message = services.exporter.messageText(layout: initialLayout, moves: codes)
+        coordinator?.showMail(message: message)
+    }
+
+    func importGame(_ text: String?) async {
+        guard let text else { return }
+        guard let newLayout = Layout(shlomiTableauDescription: text) else { return }
+        await replaceGame(initialLayout: newLayout, timeTaken: 0)
     }
 }

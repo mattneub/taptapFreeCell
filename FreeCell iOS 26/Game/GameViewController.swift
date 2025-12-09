@@ -52,8 +52,8 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         $0.contentView.addSubview(timerLabel)
         $0.bounds.size.width = 82
         $0.bounds.size.height = 44
-        timerLabel.centerXAnchor.constraint(equalTo: $0.contentView.centerXAnchor).isActive = true
-        timerLabel.centerYAnchor.constraint(equalTo: $0.contentView.centerYAnchor).isActive = true
+        timerLabel.centerXAnchor.constraint(equalTo: $0.contentView.centerXAnchor).activate()
+        timerLabel.centerYAnchor.constraint(equalTo: $0.contentView.centerYAnchor).activate()
     }
 
     override func viewDidLoad() {

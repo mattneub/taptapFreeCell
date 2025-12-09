@@ -58,6 +58,9 @@ private struct GameViewMenuBuilderTests {
             let action = try #require(result.children[4] as? UIAction)
             #expect(action.title == "Import / Export")
             #expect(action.image == UIImage(systemName: "arrow.up.arrow.down.circle"))
+            (action as? MyUIAction)?.handler?(action)
+            await #while(processor.thingsReceived.isEmpty)
+            #expect(processor.thingsReceived == [.showImportExport])
         }
         processor.thingsReceived = []
         do {

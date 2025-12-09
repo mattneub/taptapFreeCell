@@ -13,13 +13,13 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
         $0.font = UIFont.systemFont(ofSize: 17)
         $0.textAlignment = .center
         $0.translatesAutoresizingMaskIntoConstraints = false
-        $0.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        $0.heightAnchor.constraint(equalToConstant: 30).activate()
     }
 
     lazy var sortSegmentedControl = UISegmentedControl(
         items:  StatsSorting.allCases.dropLast().map {$0.text} // tee-hee, have to drop microsoft case
     ).applying { seg in
-        seg.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        seg.heightAnchor.constraint(equalToConstant: 22).activate()
         seg.isMomentary = true
         seg.selectedSegmentIndex = UISegmentedControl.noSegment
         seg.translatesAutoresizingMaskIntoConstraints = false
@@ -36,14 +36,12 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
             $0.trailingAnchor.constraint(equalTo: recordLabel.trailingAnchor),
         ])
         $0.addSubview(sortSegmentedControl)
-        sortSegmentedControl.topAnchor.constraint(equalTo: recordLabel.bottomAnchor, constant: 4).isActive = true
+        sortSegmentedControl.topAnchor.constraint(equalTo: recordLabel.bottomAnchor, constant: 4).activate()
         NSLayoutConstraint.activate([
             $0.leadingAnchor.constraint(equalTo: sortSegmentedControl.leadingAnchor),
             $0.trailingAnchor.constraint(equalTo: sortSegmentedControl.trailingAnchor),
         ])
-        let bottomConstraint = $0.bottomAnchor.constraint(equalTo: sortSegmentedControl.bottomAnchor, constant: 4)
-        bottomConstraint.priority = UILayoutPriority(999)
-        bottomConstraint.isActive = true
+        $0.bottomAnchor.constraint(equalTo: sortSegmentedControl.bottomAnchor, constant: 4).activate(priority: 999)
         $0.isHidden = true
     }
 
@@ -54,8 +52,8 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
 
     lazy var spinnerContainer = UIView().applying {
         $0.addSubview(spinner)
-        $0.centerXAnchor.constraint(equalTo: spinner.centerXAnchor).isActive = true
-        $0.centerYAnchor.constraint(equalTo: spinner.centerYAnchor).isActive = true
+        $0.centerXAnchor.constraint(equalTo: spinner.centerXAnchor).activate()
+        $0.centerYAnchor.constraint(equalTo: spinner.centerYAnchor).activate()
     }
 
     override func viewDidLoad() {

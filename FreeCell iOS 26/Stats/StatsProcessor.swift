@@ -29,7 +29,8 @@ final class StatsProcessor: Processor {
                 buttonTitles: ["Cancel", "Resume"]
             )
             if reply == "Resume", let stat = state.stats[key] {
-                await delegate?.resume(stat: stat)
+                await coordinator?.popToGame()
+                await delegate?.resume(initialLayout: stat.initialLayout, timeTaken: stat.timeTaken)
             }
         case .snapshot(let stat):
             await coordinator?.showPreview(stat: stat)
@@ -40,5 +41,5 @@ final class StatsProcessor: Processor {
 }
 
 protocol StatsDelegate: AnyObject {
-    func resume(stat: Stat) async
+    func resume(initialLayout: Layout, timeTaken: TimeInterval) async
 }
