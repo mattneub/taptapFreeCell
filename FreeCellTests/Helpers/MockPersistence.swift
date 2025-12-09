@@ -7,6 +7,8 @@ final class MockPersistence: PersistenceType {
     nonisolated(unsafe) var savedGameToReturn: SavedGame?
     nonisolated(unsafe) var migrationSet: Bool?
     nonisolated(unsafe) var migrationToReturn: Bool?
+    nonisolated(unsafe) var microsoftDealSet: Int?
+    nonisolated(unsafe) var microsoftDealToReturn: Int?
 
     func saveGame(_ savedGame: SavedGame) {
         methodsCalled.append(#function)
@@ -27,6 +29,17 @@ final class MockPersistence: PersistenceType {
         methodsCalled.append(#function)
         return migrationToReturn ?? false
     }
+
+    func loadLastMicrosoftDeal() -> Int {
+        methodsCalled.append(#function)
+        return microsoftDealToReturn ?? 0
+    }
+
+    func saveLastMicrosoftDeal(_ deal: Int) {
+        methodsCalled.append(#function)
+        microsoftDealSet = deal
+    }
+
 
 
 }

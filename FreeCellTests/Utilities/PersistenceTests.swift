@@ -77,4 +77,24 @@ private struct PersistenceTests {
         #expect(defaults.methodsCalled == ["bool(forKey:)"])
     }
 
+    @Test("loadLastMicrosoftDeal: returns int value for lastMicrosoftDeal")
+    func loadLastMicrosoftDeal() {
+        defaults.thingsToReturn["lastMicrosoftDeal"] = nil
+        var result = subject.loadLastMicrosoftDeal()
+        #expect(result == 0)
+        #expect(defaults.methodsCalled == ["integer(forKey:)"])
+        defaults.methodsCalled = []
+        defaults.thingsToReturn["lastMicrosoftDeal"] = 1
+        result = subject.loadLastMicrosoftDeal()
+        #expect(result == 1)
+        #expect(defaults.methodsCalled == ["integer(forKey:)"])
+    }
+
+    @Test("saveLastMicrosoftDeal: sets value for lastMicrosoftDeal")
+    func saveLastMicrosoftDeal() {
+        subject.saveLastMicrosoftDeal(42)
+        #expect(defaults.methodsCalled == ["set(_:forKey:)"])
+        #expect(defaults.thingsSet["lastMicrosoftDeal"] as? Int == 42)
+    }
+
 }

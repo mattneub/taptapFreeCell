@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MicrosoftViewController" customModule="TTFreeCell" customModuleProvider="target">
+            <connections>
+                <outlet property="cancelButton" destination="6eh-GV-UII" id="IQ9-B2-6Dh"/>
+                <outlet property="contentView" destination="lc6-s5-hMU" id="KGf-XM-J7Z"/>
+                <outlet property="dealButton" destination="aXq-Bp-Was" id="B2d-RE-Rkc"/>
+                <outlet property="dealNumberTextField" destination="xlV-jI-O8Y" id="e8p-oK-yar"/>
+                <outlet property="dealStepper" destination="HIv-KY-FGe" id="a4R-wP-7WA"/>
+                <outlet property="view" destination="iN0-l3-epB" id="7ub-oX-UxG"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="272"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lc6-s5-hMU">
+                    <rect key="frame" x="0.0" y="0.0" width="393" height="272"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Microsoft Deal Number:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TTj-Fw-Qwq">
+                            <rect key="frame" x="106" y="32" width="181" height="21"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <nil key="textColor"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6eh-GV-UII">
+                            <rect key="frame" x="16" y="167" width="76.666666666666671" height="34.333333333333343"/>
+                            <state key="normal" title="Cancel"/>
+                            <buttonConfiguration key="configuration" style="filled" title="Cancel"/>
+                        </button>
+                        <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="xlV-jI-O8Y">
+                            <rect key="frame" x="150.66666666666666" y="61" width="92" height="34"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="92" id="1CD-lq-nZ6"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <textInputTraits key="textInputTraits"/>
+                        </textField>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aXq-Bp-Was">
+                            <rect key="frame" x="318.66666666666669" y="167" width="58.333333333333314" height="34.333333333333343"/>
+                            <state key="normal" title="Deal"/>
+                            <buttonConfiguration key="configuration" style="filled" title="Deal"/>
+                        </button>
+                        <stepper opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" continuous="NO" autorepeat="NO" value="1" minimumValue="1" maximumValue="1000000" translatesAutoresizingMaskIntoConstraints="NO" id="HIv-KY-FGe">
+                            <rect key="frame" x="149.66666666666666" y="103" width="94" height="32"/>
+                            <color key="backgroundColor" systemColor="systemGray4Color"/>
+                        </stepper>
+                    </subviews>
+                    <color key="backgroundColor" systemColor="secondarySystemBackgroundColor"/>
+                    <constraints>
+                        <constraint firstItem="xlV-jI-O8Y" firstAttribute="top" secondItem="TTj-Fw-Qwq" secondAttribute="bottom" constant="8" id="3rl-zH-zyv"/>
+                        <constraint firstItem="HIv-KY-FGe" firstAttribute="centerX" secondItem="lc6-s5-hMU" secondAttribute="centerX" id="A8f-1h-P0Z"/>
+                        <constraint firstItem="TTj-Fw-Qwq" firstAttribute="centerX" secondItem="lc6-s5-hMU" secondAttribute="centerX" id="EN8-Mp-RY5"/>
+                        <constraint firstItem="TTj-Fw-Qwq" firstAttribute="top" secondItem="lc6-s5-hMU" secondAttribute="top" constant="32" id="Hip-UT-ELP"/>
+                        <constraint firstItem="6eh-GV-UII" firstAttribute="leading" secondItem="lc6-s5-hMU" secondAttribute="leading" constant="16" id="JWb-BR-5UK"/>
+                        <constraint firstItem="6eh-GV-UII" firstAttribute="top" secondItem="HIv-KY-FGe" secondAttribute="bottom" constant="32" id="LZN-aj-NX8"/>
+                        <constraint firstItem="HIv-KY-FGe" firstAttribute="top" secondItem="xlV-jI-O8Y" secondAttribute="bottom" constant="8" id="bfp-NC-5tE"/>
+                        <constraint firstItem="6eh-GV-UII" firstAttribute="top" secondItem="aXq-Bp-Was" secondAttribute="top" id="ju6-CY-as2"/>
+                        <constraint firstAttribute="trailing" secondItem="aXq-Bp-Was" secondAttribute="trailing" constant="16" id="mBr-ub-mKo"/>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="250" id="pFl-fw-bMz"/>
+                        <constraint firstItem="xlV-jI-O8Y" firstAttribute="centerX" secondItem="lc6-s5-hMU" secondAttribute="centerX" id="qxh-wa-gf6"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="lc6-s5-hMU" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="C2D-BW-tZL"/>
+                <constraint firstItem="lc6-s5-hMU" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="MmB-7w-3E7"/>
+                <constraint firstAttribute="trailing" secondItem="lc6-s5-hMU" secondAttribute="trailing" id="u2M-wO-TIm"/>
+                <constraint firstAttribute="bottom" secondItem="lc6-s5-hMU" secondAttribute="bottom" id="zdO-QO-uL6"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="49.618320610687022" y="104.22535211267606"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="secondarySystemBackgroundColor">
+            <color red="0.94901960784313721" green="0.94901960784313721" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGray4Color">
+            <color red="0.81960784313725488" green="0.81960784313725488" blue="0.83921568627450982" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>

@@ -131,6 +131,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             return
         }
         didInitialLayout = true
+        // construct interface and ask for presentation of initial Layout object
         CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: view.bounds.width) ?? .zero
         if let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view) {
             foundations = cardViews[0]
@@ -144,6 +145,20 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             }
             await processor?.receive(.didInitialLayout)
         }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // attach long press option to deal button, https://stackoverflow.com/a/61006024/341994
+        guard let view = navigationItem.leftBarButtonItem?.value(forKey: "view") as? UIView else {
+            return // make sure we can access this secret view
+        }
+        let gestureRecognizers = view.gestureRecognizers ?? []
+        guard gestureRecognizers.allSatisfy({ !($0 is UILongPressGestureRecognizer) }) else {
+            return // make sure we have not already added a long press gesture recognizer
+        }
+        let gestureRecognizer = MyLongPressGestureRecognizer(target: self, action: #selector(doMicrosoftDeal))
+        view.addGestureRecognizer(gestureRecognizer)
     }
 
     func present(_ state: GameState) async {
@@ -244,8 +259,15 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
-    @objc func doMicrosoftDeal() {
-        // TODO: don't forget to implement this feature!
+    @objc func doMicrosoftDeal(_ gestureRecognizer: UIGestureRecognizer) {
+        ensureNoConfetti()
+        if let item = navigationItem.leftBarButtonItem {
+            if gestureRecognizer.state == .began {
+                Task {
+                    await processor?.receive(.showMicrosoft(SourceItemWrapper(sourceItem: item)))
+                }
+            }
+        }
     }
 
     @objc func doUndo() {

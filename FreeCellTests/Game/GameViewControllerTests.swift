@@ -180,6 +180,21 @@ private struct GameViewControllerTests {
         #expect(allCards.allSatisfy { $0.movableCount == 0 })
     }
 
+    @Test("viewDidAppear: attaches long press gesture recognizer to left bar button item view")
+    func viewDidAppearLongPresser() async throws {
+        let window = makeWindow(viewController: UINavigationController(rootViewController: subject))
+        window.layoutIfNeeded()
+        subject.viewDidAppear(false)
+        let leftItem = try #require(subject.navigationItem.leftBarButtonItem)
+        let leftItemView = try #require(leftItem.value(forKey: "view") as? UIView)
+        let longPresser = try #require(leftItemView.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        #expect(longPresser.target === subject)
+        #expect(longPresser.action == #selector(subject.doMicrosoftDeal))
+        let count = leftItemView.gestureRecognizers!.count
+        subject.viewDidAppear(false)
+        #expect(leftItemView.gestureRecognizers!.count == count) // we don't add twice
+    }
+
     @Test("present: distributes state layout cards into card views, tells them to redraw")
     func present() async throws {
         var layout = Layout()
@@ -274,6 +289,22 @@ private struct GameViewControllerTests {
         subject.doDeal()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.deal])
+    }
+
+    @Test("doMicrosoftDeal: sends showMicrosoft")
+    func doMicrosoftDeal() async throws {
+        let window = makeWindow(viewController: UINavigationController(rootViewController: subject))
+        window.layoutIfNeeded()
+        subject.viewDidAppear(false)
+        let leftItem = try #require(subject.navigationItem.leftBarButtonItem)
+        let leftItemView = try #require(leftItem.value(forKey: "view") as? UIView)
+        let presser = try #require(leftItemView.gestureRecognizers?.last as? MyLongPressGestureRecognizer)
+        presser.state = .began // this calls `action` on `target` for us
+        await #while(processor.thingsReceived.count < 2)
+        guard case .showMicrosoft(let wrapper) = processor.thingsReceived[1] else {
+            throw NSError(domain: "oops", code: 0)
+        }
+        #expect(wrapper.sourceItem === leftItem)
     }
 
     @Test("singleTap: sends tapBackground")

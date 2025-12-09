@@ -12,6 +12,7 @@ protocol RootCoordinatorType: AnyObject {
     func showSafari(url: URL)
     func showImportExport()
     func dismiss() async
+    func showMicrosoft(_: SourceItemWrapper)
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -22,6 +23,7 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
     var statsProcessor: (any Processor<StatsAction, StatsState, StatsEffect>)?
     var helpProcessor: (any Processor<HelpAction, HelpState, HelpEffect>)?
     var exportProcessor: (any Processor<ExportAction, ExportState, Void>)?
+    var microsoftProcessor: (any Processor<MicrosoftAction, MicrosoftState, Void>)?
 
     func createInterface(window: UIWindow) {
         let processor = GameProcessor()
@@ -121,6 +123,20 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
                 continuation.resume(returning: ())
             }
         }
+    }
+
+    func showMicrosoft(_ wrapper: SourceItemWrapper) {
+        let processor = MicrosoftProcessor()
+        self.microsoftProcessor = processor
+        let viewController = MicrosoftViewController(nibName: "Microsoft", bundle: nil)
+        processor.presenter = viewController
+        processor.coordinator = self
+        processor.delegate = gameProcessor as? any MicrosoftDelegate
+        viewController.processor = processor
+        viewController.modalPresentationStyle = .popover
+        viewController.presentationController?.delegate = viewController
+        viewController.popoverPresentationController?.sourceItem = wrapper.sourceItem
+        rootViewController?.present(viewController, animated: unlessTesting(true))
     }
 }
 

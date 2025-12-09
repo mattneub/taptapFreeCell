@@ -145,6 +145,9 @@ final class GameProcessor: Processor {
         case .showImportExport:
             await stopwatch.pause()
             coordinator?.showImportExport()
+        case .showMicrosoft(let wrapper):
+            await stopwatch.pause()
+            coordinator?.showMicrosoft(wrapper)
         case .showRules:
             await stopwatch.pause()
             coordinator?.showHelp(.rules)
@@ -694,6 +697,14 @@ extension GameProcessor: ExportDelegate {
     func importGame(_ text: String?) async {
         guard let text else { return }
         guard let newLayout = Layout(shlomiTableauDescription: text) else { return }
+        await replaceGame(initialLayout: newLayout, timeTaken: 0)
+    }
+}
+
+extension GameProcessor: MicrosoftDelegate {
+    func dealMicrosoftNumber(_ dealNumber: Int) async {
+        var newLayout = Layout()
+        newLayout.deal(microsoftDealNumber: dealNumber)
         await replaceGame(initialLayout: newLayout, timeTaken: 0)
     }
 }

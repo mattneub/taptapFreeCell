@@ -153,4 +153,25 @@ private struct RootCoordinatorTests {
         #expect(presentedViewController.presentingViewController == nil)
         #expect(rootViewController.presentedViewController == nil)
     }
+
+    @Test("showMicrosoft: assembles module, presents as popover")
+    func showMicrosoft() async throws {
+        let rootViewController = UIViewController()
+        makeWindow(viewController: rootViewController)
+        subject.rootViewController = rootViewController
+        let gameProcessor = GameProcessor()
+        subject.gameProcessor = gameProcessor
+        let source = UIView()
+        subject.showMicrosoft(SourceItemWrapper(sourceItem: source))
+        await #while(rootViewController.presentedViewController == nil)
+        let processor = try #require(subject.microsoftProcessor as? MicrosoftProcessor)
+        let viewController = try #require(processor.presenter as? MicrosoftViewController)
+        #expect(processor.coordinator === subject)
+        #expect(processor.delegate === gameProcessor)
+        #expect(viewController.processor === processor)
+        #expect(viewController.modalPresentationStyle == .popover)
+        #expect(viewController.presentationController?.delegate === viewController)
+        #expect(viewController.popoverPresentationController?.sourceItem === source)
+        #expect(rootViewController.presentedViewController === viewController)
+    }
 }

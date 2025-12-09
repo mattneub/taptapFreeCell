@@ -1,6 +1,6 @@
 @testable import TTFreeCell
 import Testing
-import Foundation
+import UIKit
 import WaitWhile
 
 private struct GameProcessorTests {
@@ -476,6 +476,15 @@ private struct GameProcessorTests {
         await subject.receive(.showStats)
         #expect(stopwatch.methodsCalled == ["pause()"])
         #expect(coordinator.methodsCalled == ["showStats()"])
+    }
+
+    @Test("receive showMicrosoft: pauses the stopwatch, tells coordinator")
+    func showMicrosoft() async {
+        let wrapped = UIView()
+        await subject.receive(.showMicrosoft(SourceItemWrapper(sourceItem: wrapped)))
+        #expect(stopwatch.methodsCalled == ["pause()"])
+        #expect(coordinator.methodsCalled == ["showMicrosoft(_:)"])
+        #expect(coordinator.wrapper?.sourceItem === wrapped)
     }
 
     @Test("receive tapBackground: erases existing first tap, returns to neutrality")
@@ -2092,5 +2101,75 @@ private struct GameProcessorTests {
         #expect(stopwatch.methodsCalled.isEmpty)
         try? await Task.sleep(for: .seconds(0.1))
         #expect(stats.methodsCalled.isEmpty)
+    }
+
+    @Test("dealMicrosoftNumber: initializes layout from microsoft number, behaves just like resumeStat if game over")
+    func dealMicrosoftNumberGameOver() async throws {
+        var layout = Layout()
+        layout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = layout
+        subject.state.gameProgress = .gameOver
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [Layout(), Layout()]
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        await subject.dealMicrosoftNumber(1)
+        var dealLayout = Layout()
+        dealLayout.deal(microsoftDealNumber: 1)
+        #expect(subject.state.layout == dealLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == Layout()) // animated as if dealing
+        #expect(animator.newLayout == dealLayout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0) // this is the only difference from resume
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(stats.methodsCalled.isEmpty)
+    }
+
+    @Test("dealMicrosoftNumber: initializes layout from microsoft number, behaves just like resumeStat if game not over")
+    func dealMicrosoftNumberGameNotOver() async throws {
+        var oldLayout = Layout()
+        oldLayout.foundations[0].cards = [Card(rank: .jack, suit: .hearts)]
+        subject.state.layout = oldLayout
+        subject.state.gameProgress = .inProgress // *
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [oldLayout, Layout()] // teehee
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        await subject.dealMicrosoftNumber(1)
+        var dealLayout = Layout()
+        dealLayout.deal(microsoftDealNumber: 1)
+        #expect(subject.state.layout == dealLayout)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == oldLayout) // animated from existing old game
+        #expect(animator.newLayout == dealLayout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0)
+        await #while(stats.methodsCalled.isEmpty)
+        #expect(stats.methodsCalled == ["saveStat(_:)"])
+        #expect(stats.stat == Stat(
+            dateFinished: Date.distantPast,
+            won: false,
+            initialLayout: oldLayout,
+            movesCount: 1,
+            timeTaken: 0,
+            codes: ["yoho"]
+        ))
     }
 }

@@ -20,4 +20,9 @@ final class MockUserDefaults: UserDefaultsType {
         methodsCalled.append(#function)
         return thingsToReturn[forKey] as? Bool ?? false
     }
+
+    func integer(forKey: String) -> Int {
+        methodsCalled.append(#function)
+        return thingsToReturn[forKey] as? Int ?? 0
+    }
 }

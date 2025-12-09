@@ -4,6 +4,7 @@ struct Defaults {
     static let currentGame = "currentGame"
     static let didMigration3 = "migration3"
     static let stats = "stats" // actually, this one keys into Documents
+    static let lastMicrosoftDeal = "lastMicrosoftDeal"
 }
 
 struct SavedGame: Codable, Equatable {
@@ -18,6 +19,8 @@ protocol PersistenceType: Sendable {
     func loadGame() -> SavedGame?
     func setDidMigration3(_: Bool)
     func didMigration3() -> Bool
+    func loadLastMicrosoftDeal() -> Int
+    func saveLastMicrosoftDeal(_: Int)
 }
 
 final class Persistence: PersistenceType {
@@ -40,6 +43,14 @@ final class Persistence: PersistenceType {
 
     func didMigration3() -> Bool {
         return services.userDefaults.bool(forKey: Defaults.didMigration3)
+    }
+
+    func loadLastMicrosoftDeal() -> Int {
+        services.userDefaults.integer(forKey: Defaults.lastMicrosoftDeal)
+    }
+
+    func saveLastMicrosoftDeal(_ int: Int) {
+        services.userDefaults.set(int, forKey: Defaults.lastMicrosoftDeal)
     }
 
 }

@@ -11,6 +11,7 @@ final class MockRootCoordinator: RootCoordinatorType {
     var stat: Stat?
     var helpType: HelpState.HelpType?
     var url: URL?
+    var wrapper: SourceItemWrapper?
 
     func createInterface(window: UIWindow) {
         methodsCalled.append(#function)
@@ -59,5 +60,10 @@ final class MockRootCoordinator: RootCoordinatorType {
 
     func dismiss() async {
         methodsCalled.append(#function)
+    }
+
+    func showMicrosoft(_ wrapper: SourceItemWrapper) {
+        methodsCalled.append(#function)
+        self.wrapper = wrapper
     }
 }
