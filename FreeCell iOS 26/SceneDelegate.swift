@@ -19,6 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func bootstrap(scene: UIWindowScene) {
+        services.persistence.registerDefaults()
         let window = UIWindow(windowScene: scene)
         self.window = window
         coordinator.createInterface(window: window)

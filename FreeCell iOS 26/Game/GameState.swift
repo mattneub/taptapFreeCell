@@ -6,15 +6,20 @@ struct GameState: Equatable {
     var redoStack = [Layout]()
 
     /// Preferences
-    var sequences = true
-    var sequenceMoves = true
-    var supermoves = true
-    var tintTapped = false
-    var growTapped = true
-    var showDestinations = true
-    var autoplay = true
-    var unambiguousMove = true
+    var prefs: [PrefKey: Bool] = PrefKey.allCases.reduce(into: [:]) { result, prefKey in
+        result[prefKey] = prefKey.defaultValue // initial value is simple the default default
+    }
     var animationSpeed = AnimationSpeed.fast
+
+    /// Subscript shorthand for accessing the prefs
+    subscript(prefKey: PrefKey) -> Bool {
+        get {
+            prefs[prefKey] ?? false
+        }
+        set {
+            prefs[prefKey] = newValue
+        }
+    }
 
     /// The game is always in one of two states: either the user has just performed the first
     /// tap of a two-tap sequence, or not. If so, and only if so, this is non-`nil`, and tells
@@ -28,7 +33,7 @@ struct GameState: Equatable {
     }
 
     var highlightOn: Bool {
-        (tintTapped || growTapped) && firstTapLocation != nil
+        (self[.tintTappedCard] || self[.growTappedCard]) && firstTapLocation != nil
     }
 
     var enablements = [Location: Enablement]()

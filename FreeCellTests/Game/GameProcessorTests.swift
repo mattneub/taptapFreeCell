@@ -257,9 +257,28 @@ private struct GameProcessorTests {
         Task {
             lifetime.event = .enterBackground
         }
-        await #while(persistence.methodsCalled.count < 2) // because loadGame is called first!
+        await #while(!persistence.methodsCalled.contains("saveGame(_:)"))
         #expect(persistence.methodsCalled.last == "saveGame(_:)")
         #expect(presenter.thingsReceived == [.removeConfetti])
+    }
+
+    @Test("receive didInitialLayout: sets state prefs from persistence value")
+    func didInitialLayoutPrefs() async {
+        persistence.prefsToReturn = [.automoveOnFirstTap: true, .automoveToFoundations: true]
+        persistence.speedToReturn = .glacial
+        subject.state.prefs = [:]
+        await subject.receive(.didInitialLayout)
+        #expect(persistence.methodsCalled == [
+            "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)",
+            "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadAnimationSpeed()", "loadGame()"
+        ])
+        #expect(subject.state.prefs == [
+            .automoveOnFirstTap: true, .showClock: false,
+            .supermoves: false, .automoveToFoundations: true, .sequenceMoves: false,
+            .highlightDestinations: false, .showSequences: false, .growTappedCard: false,
+            .earlyEndgame: false, .tintTappedCard: false
+        ])
+        #expect(subject.state.animationSpeed == .glacial)
     }
 
     @Test("receive didInitialLayout: restores game if there is one saved")
@@ -541,7 +560,7 @@ private struct GameProcessorTests {
         stopwatch.methodsCalled = []
         do {
             subject.state.layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
-            subject.state.unambiguousMove = false
+            subject.state[.automoveOnFirstTap] = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -566,7 +585,7 @@ private struct GameProcessorTests {
             ]
             subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
-            subject.state.autoplay = false // we will play just the ace and stop
+            subject.state[.automoveToFoundations] = false // we will play just the ace and stop
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.firstTapLocation == nil)
@@ -601,7 +620,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[7].cards = [Card(rank: .seven, suit: .clubs)]
             subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
-            subject.state.autoplay = true // we will play and then autoplay
+            subject.state[.automoveToFoundations] = true // we will play and then autoplay
             subject.state.redoStack = [Layout]()
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.firstTapLocation == nil)
@@ -642,7 +661,7 @@ private struct GameProcessorTests {
         do {
             subject.state.layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [Card(rank: .king, suit: .clubs)]
-            subject.state.showDestinations = false
+            subject.state[.highlightDestinations] = false
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.enablements == subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
@@ -656,7 +675,7 @@ private struct GameProcessorTests {
         do {
             subject.state.layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [Card(rank: .king, suit: .clubs)]
-            subject.state.showDestinations = true // default
+            subject.state[.highlightDestinations] = true // default
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.enablements != subject.state.baseEnablements)
             #expect(subject.state.firstTapLocation == Location(category: .column, index: 0))
@@ -748,7 +767,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[1].cards = [Card(rank: .king, suit: .clubs)]
             subject.state.layout.columns[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = true
+            subject.state[.automoveOnFirstTap] = true
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -773,7 +792,7 @@ private struct GameProcessorTests {
         do {
             subject.state.layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
             subject.state.layout.columns[1].cards = [Card(rank: .king, suit: .clubs)]
-            subject.state.unambiguousMove = true
+            subject.state[.automoveOnFirstTap] = true
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -809,7 +828,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = false
+            subject.state[.automoveOnFirstTap] = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -846,7 +865,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = true // *
+            subject.state[.automoveOnFirstTap] = true // *
             let oldLayout = subject.state.layout
             await subject.receive(.tapped(Location(category: .freeCell, index: 0)))
             #expect(subject.state.layout.foundations[1].cards == [
@@ -892,7 +911,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = false
+            subject.state[.automoveOnFirstTap] = false
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
             let oldLayout = subject.state.layout
@@ -927,7 +946,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[7].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.columns[0].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = true // *
+            subject.state[.automoveOnFirstTap] = true // *
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .freeCell, index: 0)))
@@ -969,7 +988,7 @@ private struct GameProcessorTests {
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = false
+            subject.state[.automoveOnFirstTap] = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -1012,7 +1031,7 @@ private struct GameProcessorTests {
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = true
+            subject.state[.automoveOnFirstTap] = true
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1063,7 +1082,7 @@ private struct GameProcessorTests {
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = false
+            subject.state[.automoveOnFirstTap] = false
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
@@ -1102,7 +1121,7 @@ private struct GameProcessorTests {
             subject.state.layout.freeCells[2].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.freeCells[3].cards = [Card(rank: .king, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.unambiguousMove = true // *
+            subject.state[.automoveOnFirstTap] = true // *
             subject.state.redoStack = [Layout()]
             let oldLayout = subject.state.layout
             await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1144,7 +1163,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[0].cards = [Card(rank: .queen, suit: .hearts)]
             subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
-            subject.state.unambiguousMove = true
+            subject.state[.automoveOnFirstTap] = true
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.layout.columns[0].cards.isEmpty)
             let expected: [Card] = [Card(rank: .queen, suit: .hearts)]
@@ -1166,7 +1185,7 @@ private struct GameProcessorTests {
         subject.state.gameProgress = .inProgress
         do {
             subject.state.layout.freeCells[0].cards = [Card(rank: .queen, suit: .hearts)]
-            subject.state.unambiguousMove = true
+            subject.state[.automoveOnFirstTap] = true
             await subject.receive(.tapped(Location(category: .freeCell, index: 0)))
             #expect(subject.state.layout.freeCells[0].isEmpty)
             #expect(subject.state.layout.columns[0].cards == [Card(rank: .queen, suit: .hearts)])
@@ -1181,7 +1200,7 @@ private struct GameProcessorTests {
                 Card(rank: .three, suit: .clubs),
                 Card(rank: .three, suit: .hearts)
             ]
-            subject.state.unambiguousMove = true
+            subject.state[.automoveOnFirstTap] = true
             await subject.receive(.tapped(Location(category: .column, index: 7)))
             #expect(subject.state.layout.columns[7].cards == [Card(rank: .three, suit: .clubs)])
             #expect(subject.state.layout.columns[0].cards == [Card(rank: .three, suit: .hearts)])
@@ -1197,7 +1216,7 @@ private struct GameProcessorTests {
             subject.state.layout.foundations[1].cards = [Card(rank: .four, suit: .hearts)]
             subject.state.layout.moveCode = "heyho"
             let oldLayout = subject.state.layout
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .foundation, index: 0)))
@@ -1222,7 +1241,7 @@ private struct GameProcessorTests {
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
             subject.state.layout.columns[7].cards = [Card(rank: .six, suit: .clubs)]
             subject.state.layout.foundations[1].cards = [Card(rank: .five, suit: .hearts)]
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .foundation, index: 0)))
@@ -1258,7 +1277,7 @@ private struct GameProcessorTests {
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             await subject.receive(.tapped(Location(category: .freeCell, index: 3)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
@@ -1280,7 +1299,7 @@ private struct GameProcessorTests {
             subject.state.layout.freeCells[0].cards = [Card(rank: .two, suit: .clubs)]
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .freeCell, index: 3)))
@@ -1313,7 +1332,7 @@ private struct GameProcessorTests {
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
@@ -1335,7 +1354,7 @@ private struct GameProcessorTests {
             subject.state.layout.freeCells[0].cards = [Card(rank: .five, suit: .clubs)]
             subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
             subject.state.layout.moveCode = "heyho"
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1370,7 +1389,7 @@ private struct GameProcessorTests {
             let oldLayout = subject.state.layout
             subject.state.undoStack = [Layout()]
             subject.state.redoStack = [Layout()]
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             await subject.receive(.tapped(Location(category: .column, index: 0)))
             #expect(subject.state.layout == oldLayout)
             #expect(subject.state.undoStack == [Layout()])
@@ -1396,7 +1415,7 @@ private struct GameProcessorTests {
             ]
             subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
-            subject.state.autoplay = false
+            subject.state[.automoveToFoundations] = false
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1432,7 +1451,7 @@ private struct GameProcessorTests {
         subject.state.layout.moveCode = "heyho"
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         let oldLayout = subject.state.layout
-        subject.state.autoplay = false
+        subject.state[.automoveToFoundations] = false
         subject.state.undoStack = [Layout()]
         subject.state.redoStack = [Layout()]
         await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1462,7 +1481,7 @@ private struct GameProcessorTests {
             subject.state.layout.foundations[0].cards = [Card(rank: .ace, suit: .spades)]
             subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
-            subject.state.autoplay = false // *
+            subject.state[.automoveToFoundations] = false // *
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))
@@ -1509,7 +1528,7 @@ private struct GameProcessorTests {
             subject.state.layout.foundations[3].cards = [Card(rank: .ace, suit: .diamonds)]
             subject.state.layout.moveCode = "heyho"
             subject.state.firstTapLocation = Location(category: .column, index: 1)
-            subject.state.autoplay = true // *
+            subject.state[.automoveToFoundations] = true // *
             let oldLayout = subject.state.layout
             subject.state.redoStack = [Layout()]
             await subject.receive(.tapped(Location(category: .column, index: 0)))

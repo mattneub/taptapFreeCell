@@ -178,7 +178,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         for index in columns.indices {
             if columns[index].cards != state.layout.columns[index].cards {
                 columns[index].cards = state.layout.columns[index].cards
-                let movableCount = if state.sequences {
+                let movableCount = if state[.showSequences] {
                     state.layout.columns[index].maxMovableSequence.count
                 } else {
                     0
@@ -187,7 +187,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             }
         }
         if state.highlightOn, let location = state.firstTapLocation {
-            await highlight(location, tint: state.tintTapped, grow: state.growTapped)
+            await highlight(
+                location,
+                tint: state[.tintTappedCard],
+                grow: state[.growTappedCard]
+            )
         } else {
             highlightLayer?.removeFromSuperlayer()
             highlightLayer = nil

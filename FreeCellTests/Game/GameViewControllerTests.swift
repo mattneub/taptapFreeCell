@@ -205,7 +205,7 @@ private struct GameViewControllerTests {
             Card(rank: .ten, suit: .clubs)
         ]
         subject.viewWillLayoutSubviews()
-        await subject.present(GameState(layout: layout, sequences: false))
+        await subject.present(GameState(layout: layout, prefs: [.showSequences: false]))
         let foundationCard = try #require(subject.foundations.first as? MockCardView)
         #expect(foundationCard.cards == [Card(rank: .ace, suit: .spades)])
         #expect(foundationCard.methodsCalled == ["redraw(movableCount:)"])
@@ -233,7 +233,7 @@ private struct GameViewControllerTests {
             Card(rank: .ten, suit: .clubs)
         ]
         subject.viewWillLayoutSubviews()
-        await subject.present(GameState(layout: layout, sequences: true))
+        await subject.present(GameState(layout: layout, prefs: [.showSequences: true]))
         let foundationCard = try #require(subject.foundations.first as? MockCardView)
         #expect(foundationCard.cards == [Card(rank: .ace, suit: .spades)])
         #expect(foundationCard.methodsCalled == ["redraw(movableCount:)"])
@@ -265,7 +265,12 @@ private struct GameViewControllerTests {
     @Test("present: if highlightOn true, adds and configures highlightLayer")
     func presentHighlightOnTrue() async throws {
         subject.viewWillLayoutSubviews()
-        await subject.present(GameState(firstTapLocation: Location(category: .column, index: 0)))
+        await subject.present(
+            GameState(
+                prefs: [.growTappedCard: true],
+                firstTapLocation: Location(category: .column, index: 0)
+            )
+        )
         let layer = try #require(subject.highlightLayer)
         #expect(layer.superlayer === subject.columns[0].layer.superlayer)
         #expect(layer.frame == subject.columns[0].layer.frame)

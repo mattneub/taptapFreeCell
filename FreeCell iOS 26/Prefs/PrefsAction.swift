@@ -1,0 +1,1 @@
+enum PrefsAction: Equatable {}

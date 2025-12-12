@@ -174,4 +174,16 @@ private struct RootCoordinatorTests {
         #expect(viewController.popoverPresentationController?.sourceItem === source)
         #expect(rootViewController.presentedViewController === viewController)
     }
+
+    @Test("showPrefs: assembles modules, pushes it")
+    func showPrefs() throws {
+        let navigationController = UINavigationController()
+        subject.rootViewController = navigationController
+        subject.showPrefs()
+        let processor = try #require(subject.prefsProcessor as? PrefsProcessor)
+        #expect(processor.coordinator === subject)
+        let viewController = try #require(processor.presenter as? PrefsViewController)
+        #expect(viewController.processor === processor)
+        #expect(navigationController.children.first == viewController)
+    }
 }

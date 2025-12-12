@@ -66,4 +66,9 @@ final class MockRootCoordinator: RootCoordinatorType {
         methodsCalled.append(#function)
         self.wrapper = wrapper
     }
+
+    func showPrefs() {
+        methodsCalled.append(#function)
+    }
+
 }

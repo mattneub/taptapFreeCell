@@ -25,4 +25,14 @@ final class MockUserDefaults: UserDefaultsType {
         methodsCalled.append(#function)
         return thingsToReturn[forKey] as? Int ?? 0
     }
+
+    func double(forKey: String) -> Double {
+        methodsCalled.append(#function)
+        return thingsToReturn[forKey] as? Double ?? 0
+    }
+
+    func register(defaults: [String: Any]) {
+        methodsCalled.append(#function)
+        thingsSet = defaults
+    }
 }

@@ -21,15 +21,32 @@ private struct GameStateTests {
         #expect(subject.highlightOn == false)
         subject.firstTapLocation = Location(category: .column, index: 0)
         #expect(subject.highlightOn == true)
-        subject.tintTapped = false
-        subject.growTapped = false
+        subject[.tintTappedCard] = false
+        subject[.growTappedCard] = false
         #expect(subject.highlightOn == false)
-        subject.tintTapped = true
-        subject.growTapped = false
+        subject[.tintTappedCard] = true
+        subject[.growTappedCard] = false
         #expect(subject.highlightOn == true)
-        subject.tintTapped = false
-        subject.growTapped = true
+        subject[.tintTappedCard] = false
+        subject[.growTappedCard] = true
         #expect(subject.highlightOn == true)
+        subject[.tintTappedCard] = true
+        subject[.growTappedCard] = true
+        #expect(subject.highlightOn == true)
+        subject[.tintTappedCard] = true
+        subject[.growTappedCard] = true
+        subject.firstTapLocation = nil
+        #expect(subject.highlightOn == false)
+    }
+
+    @Test("subscripting works as expected")
+    func subscripting() {
+        var subject = GameState()
+        subject.prefs = [.automoveOnFirstTap: true]
+        #expect(subject[.automoveOnFirstTap] == true)
+        #expect(subject[.earlyEndgame] == false)
+        subject[.earlyEndgame] = true
+        #expect(subject.prefs[.earlyEndgame] == true)
     }
 }
 

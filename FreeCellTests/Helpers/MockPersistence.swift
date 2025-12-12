@@ -9,6 +9,10 @@ final class MockPersistence: PersistenceType {
     nonisolated(unsafe) var migrationToReturn: Bool?
     nonisolated(unsafe) var microsoftDealSet: Int?
     nonisolated(unsafe) var microsoftDealToReturn: Int?
+    nonisolated(unsafe) var prefsSet = [PrefKey: Bool]()
+    nonisolated(unsafe) var prefsToReturn = [PrefKey: Bool]()
+    nonisolated(unsafe) var speedSet: GameState.AnimationSpeed?
+    nonisolated(unsafe) var speedToReturn: GameState.AnimationSpeed?
 
     func saveGame(_ savedGame: SavedGame) {
         methodsCalled.append(#function)
@@ -38,6 +42,30 @@ final class MockPersistence: PersistenceType {
     func saveLastMicrosoftDeal(_ deal: Int) {
         methodsCalled.append(#function)
         microsoftDealSet = deal
+    }
+
+    func loadPref(_ pref: Pref) -> Pref {
+        methodsCalled.append(#function)
+        return Pref(key: pref.key, value: prefsToReturn[pref.key] ?? false)
+    }
+
+    func savePref(_ pref: Pref) {
+        methodsCalled.append(#function)
+        prefsSet[pref.key] = pref.value
+    }
+
+    func loadAnimationSpeed() -> GameState.AnimationSpeed {
+        methodsCalled.append(#function)
+        return speedToReturn ?? .noAnimation
+    }
+
+    func saveAnimationSpeed(_ speed: GameState.AnimationSpeed) {
+        methodsCalled.append(#function)
+        speedSet = speed
+    }
+
+    func registerDefaults() {
+        methodsCalled.append(#function)
     }
 
 

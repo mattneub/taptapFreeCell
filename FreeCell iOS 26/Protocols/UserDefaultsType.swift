@@ -5,6 +5,8 @@ protocol UserDefaultsType {
     func data(forKey: String) -> Data?
     func bool(forKey: String) -> Bool
     func integer(forKey: String) -> Int
+    func double(forKey: String) -> Double
+    func register(defaults: [String: Any])
 }
 
 extension UserDefaults: UserDefaultsType {}

@@ -87,6 +87,12 @@ final class GameProcessor: Processor {
             listenForEventTask = Task {
                 try await listenForEvent()
             }
+            // set prefs properties in state
+            for pref in Pref.list {
+                let pref = services.persistence.loadPref(pref)
+                state[pref.key] = pref.value
+            }
+            state.animationSpeed = services.persistence.loadAnimationSpeed()
             // restore game if there was one; this is a fully restorable game so cannot call `beginGame`
             if let game = services.persistence.loadGame() {
                 state.layout = game.layout
@@ -288,14 +294,14 @@ final class GameProcessor: Processor {
             state.layout.moveCode = nil // counts as an autoplay
             await ensureNeutralState()
             await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
-            if state.autoplay {
+            if state[.automoveToFoundations] {
                 await autoplay()
             }
             return
         }
 
         // Only one move is even possible, and the "unambiguous" pref is on; make the move!
-        if state.unambiguousMove {
+        if state[.automoveOnFirstTap] {
             if let _ = try? await unambiguousMove(location: location) {
                 return // We have made the move _completely_, including neutrality and autoplay.
             }
@@ -305,7 +311,7 @@ final class GameProcessor: Processor {
         // we store the tap and perform all highlighting / enabling as appropriate. Thus we
         // _must_ do a presentation, to give the presenter a chance to adjust the interface.
         state.firstTapLocation = location
-        state.enablements = if state.showDestinations {
+        state.enablements = if state[.highlightDestinations] {
             firstTapEnablements(for: location)
         } else {
             state.baseEnablements
@@ -355,8 +361,8 @@ final class GameProcessor: Processor {
                 if state.layout.howManyCardsCanMoveLegally(
                     from: location.index,
                     to: $0,
-                    sequenceMoves: state.sequenceMoves,
-                    supermoves: state.supermoves
+                    sequenceMoves: state[.sequenceMoves],
+                    supermoves: state[.supermoves]
                 ) > 0 {
                     result[Location(category: .column, index: $0)] = .enabled
                 }
@@ -401,8 +407,8 @@ final class GameProcessor: Processor {
                     if state.layout.howManyCardsCanMoveLegally(
                         from: source,
                         to: dest,
-                        sequenceMoves: state.sequenceMoves,
-                        supermoves: state.supermoves
+                        sequenceMoves: state[.sequenceMoves],
+                        supermoves: state[.supermoves]
                     ) > 0 {
                         result[Location(category: .column, index: source)] = .enabled
                         continue columns
@@ -494,8 +500,8 @@ final class GameProcessor: Processor {
                     if index != location.index && state.layout.howManyCardsCanMoveLegally(
                         from: location.index,
                         to: index,
-                        sequenceMoves: state.sequenceMoves,
-                        supermoves: state.supermoves
+                        sequenceMoves: state[.sequenceMoves],
+                        supermoves: state[.supermoves]
                     ) > 0 {
                         if emptyColumns(destination, Location(category: .column, index: index)) {
                             continue
@@ -565,8 +571,8 @@ final class GameProcessor: Processor {
                 let number = state.layout.howManyCardsCanMoveLegally(
                     from: firstTapLocation.index,
                     to: secondTapLocation.index,
-                    sequenceMoves: state.sequenceMoves,
-                    supermoves: state.supermoves
+                    sequenceMoves: state[.sequenceMoves],
+                    supermoves: state[.supermoves]
                 )
                 if number > 0 {
                     state.layout.columns[firstTapLocation.index].cards.suffix(number).forEach {
@@ -586,7 +592,7 @@ final class GameProcessor: Processor {
         } else {
             await ensureNeutralState() // bad second tap! restore neutrality, wait for another tap-tap
         }
-        if state.autoplay {
+        if state[.automoveToFoundations] {
             await autoplay()
         }
     }
