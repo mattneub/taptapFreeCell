@@ -48,5 +48,11 @@ private struct GameStateTests {
         subject[.earlyEndgame] = true
         #expect(subject.prefs[.earlyEndgame] == true)
     }
+
+    @Test("animation speed: cases are in correct order")
+    func animationSpeed() {
+        let result = GameState.AnimationSpeed.allCases
+        #expect(result == [.fast, .slow, .glacial, .noAnimation])
+    }
 }
 

@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3F01D77D2EBE3F180075B216 /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F01D77C2EBE3F180075B216 /* WaitWhile */; };
 		3F058ED02EE32BF6000BB938 /* FreeCellHelpHTML in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3F058ECF2EE32BF6000BB938 /* FreeCellHelpHTML */; };
 		3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; };
 		3F3604412ECA267400487EF9 /* Confetti.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3F36043A2ECA267400487EF9 /* Confetti.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */; };
-		3FB2C94A2EDFBC48000FF1F0 /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 3FB2C9492EDFBC48000FF1F0 /* Algorithms */; };
+		3F91C2652EEDB17F0085193D /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C2642EEDB17F0085193D /* Algorithms */; };
+		3F91C2682EEDB2030085193D /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C2672EEDB2030085193D /* SnapshotTesting */; };
+		3F91C26B2EEDB21D0085193D /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C26A2EEDB21D0085193D /* WaitWhile */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -191,7 +191,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3FB2C94A2EDFBC48000FF1F0 /* Algorithms in Frameworks */,
+				3F91C2652EEDB17F0085193D /* Algorithms in Frameworks */,
 				3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -200,8 +200,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F7AC3FD2EBA4982006DC6B2 /* SnapshotTesting in Frameworks */,
-				3F01D77D2EBE3F180075B216 /* WaitWhile in Frameworks */,
+				3F91C2682EEDB2030085193D /* SnapshotTesting in Frameworks */,
+				3F91C26B2EEDB21D0085193D /* WaitWhile in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,7 +287,7 @@
 			);
 			name = "FreeCell iOS 26";
 			packageProductDependencies = (
-				3FB2C9492EDFBC48000FF1F0 /* Algorithms */,
+				3F91C2642EEDB17F0085193D /* Algorithms */,
 			);
 			productName = "FreeCell iOS 26";
 			productReference = 3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */;
@@ -311,8 +311,8 @@
 			);
 			name = FreeCellTests;
 			packageProductDependencies = (
-				3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */,
-				3F01D77C2EBE3F180075B216 /* WaitWhile */,
+				3F91C2672EEDB2030085193D /* SnapshotTesting */,
+				3F91C26A2EEDB21D0085193D /* WaitWhile */,
 			);
 			productName = FreeCellTests;
 			productReference = 3FB3F4B12EB8F8E600689661 /* FreeCellTests.xctest */;
@@ -351,9 +351,9 @@
 			mainGroup = 3FB3F2A22EB8E76C00689661;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
-				3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */,
-				3FB2C9482EDFBC48000FF1F0 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				3F91C2632EEDB17F0085193D /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				3F91C2662EEDB2030085193D /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				3F91C2692EEDB21D0085193D /* XCRemoteSwiftPackageReference "WaitWhile" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3FB3F2AC2EB8E76C00689661 /* Products */;
@@ -801,23 +801,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mattneub/WaitWhile";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-		3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.18.7;
-			};
-		};
-		3FB2C9482EDFBC48000FF1F0 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+		3F91C2632EEDB17F0085193D /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-algorithms.git";
 			requirement = {
@@ -825,23 +809,39 @@
 				minimumVersion = 1.2.1;
 			};
 		};
+		3F91C2662EEDB2030085193D /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.18.7;
+			};
+		};
+		3F91C2692EEDB21D0085193D /* XCRemoteSwiftPackageReference "WaitWhile" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mattneub/WaitWhile";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3F01D77C2EBE3F180075B216 /* WaitWhile */ = {
+		3F91C2642EEDB17F0085193D /* Algorithms */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3F01D77B2EBE3F180075B216 /* XCRemoteSwiftPackageReference "WaitWhile" */;
-			productName = WaitWhile;
+			package = 3F91C2632EEDB17F0085193D /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
 		};
-		3F7AC3FC2EBA4982006DC6B2 /* SnapshotTesting */ = {
+		3F91C2672EEDB2030085193D /* SnapshotTesting */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3F7AC3FB2EBA4982006DC6B2 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			package = 3F91C2662EEDB2030085193D /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
 			productName = SnapshotTesting;
 		};
-		3FB2C9492EDFBC48000FF1F0 /* Algorithms */ = {
+		3F91C26A2EEDB21D0085193D /* WaitWhile */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3FB2C9482EDFBC48000FF1F0 /* XCRemoteSwiftPackageReference "swift-algorithms" */;
-			productName = Algorithms;
+			package = 3F91C2692EEDB21D0085193D /* XCRemoteSwiftPackageReference "WaitWhile" */;
+			productName = WaitWhile;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

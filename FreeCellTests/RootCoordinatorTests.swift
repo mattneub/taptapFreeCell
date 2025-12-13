@@ -177,11 +177,16 @@ private struct RootCoordinatorTests {
 
     @Test("showPrefs: assembles modules, pushes it")
     func showPrefs() throws {
+        let gameProcessor = GameProcessor()
+        subject.gameProcessor = gameProcessor
         let navigationController = UINavigationController()
         subject.rootViewController = navigationController
-        subject.showPrefs()
+        let prefsState = PrefsState(prefs: [Pref(key: .automoveToFoundations, value: true)], speed: .glacial)
+        subject.showPrefs(prefsState)
         let processor = try #require(subject.prefsProcessor as? PrefsProcessor)
         #expect(processor.coordinator === subject)
+        #expect(processor.state == prefsState)
+        #expect(processor.delegate === gameProcessor)
         let viewController = try #require(processor.presenter as? PrefsViewController)
         #expect(viewController.processor === processor)
         #expect(navigationController.children.first == viewController)

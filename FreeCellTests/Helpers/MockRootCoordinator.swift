@@ -12,6 +12,7 @@ final class MockRootCoordinator: RootCoordinatorType {
     var helpType: HelpState.HelpType?
     var url: URL?
     var wrapper: SourceItemWrapper?
+    var prefsState: PrefsState?
 
     func createInterface(window: UIWindow) {
         methodsCalled.append(#function)
@@ -67,8 +68,9 @@ final class MockRootCoordinator: RootCoordinatorType {
         self.wrapper = wrapper
     }
 
-    func showPrefs() {
+    func showPrefs(_ prefsState: PrefsState) {
         methodsCalled.append(#function)
+        self.prefsState = prefsState
     }
 
 }

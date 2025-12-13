@@ -12,6 +12,7 @@ enum GameAction: Equatable {
     case showHelp
     case showImportExport
     case showMicrosoft(SourceItemWrapper)
+    case showPrefs
     case showRules
     case showStats
     case tapBackground

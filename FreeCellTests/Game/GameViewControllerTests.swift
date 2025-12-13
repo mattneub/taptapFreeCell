@@ -50,7 +50,7 @@ private struct GameViewControllerTests {
     @Test("viewDidLoad: configures bar button items, adds image view, tap gesture recognizers")
     func viewDidLoad() throws {
         subject.loadViewIfNeeded()
-        #expect(subject.title == "Game")
+        #expect(subject.title == nil)
         #expect(subject.navigationItem.backBarButtonItem?.title == "Game")
         let lefts = try #require(subject.navigationItem.leftBarButtonItems)
         #expect(lefts.count == 2)
@@ -89,7 +89,6 @@ private struct GameViewControllerTests {
         #expect(menu1action.title == "Undo All")
         #expect(menu1action.image == UIImage(systemName: "arrow.uturn.backward"))
         // will test handler later
-        #expect(subject.navigationItem.titleView === subject.timerGlass)
         let imageView = try #require(subject.view.subviews(ofType: UIImageView.self).first)
         #expect(imageView.image == UIImage(named: "wallpaper.jpg"))
         #expect(imageView.frame == subject.view.bounds)
@@ -251,6 +250,28 @@ private struct GameViewControllerTests {
         #expect(columnCard.movableCount == 2) // *
     }
 
+    @Test("present: distributes and redraws if nothing changed, but only if in a window")
+    func presentNoChange() async throws {
+        var layout = Layout()
+        layout.columns[0].cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .ten, suit: .clubs)
+        ]
+        subject.viewWillLayoutSubviews()
+        let columnCard = try #require(subject.columns.first as? MockCardView)
+        columnCard.cards = [
+            Card(rank: .jack, suit: .hearts),
+            Card(rank: .ten, suit: .clubs)
+        ]
+        await subject.present(GameState(layout: layout, prefs: [.showSequences: false]))
+        #expect(columnCard.methodsCalled == ["redraw(movableCount:)"])
+        // part two
+        makeWindow(viewController: subject)
+        columnCard.methodsCalled = []
+        await subject.present(GameState(layout: layout, prefs: [.showSequences: false]))
+        #expect(columnCard.methodsCalled == [])
+    }
+
     @Test("present: if highlightOn false, removes and nilifies highlightLayer")
     func presentHighlightOnFalse() async {
         subject.viewWillLayoutSubviews()
@@ -280,6 +301,7 @@ private struct GameViewControllerTests {
 
     @Test("present: sets card view enablements")
     func presentEnablements() async throws {
+        makeWindow(viewController: subject)
         subject.viewWillLayoutSubviews()
         let allCards = try #require((subject.foundations + subject.freeCells + subject.columns) as? [MockCardView])
         var state = GameState()
@@ -287,6 +309,17 @@ private struct GameViewControllerTests {
         await subject.present(state)
         #expect(allCards.allSatisfy { $0.methodsCalled == ["setEnablement(_:)"] })
         #expect(allCards.allSatisfy { $0.enablement == .normal })
+    }
+
+    @Test("present: shows or hides clock")
+    func showClock() async {
+        var state = GameState()
+        state[.showClock] = true
+        await subject.present(state)
+        #expect(subject.navigationItem.titleView === subject.timerGlass)
+        state[.showClock] = false
+        await subject.present(state)
+        #expect(subject.navigationItem.titleView == nil)
     }
 
     @Test("doDeal: sends deal")

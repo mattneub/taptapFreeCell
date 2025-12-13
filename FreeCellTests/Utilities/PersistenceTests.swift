@@ -52,6 +52,34 @@ private struct PersistenceTests {
         #expect(PrefKey.showClock.defaultValue == true)
     }
 
+    @Test("PrefKey has subordinate is correct")
+    func prefKeyHasSubordinate() {
+        #expect(PrefKey.sequenceMoves.hasSubordinate == .supermoves)
+        #expect(PrefKey.supermoves.hasSubordinate == nil)
+        #expect(PrefKey.showSequences.hasSubordinate == nil)
+        #expect(PrefKey.growTappedCard.hasSubordinate == nil)
+        #expect(PrefKey.tintTappedCard.hasSubordinate == nil)
+        #expect(PrefKey.highlightDestinations.hasSubordinate == nil)
+        #expect(PrefKey.automoveToFoundations.hasSubordinate == .earlyEndgame)
+        #expect(PrefKey.earlyEndgame.hasSubordinate == nil)
+        #expect(PrefKey.automoveOnFirstTap.hasSubordinate == nil)
+        #expect(PrefKey.showClock.hasSubordinate == nil)
+    }
+
+    @Test("PrefKey is subordinate is correct")
+    func prefKeyIsSubordinate() {
+        #expect(PrefKey.sequenceMoves.isSubordinateTo == nil)
+        #expect(PrefKey.supermoves.isSubordinateTo == .sequenceMoves)
+        #expect(PrefKey.showSequences.isSubordinateTo == nil)
+        #expect(PrefKey.growTappedCard.isSubordinateTo == nil)
+        #expect(PrefKey.tintTappedCard.isSubordinateTo == nil)
+        #expect(PrefKey.highlightDestinations.isSubordinateTo == nil)
+        #expect(PrefKey.automoveToFoundations.isSubordinateTo == nil)
+        #expect(PrefKey.earlyEndgame.isSubordinateTo == .automoveToFoundations)
+        #expect(PrefKey.automoveOnFirstTap.isSubordinateTo == nil)
+        #expect(PrefKey.showClock.isSubordinateTo == nil)
+    }
+
     @Test("saveGame: encodes game using property list encoder, calls set for currentGame")
     func saveGame() throws {
         var layout = Layout()

@@ -475,6 +475,60 @@ private struct GameProcessorTests {
         #expect(coordinator.helpType == .help)
     }
 
+    @Test("receive showPrefs: pauses the stopwatch, tells coordinator with correct state")
+    func showPrefs() async {
+        subject.state.animationSpeed = .glacial
+        subject.state[.automoveOnFirstTap] = false // and all others will be true by default
+        await subject.receive(.showPrefs)
+        #expect(stopwatch.methodsCalled == ["pause()"])
+        #expect(coordinator.methodsCalled == ["showPrefs(_:)"])
+        let expected = PrefsState(
+            prefs: [
+                Pref(
+                    key: .sequenceMoves,
+                    value: true
+                ),
+                Pref(
+                    key: .supermoves,
+                    value: true
+                ),
+                Pref(
+                    key: .showSequences,
+                    value: true
+                ),
+                Pref(
+                    key: .growTappedCard,
+                    value: true
+                ),
+                Pref(
+                    key: .tintTappedCard,
+                    value: false
+                ),
+                Pref(
+                    key: .highlightDestinations,
+                    value: true
+                ),
+                Pref(
+                    key: .automoveToFoundations,
+                    value: true
+                ),
+                Pref(
+                    key: .earlyEndgame,
+                    value: true
+                ),
+                Pref(
+                    key: .automoveOnFirstTap,
+                    value: false
+                ),
+                Pref(
+                    key: .showClock,
+                    value: true
+                )
+            ],
+            speed: .glacial)
+        #expect(coordinator.prefsState == expected)
+    }
+
     @Test("receive showRules: pauses the stopwatch, tells coordinator")
     func showRules() async {
         await subject.receive(.showRules)
@@ -2190,5 +2244,22 @@ private struct GameProcessorTests {
             timeTaken: 0,
             codes: ["yoho"]
         ))
+    }
+
+    @Test("prefChanged: saves the pref into state and presents state, saves the pref into persistence")
+    func prefChanged() async {
+        await subject.prefChanged(.automoveToFoundations, value: false)
+        #expect(subject.state[.automoveToFoundations] == false)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(persistence.methodsCalled == ["savePref(_:)"])
+        #expect(persistence.prefsSet == [.automoveToFoundations: false])
+    }
+
+    @Test("speedChanged: saves the speed into state, saves the speed into persistence")
+    func speedChanged() async {
+        await subject.speedChanged(index: 2) // glacial
+        #expect(subject.state.animationSpeed == .glacial)
+        #expect(persistence.methodsCalled == ["saveAnimationSpeed(_:)"])
+        #expect(persistence.speedSet == .glacial)
     }
 }

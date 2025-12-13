@@ -57,10 +57,17 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
                 await processor?.receive(.showImportExport)
             }
         }
-        let prefsAction = UIAction(
-            title: "Settings",
+        let prefsAction = MyUIAction(
+            myTitle: "Settings",
             image: UIImage(systemName: "gear")
-        ) { _ in }
+        ) { [weak processor] _ in
+            Task {
+                try? await unlessTesting {
+                    try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
+                }
+                await processor?.receive(.showPrefs)
+            }
+        }
         return UIMenu(title: "", children: [
             rulesAction,
             tapTapAction,

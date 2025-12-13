@@ -154,6 +154,15 @@ final class GameProcessor: Processor {
         case .showMicrosoft(let wrapper):
             await stopwatch.pause()
             coordinator?.showMicrosoft(wrapper)
+        case .showPrefs:
+            await stopwatch.pause()
+            // gather up prefs from state _in order_
+            var prefs = [Pref]()
+            for key in PrefKey.allCases {
+                prefs.append(Pref(key: key, value: state[key]))
+            }
+            // send prefs together with speed to Prefs module via coordinator
+            coordinator?.showPrefs(PrefsState(prefs: prefs, speed: state.animationSpeed))
         case .showRules:
             await stopwatch.pause()
             coordinator?.showHelp(.rules)
@@ -712,5 +721,19 @@ extension GameProcessor: MicrosoftDelegate {
         var newLayout = Layout()
         newLayout.deal(microsoftDealNumber: dealNumber)
         await replaceGame(initialLayout: newLayout, timeTaken: 0)
+    }
+}
+
+extension GameProcessor: PrefsDelegate {
+    func prefChanged(_ prefKey: PrefKey, value: Bool) async {
+        state[prefKey] = value
+        await presenter?.present(state)
+        services.persistence.savePref(Pref(key: prefKey, value: value))
+    }
+
+    func speedChanged(index: Int) async {
+        let speed = GameState.AnimationSpeed.allCases[index]
+        state.animationSpeed = speed
+        services.persistence.saveAnimationSpeed(speed)
     }
 }

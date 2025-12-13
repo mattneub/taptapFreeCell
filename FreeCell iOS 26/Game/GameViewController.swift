@@ -58,7 +58,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Game"
+        navigationItem.title = nil
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "Game")
 
         let dealButton = UIBarButtonItem(
@@ -104,8 +104,6 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             ]
         )
         navigationItem.rightBarButtonItems = [redoButton, undoButton]
-
-        navigationItem.titleView = timerGlass
 
         let imageView = UIImageView().applying {
             $0.image = UIImage(named: "wallpaper.jpg")
@@ -162,7 +160,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     }
 
     func present(_ state: GameState) async {
-        // reflect layout into card views, skipping card views that do not change
+        // reflect layout into card views, skipping card views that do not change...
         for index in foundations.indices {
             if foundations[index].cards != state.layout.foundations[index].cards {
                 foundations[index].cards = state.layout.foundations[index].cards
@@ -175,8 +173,8 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                 await freeCells[index].redraw()
             }
         }
-        for index in columns.indices {
-            if columns[index].cards != state.layout.columns[index].cards {
+        for index in columns.indices { // ... but ok and necessary to refresh if not showing, e.g. user is changing a pref
+            if columns[index].cards != state.layout.columns[index].cards || view.window == nil {
                 columns[index].cards = state.layout.columns[index].cards
                 let movableCount = if state[.showSequences] {
                     state.layout.columns[index].maxMovableSequence.count
@@ -202,6 +200,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                 group[location.index].setEnablement(enablement)
             }
         }
+        navigationItem.titleView = state[.showClock] ? timerGlass : nil
     }
 
     func receive(_ effect: GameEffect) async {

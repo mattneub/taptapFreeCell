@@ -73,6 +73,25 @@ enum PrefKey: String, Hashable, CaseIterable {
             true
         }
     }
+
+    /// The value that is our subordinate. If we become false, it must become false.
+    var hasSubordinate: PrefKey? {
+        switch self {
+        case .sequenceMoves: .supermoves
+        case .automoveToFoundations: .earlyEndgame
+        default: nil
+        }
+    }
+
+    /// The value to which we are subordinate (inverse of the preceding). If we become true,
+    /// it must become true.
+    var isSubordinateTo: PrefKey? {
+        switch self {
+        case .supermoves: .sequenceMoves
+        case .earlyEndgame: .automoveToFoundations
+        default: nil
+        }
+    }
 }
 
 struct SavedGame: Codable, Equatable {

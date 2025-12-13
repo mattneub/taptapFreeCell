@@ -13,7 +13,7 @@ protocol RootCoordinatorType: AnyObject {
     func showImportExport()
     func dismiss() async
     func showMicrosoft(_: SourceItemWrapper)
-    func showPrefs()
+    func showPrefs(_: PrefsState)
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -25,7 +25,7 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
     var helpProcessor: (any Processor<HelpAction, HelpState, HelpEffect>)?
     var exportProcessor: (any Processor<ExportAction, ExportState, Void>)?
     var microsoftProcessor: (any Processor<MicrosoftAction, MicrosoftState, Void>)?
-    var prefsProcessor: (any Processor<PrefsAction, PrefsState, Void>)?
+    var prefsProcessor: (any Processor<PrefsAction, PrefsState, PrefsEffect>)?
 
     func createInterface(window: UIWindow) {
         let processor = GameProcessor()
@@ -141,12 +141,14 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         rootViewController?.present(viewController, animated: unlessTesting(true))
     }
 
-    func showPrefs() {
+    func showPrefs(_ prefsState: PrefsState) {
         let processor = PrefsProcessor()
         self.prefsProcessor = processor
         let viewController = PrefsViewController()
         processor.presenter = viewController
         processor.coordinator = self
+        processor.delegate = gameProcessor as? any PrefsDelegate
+        processor.state = prefsState
         viewController.processor = processor
         (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
     }

@@ -67,6 +67,9 @@ private struct GameViewMenuBuilderTests {
             let action = try #require(result.children[5] as? UIAction)
             #expect(action.title == "Settings")
             #expect(action.image == UIImage(systemName: "gear"))
+            (action as? MyUIAction)?.handler?(action)
+            await #while(processor.thingsReceived.isEmpty)
+            #expect(processor.thingsReceived == [.showPrefs])
         }
     }
 

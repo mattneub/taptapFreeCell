@@ -57,11 +57,11 @@ struct GameState: Equatable {
         case normal
     }
 
-    enum AnimationSpeed: Double {
+    enum AnimationSpeed: Double, CaseIterable { // order matters! index == segment index
         case fast = 0.1
+        case slow = 0.3
         case glacial = 0.5
         case noAnimation = 0.0
-        case slow = 0.3
     }
 
     enum GameProgress {
