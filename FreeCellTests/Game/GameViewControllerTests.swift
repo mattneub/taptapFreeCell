@@ -26,25 +26,34 @@ private struct GameViewControllerTests {
     }
 
     @Test("timerLabel is correctly constructed")
-    func timerLabel() {
+    func timerLabel() throws {
         let label = subject.timerLabel
         #expect(label.text == "00:00:00")
         #expect(label.font == UIFont(name: "ArialRoundedMTBold", size: 16))
         #expect(label.textAlignment == .center)
         #expect(label.translatesAutoresizingMaskIntoConstraints == false)
+        #expect(label.constraints.count == 2)
+        let width = try #require(label.constraints.first(where: { $0.firstAttribute == .width }))
+        #expect(width.constant == 90)
+        let height = try #require(label.constraints.first(where: { $0.firstAttribute == .height }))
+        #expect(height.constant == 44)
     }
 
     @Test("timerGlass is correctly constructed")
     func timerGlass() {
         let glass = subject.timerGlass
+        #expect(glass.translatesAutoresizingMaskIntoConstraints == false)
         #expect(glass.cornerConfiguration == .capsule())
-        #expect(glass.bounds.size.width == 82)
-        #expect(glass.bounds.size.height == 44)
         let label = subject.timerLabel
         #expect(label.isDescendant(of: glass))
+        let viewController = UIViewController()
+        makeWindow(viewController: viewController)
+        viewController.view.addSubview(glass)
         glass.layoutIfNeeded()
-        #expect(label.frame.midX.rounded() == glass.bounds.midX)
-        #expect(label.frame.midY.rounded() == glass.bounds.midY)
+        #expect(glass.bounds.size.width == 90)
+        #expect(glass.bounds.size.height == 44)
+        #expect(label.bounds.size.width == 90)
+        #expect(label.bounds.size.height == 44)
     }
 
     @Test("viewDidLoad: configures bar button items, adds image view, tap gesture recognizers")
@@ -175,8 +184,6 @@ private struct GameViewControllerTests {
         #expect(allCards.allSatisfy { $0.cards.isEmpty })
         await #while(!(allCards.allSatisfy { $0.processor === processor }))
         #expect(allCards.allSatisfy { $0.processor === processor })
-        #expect(allCards.allSatisfy { $0.methodsCalled == ["redraw(movableCount:)"] })
-        #expect(allCards.allSatisfy { $0.movableCount == 0 })
     }
 
     @Test("viewDidAppear: attaches long press gesture recognizer to left bar button item view")
@@ -307,7 +314,7 @@ private struct GameViewControllerTests {
         var state = GameState()
         state.enablements = state.baseEnablements
         await subject.present(state)
-        #expect(allCards.allSatisfy { $0.methodsCalled == ["setEnablement(_:)"] })
+        #expect(allCards.allSatisfy { $0.methodsCalled.last == "setEnablement(_:)" })
         #expect(allCards.allSatisfy { $0.enablement == .normal })
     }
 
@@ -418,7 +425,7 @@ private struct GameViewControllerTests {
         await subject.receive(.animate([move], duration: 0.05))
         let destination = try #require(subject.foundations[0] as? MockCardView)
         #expect(destination.methodsCalled == [
-            "hideCard(at:)", "hideBorder()", "redraw(movableCount:)", "showCards()", "showBorder()"
+            "hideCard(at:)", "hideBorder()", "showCards()", "showBorder()"
         ])
         #expect(destination.hideCardIndex == 2)
         // that's really all we can test; by the time we return from `await`, the fake card layers
@@ -608,5 +615,56 @@ private struct GameViewControllerTests {
         subject.loadViewIfNeeded()
         await subject.receive(.updateStopwatch(1))
         #expect(subject.timerLabel.text == "00:00:01")
+    }
+
+    @Test("viewWillTransition: basically just like viewDidLayoutSubviews, with resized action at end")
+    func viewWillTransition() async throws {
+        sizer.sizeToReturn = CGSize(width: 50, height: 100)
+        subject.view.bounds.size.width = 400
+        subject.viewWillLayoutSubviews()
+        await #while(processor.thingsReceived.isEmpty)
+        let cardView = subject.foundations[0]
+        subject.view.addSubview(cardView)
+        let viewController = UIViewController()
+        makeWindow(viewController: viewController)
+        let presentedViewController = MyViewController()
+        // sneaky trick to allow us to call `viewWillTransition`
+        presentedViewController.operation = { coordinator in
+            subject.viewWillTransition(to: CGSize(width: 400, height: 400), with: coordinator)
+        }
+        processor.thingsReceived = []
+        sizer.methodsCalled = []
+        sizer.boardWidth = nil
+        constructor.methodsCalled = []
+        constructor.view = nil
+        // okay, that was prep, this is the test!
+        viewController.present(presentedViewController, animated: false)
+        // and our view controller calls `subject.viewWillTransition` which is what we want to test!
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(sizer.methodsCalled == ["cardSize(boardWidth:)"])
+        #expect(sizer.boardWidth == 400)
+        #expect(CardView.baseSize == CGSize(width: 50, height: 100))
+        #expect(constructor.methodsCalled == ["constructInterface(in:)"])
+        #expect(constructor.view === subject.view)
+        #expect(cardView.superview == nil) // i.e., all pre-existing card views were removed
+        let foundation = try #require(subject.foundations.first)
+        #expect(foundation.location.category == .foundation)
+        let freeCell = try #require(subject.freeCells.first)
+        #expect(freeCell.location.category == .freeCell)
+        let column = try #require(subject.columns.first)
+        #expect(column.location.category == .column)
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.resized])
+    }
+}
+
+/// Sneaky trick to give us a workable transition coordinator.
+private final class MyViewController: UIViewController {
+    var operation: ((any UIViewControllerTransitionCoordinator) -> Void)?
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        if let operation, let transitionCoordinator {
+            operation(transitionCoordinator)
+        }
     }
 }

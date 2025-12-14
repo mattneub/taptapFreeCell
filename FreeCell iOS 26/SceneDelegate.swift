@@ -13,6 +13,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = scene as? UIWindowScene else {
             return
         }
+        scene.sizeRestrictions?.minimumSize.width = 500
         unlessTesting {
             bootstrap(scene: scene)
         }

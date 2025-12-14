@@ -103,10 +103,12 @@ final class GameProcessor: Processor {
                 } else {
                     state.gameProgress = .dealtWaitingForFirstMove
                 }
-                await ensureNeutralState()
                 await stopwatch.reset(to: game.timeTaken)
                 // the stopwatch is now _stopped_ at the loaded time
+            } else {
+                await stopwatch.reset(to: 0)
             }
+            await ensureNeutralState() // initial state presentation
             await services.stats.loadStats() // actor, interface not blocked
             logger.log("stats loaded")
         case .hint:
@@ -115,7 +117,7 @@ final class GameProcessor: Processor {
             await presenter?.present(state)
             await checkStopwatch()
         case .longPress(let location, let internalIndex):
-            await ensureNeutralState() // TODO: okay?
+            await ensureNeutralState()
             let card = state.layout.card(at: location, internalIndex: internalIndex)
             let allCards = state.layout.allLocationsAndCards()
             let allCardsFiltered = allCards.filter { $0.card.rank == card?.rank }
@@ -145,6 +147,8 @@ final class GameProcessor: Processor {
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkStopwatch()
+        case .resized:
+            await ensureNeutralState()
         case .showHelp:
             await stopwatch.pause()
             coordinator?.showHelp(.help)

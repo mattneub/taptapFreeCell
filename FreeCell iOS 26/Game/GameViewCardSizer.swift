@@ -7,6 +7,7 @@ protocol GameViewCardSizerType {
 /// Helper object that computes the size a card view should be, based on the game board width.
 struct GameViewCardSizer: GameViewCardSizerType {
     func cardSize(boardWidth: CGFloat) -> CGSize {
+        let boardWidth = min(boardWidth, MAXWIDTH)
         // how big should a card be?
         // start by assuming that if the board were 320 points wide, the intercolumn space would be 1
         // so scale that intercolumn space for what the board width _really_ is

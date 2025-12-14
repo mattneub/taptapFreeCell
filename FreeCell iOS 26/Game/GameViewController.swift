@@ -44,16 +44,23 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         $0.font = UIFont(name: "ArialRoundedMTBold", size: 16)
         $0.textAlignment = .center
         $0.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            $0.widthAnchor.constraint(equalToConstant: 90),
+            $0.heightAnchor.constraint(equalToConstant: 44),
+        ])
     }
 
     /// Glass wrapper containing the timer label.
     lazy var timerGlass = UIVisualEffectView(effect: UIGlassEffect(style: .regular)).applying {
         $0.cornerConfiguration = .capsule()
+        $0.translatesAutoresizingMaskIntoConstraints = false
         $0.contentView.addSubview(timerLabel)
-        $0.bounds.size.width = 82
-        $0.bounds.size.height = 44
-        timerLabel.centerXAnchor.constraint(equalTo: $0.contentView.centerXAnchor).activate()
-        timerLabel.centerYAnchor.constraint(equalTo: $0.contentView.centerYAnchor).activate()
+        NSLayoutConstraint.activate([
+            timerLabel.leadingAnchor.constraint(equalTo: $0.leadingAnchor),
+            timerLabel.topAnchor.constraint(equalTo: $0.topAnchor),
+            timerLabel.centerXAnchor.constraint(equalTo: $0.contentView.centerXAnchor),
+            timerLabel.centerYAnchor.constraint(equalTo: $0.contentView.centerYAnchor),
+        ])
     }
 
     override func viewDidLoad() {
@@ -71,8 +78,6 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             image: UIImage(systemName: "ellipsis"),
             menu: gameViewMenuBuilder?.buildMenu(processor: processor)
         )
-        navigationItem.leftBarButtonItems = [dealButton, menuButton]
-
         let undoButton = UIBarButtonItem(
             title: nil,
             image: UIImage(systemName: "arrow.uturn.backward"),
@@ -103,6 +108,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                 ) { [weak self] _ in self?.doRedoAll() }
             ]
         )
+        navigationItem.leftBarButtonItems = [dealButton, menuButton]
         navigationItem.rightBarButtonItems = [redoButton, undoButton]
 
         let imageView = UIImageView().applying {
@@ -136,12 +142,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             freeCells = cardViews[1]
             columns = cardViews[2]
         }
+        for cardView in foundations + freeCells + columns {
+            cardView.processor = self.processor
+        }
         Task {
-            for cardView in foundations + freeCells + columns {
-                cardView.processor = self.processor
-                await cardView.redraw()
-            }
-            await processor?.receive(.didInitialLayout)
+            await processor?.receive(.didInitialLayout) // request presentation
         }
     }
 
@@ -182,6 +187,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
                     0
                 }
                 await columns[index].redraw(movableCount: movableCount)
+            }
+        }
+        for card in (foundations + freeCells + columns) { // ensure _some_ redraw on first `present`
+            if !card.drawn {
+                await card.redraw()
             }
         }
         if state.highlightOn, let location = state.firstTapLocation {
@@ -510,5 +520,28 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             $0.layer.removeFromSuperlayer()
         }
         navigationController?.view.isUserInteractionEnabled = true
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
+        print(size)
+        super.viewWillTransition(to: size, with: coordinator)
+        (foundations + freeCells + columns).forEach {
+            $0.removeFromSuperview()
+        }
+        coordinator.animate { [self] context in // wait until size change has finished, then layout
+            // (and indeed, this is almost a repetition of `didLayoutSubviews`)
+            CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: size.width) ?? .zero
+            if let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view) {
+                foundations = cardViews[0]
+                freeCells = cardViews[1]
+                columns = cardViews[2]
+            }
+            for cardView in foundations + freeCells + columns {
+                cardView.processor = self.processor
+            }
+            Task {
+                await processor?.receive(.resized) // request presentation
+            }
+        }
     }
 }

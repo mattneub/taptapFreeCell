@@ -9,6 +9,7 @@ enum GameAction: Equatable {
     case longPressEnded
     case redo
     case redoAll
+    case resized
     case showHelp
     case showImportExport
     case showMicrosoft(SourceItemWrapper)

@@ -144,6 +144,15 @@ private struct CardViewTests {
         #expect(border.cornerRadius == 4)
     }
 
+    @Test("redraw: sets drawn to true")
+    func redrawnDrawn() async {
+        let subject = CardView(location: Location(category: .column, index: 0))
+        CardView.baseSize = CGSize(width: 100, height: 200)
+        subject.drawn = false
+        await subject.redraw()
+        #expect(subject.drawn == true)
+    }
+
     @Test("setEnablement: sets alpha as expected")
     func enablement() {
         do {

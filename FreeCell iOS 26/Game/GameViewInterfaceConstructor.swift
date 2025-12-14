@@ -7,6 +7,7 @@ protocol GameViewInterfaceConstructorType {
 /// Helper object that builds the interface by laying out card views.
 struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
     func constructInterface(in view: UIView) -> [[CardView]] {
+        let margin: CGFloat = max(16, (view.bounds.width - MAXWIDTH) / 2)
         // foundations
         let foundation1 = CardView(location: Location(category: .foundation, index: 3)).applying {
             view.addSubview($0)
@@ -16,7 +17,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
             $0.heightConstraint.activate()
         }
         foundation1.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16).activate()
-        foundation1.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).activate()
+        foundation1.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -margin).activate()
         let foundation2 = CardView(location: Location(category: .foundation, index: 2)).applying {
             view.addSubview($0)
             $0.widthConstraint.constant = CardView.baseSize.width
@@ -53,7 +54,7 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
             $0.heightConstraint.activate()
         }
         freecell1.topAnchor.constraint(equalTo: foundation1.bottomAnchor, constant: 8).activate()
-        freecell1.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).activate()
+        freecell1.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: margin).activate()
         let freecell2 = CardView(location: Location(category: .freeCell, index: 1)).applying {
             view.addSubview($0)
             $0.widthConstraint.constant = CardView.baseSize.width
@@ -88,8 +89,8 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
             $0.distribution = .equalSpacing
             view.addSubview($0)
         }
-        stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).activate()
-        stackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).activate()
+        stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: margin).activate()
+        stackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -margin).activate()
         stackView.topAnchor.constraint(equalTo: freecell1.bottomAnchor, constant: 8).activate()
         for index in 0..<8 {
             let column = CardView(location: Location(category: .column, index: index)).applying {

@@ -7,6 +7,9 @@ var services = Services()
 
 let logger = Logger(subsystem: "freecell", category: "debugging")
 
+/// Maximum width for our layout, no matter how wide the window/view may be.
+let MAXWIDTH: CGFloat = 700
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 

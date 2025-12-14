@@ -20,6 +20,10 @@ class CardView: UIView {
     /// so that we can easily remove them all when showing same-ranked cards is over.
     var tintLayers = [CALayer]()
 
+    /// Whether this card view has ever received its initial `redraw` command, so that we can
+    /// ensure that they all _do_ get drawn when they first appear.
+    var drawn = false
+
     static var baseSize: CGSize = .zero // will be set when view controller knows view size
     static let cardLayerBorder: CGFloat = 2
     static let cardLayerInset = UIEdgeInsets(
@@ -66,6 +70,7 @@ class CardView: UIView {
     }
 
     func redraw(movableCount: Int = 0) async {
+        drawn = true
         layer.sublayers = nil
         self.layer.addSublayer(emptyLayer)
         if cards.isEmpty {

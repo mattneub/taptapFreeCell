@@ -216,12 +216,18 @@ private struct GameProcessorTests {
         #expect(stopwatch.resetTimeInterval == 0)
     }
 
-    @Test("receive didInitialLayout: sets up the lifetime listener task, tells stats to load stats")
+    @Test("receive didInitialLayout: sets up the lifetime listener task, resets stopwatch to zero, presents neutral state, tells stats to load stats")
     func didInitialLayout() async {
         #expect(subject.listenForEventTask == nil)
+        subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
         await subject.receive(.didInitialLayout)
         await #while(subject.listenForEventTask == nil)
         #expect(subject.listenForEventTask != nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0)
         #expect(stats.methodsCalled == ["loadStats()"])
         subject.listenForEventTask?.cancel()
     }
@@ -229,6 +235,8 @@ private struct GameProcessorTests {
     @Test("receive didInitialLayout: setting the lifetime's becomeActive calls the stopwatch resumeIfPaused")
     func didInitialLayoutBecomeActive() async {
         await subject.receive(.didInitialLayout)
+        await #while(stopwatch.methodsCalled.isEmpty)
+        stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
         Task {
             lifetime.event = .becomeActive
@@ -241,6 +249,8 @@ private struct GameProcessorTests {
     @Test("receive didInitialLayout: setting the lifetime's resignActive calls the stopwatch pause")
     func didInitialLayoutResignActive() async {
         await subject.receive(.didInitialLayout)
+        await #while(stopwatch.methodsCalled.isEmpty)
+        stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
         Task {
             lifetime.event = .resignActive
@@ -465,6 +475,15 @@ private struct GameProcessorTests {
             #expect(animator.speed == subject.state.animationSpeed)
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
+    }
+
+    @Test("receive resized: does a neutral presentation")
+    func resized() async {
+        subject.state.firstTapLocation = Location(category: .freeCell, index: 0)
+        await subject.receive(.resized)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(presenter.statesPresented == [subject.state])
     }
 
     @Test("receive showHelp: pauses the stopwatch, tells coordinator")

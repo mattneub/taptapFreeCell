@@ -11,6 +11,7 @@ final class MockCardView: CardView {
     override func redraw(movableCount: Int = 0) async {
         methodsCalled.append(#function)
         self.movableCount = movableCount
+        self.drawn = true // just like what real card view does, so test results make sense
     }
 
     override func setEnablement(_ enablement: GameState.Enablement) {
