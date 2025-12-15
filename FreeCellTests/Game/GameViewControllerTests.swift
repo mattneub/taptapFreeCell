@@ -292,9 +292,13 @@ private struct GameViewControllerTests {
         #expect(layer.superlayer == nil)
     }
 
-    @Test("present: if highlightOn true, adds and configures highlightLayer")
+    @Test("present: if highlightOn true, adds and configures highlightLayer, applying grow transform")
     func presentHighlightOnTrue() async throws {
-        subject.viewWillLayoutSubviews()
+        subject.view.bounds.size.width = 400
+        subject.gameViewCardSizer = GameViewCardSizer()
+        subject.gameViewInterfaceConstructor = GameViewInterfaceConstructor()
+        makeWindow(viewController: subject)
+        subject.view.layoutIfNeeded()
         await subject.present(
             GameState(
                 prefs: [.growTappedCard: true],
@@ -303,9 +307,8 @@ private struct GameViewControllerTests {
         )
         let layer = try #require(subject.highlightLayer)
         #expect(layer.superlayer === subject.columns[0].layer.superlayer)
-        #expect(layer.frame == subject.columns[0].layer.frame)
+        #expect(layer.frame.integral == subject.columns[0].layer.frame.insetBy(dx: -2, dy: -5).integral)
         #expect(layer.zPosition == 2000)
-        // could check transform etc. but not worth worrying about it
     }
 
     @Test("present: sets card view enablements")

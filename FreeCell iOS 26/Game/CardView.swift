@@ -74,12 +74,14 @@ class CardView: UIView {
         layer.sublayers = nil
         self.layer.addSublayer(emptyLayer)
         if cards.isEmpty {
+            heightConstraint.constant = CardView.baseSize.height
             emptyLayer.isHidden = false
             alpha = 0.5
         } else {
             emptyLayer.isHidden = true
             switch location.category {
             case .freeCell, .foundation:
+                heightConstraint.constant = CardView.baseSize.height
                 // cards go on top of one another in a simple pile
                 for (offset, card) in cards.enumerated() {
                     let cardLayer = await CardLayer(card: card)

@@ -184,6 +184,7 @@ private struct StatsDatasourceTests {
 
     @Test("trailing swipe action 0 removes row from sorted data, updates table, sends delete with key")
     func trailingSwipeDelete() async throws {
+        makeWindow(view: tableView)
         let stats: StatsDictionary = [
             "hey": Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1),
             "ho": Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2),

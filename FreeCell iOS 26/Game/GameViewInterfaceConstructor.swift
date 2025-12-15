@@ -82,16 +82,39 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
         }
         freecell4.topAnchor.constraint(equalTo: freecell1.topAnchor).activate()
         freecell4.leadingAnchor.constraint(equalTo: freecell3.trailingAnchor, constant: 10).activate()
+        let scrollView = UIScrollView().applying {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            $0.showsVerticalScrollIndicator = false
+            $0.showsHorizontalScrollIndicator = false
+            $0.clipsToBounds = true
+            view.addSubview($0)
+        }
+        scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).activate()
+        scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).activate()
+        scrollView.topAnchor.constraint(equalTo: freecell1.bottomAnchor).activate()
+        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).activate()
+        let contentView = UIView().applying {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            $0.clipsToBounds = false
+            scrollView.addSubview($0)
+        }
+        contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor).activate()
+        contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor).activate()
+        contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor).activate()
+        contentView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor).activate()
+        contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor).activate()
+        contentView.heightAnchor.constraint(equalToConstant: 100).activate(priority: 100)
         let stackView = UIStackView().applying {
             $0.translatesAutoresizingMaskIntoConstraints = false
             $0.axis = .horizontal
             $0.alignment = .top
             $0.distribution = .equalSpacing
-            view.addSubview($0)
+            contentView.addSubview($0)
         }
         stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: margin).activate()
         stackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -margin).activate()
-        stackView.topAnchor.constraint(equalTo: freecell1.bottomAnchor, constant: 8).activate()
+        stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8).activate()
+        stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).activate()
         for index in 0..<8 {
             let column = CardView(location: Location(category: .column, index: index)).applying {
                 view.addSubview($0)

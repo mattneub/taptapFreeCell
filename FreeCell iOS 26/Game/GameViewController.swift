@@ -370,7 +370,12 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         if grow { // deliberately do not await this because that delays enablement
             CATransaction.begin()
             CATransaction.setAnimationDuration(0.1)
-            highlightLayer.transform = CATransform3DMakeScale(1.15, 1.15, 1)
+            // transform is by percentage, but I want to specify a max point count
+            let maxHeight = highlightLayer.bounds.size.height + 16
+            let vScale = min(1.15, maxHeight / highlightLayer.bounds.size.height)
+            let maxWidth = highlightLayer.bounds.size.width + 4
+            let hScale = min(1.15, maxWidth / highlightLayer.bounds.size.width)
+            highlightLayer.transform = CATransform3DMakeScale(hScale, vScale, 1)
             CATransaction.commit()
         }
         self.highlightLayer = highlightLayer
@@ -531,9 +536,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     /// into the debounce and just wait to be called back as the debouncer delegate.
     override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
-        (foundations + freeCells + columns).forEach {
-            $0.removeFromSuperview()
-        }
+        view.subviews.filter { !($0 is UIImageView) }.forEach { $0.removeFromSuperview() }
         foundations = []
         freeCells = []
         columns = []
