@@ -9,12 +9,14 @@ private struct GameViewControllerTests {
     let constructor = MockGameViewInterfaceConstructor()
     let builder = MockGameViewMenuBuilder()
     let processor = MockReceiver<GameAction>()
+    let debouncer = MockDebouncer(interval: 0.2, delegate: nil)
 
     init() {
         subject.gameViewCardSizer = sizer
         subject.gameViewInterfaceConstructor = constructor
         subject.gameViewMenuBuilder = builder
         subject.processor = processor
+        subject.debouncer = debouncer
     }
 
     @Test("deckPoint: is correctly defined in terms of view bounds and card size")
@@ -617,10 +619,8 @@ private struct GameViewControllerTests {
         #expect(subject.timerLabel.text == "00:00:01")
     }
 
-    @Test("viewWillTransition: basically just like viewDidLayoutSubviews, with resized action at end")
-    func viewWillTransition() async throws {
-        sizer.sizeToReturn = CGSize(width: 50, height: 100)
-        subject.view.bounds.size.width = 400
+    @Test("viewWillTransition: removes all card views, calls debouncer")
+    func viewWillTransition() async {
         subject.viewWillLayoutSubviews()
         await #while(processor.thingsReceived.isEmpty)
         let cardView = subject.foundations[0]
@@ -632,28 +632,33 @@ private struct GameViewControllerTests {
         presentedViewController.operation = { coordinator in
             subject.viewWillTransition(to: CGSize(width: 400, height: 400), with: coordinator)
         }
-        processor.thingsReceived = []
-        sizer.methodsCalled = []
-        sizer.boardWidth = nil
-        constructor.methodsCalled = []
-        constructor.view = nil
         // okay, that was prep, this is the test!
         viewController.present(presentedViewController, animated: false)
+        await #while(debouncer.methodsCalled.isEmpty)
         // and our view controller calls `subject.viewWillTransition` which is what we want to test!
-        try? await Task.sleep(for: .seconds(0.1))
+        #expect(subject.foundations.isEmpty)
+        #expect(subject.freeCells.isEmpty)
+        #expect(subject.columns.isEmpty)
+        #expect(cardView.superview == nil)
+        #expect(debouncer.methodsCalled == ["eventOccurred()"])
+    }
+
+    @Test("debounced: basically just like viewDidLayoutSubviews, with resized action at end")
+    func debounced() async throws {
+        sizer.sizeToReturn = CGSize(width: 50, height: 100)
+        subject.view.bounds.size.width = 400
+        await subject.debounced()
         #expect(sizer.methodsCalled == ["cardSize(boardWidth:)"])
         #expect(sizer.boardWidth == 400)
         #expect(CardView.baseSize == CGSize(width: 50, height: 100))
         #expect(constructor.methodsCalled == ["constructInterface(in:)"])
         #expect(constructor.view === subject.view)
-        #expect(cardView.superview == nil) // i.e., all pre-existing card views were removed
         let foundation = try #require(subject.foundations.first)
         #expect(foundation.location.category == .foundation)
         let freeCell = try #require(subject.freeCells.first)
         #expect(freeCell.location.category == .freeCell)
         let column = try #require(subject.columns.first)
         #expect(column.location.category == .column)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.resized])
     }
 }

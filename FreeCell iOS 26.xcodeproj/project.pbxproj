@@ -13,6 +13,7 @@
 		3F91C2652EEDB17F0085193D /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C2642EEDB17F0085193D /* Algorithms */; };
 		3F91C2682EEDB2030085193D /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C2672EEDB2030085193D /* SnapshotTesting */; };
 		3F91C26B2EEDB21D0085193D /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C26A2EEDB21D0085193D /* WaitWhile */; };
+		3FD262912EF0543D0094F754 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 3FD262902EF0543D0094F754 /* AsyncAlgorithms */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -193,6 +194,7 @@
 			files = (
 				3F91C2652EEDB17F0085193D /* Algorithms in Frameworks */,
 				3F3604402ECA267400487EF9 /* Confetti.framework in Frameworks */,
+				3FD262912EF0543D0094F754 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -288,6 +290,7 @@
 			name = "FreeCell iOS 26";
 			packageProductDependencies = (
 				3F91C2642EEDB17F0085193D /* Algorithms */,
+				3FD262902EF0543D0094F754 /* AsyncAlgorithms */,
 			);
 			productName = "FreeCell iOS 26";
 			productReference = 3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */;
@@ -354,6 +357,7 @@
 				3F91C2632EEDB17F0085193D /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				3F91C2662EEDB2030085193D /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				3F91C2692EEDB21D0085193D /* XCRemoteSwiftPackageReference "WaitWhile" */,
+				3FD2628F2EF0543D0094F754 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3FB3F2AC2EB8E76C00689661 /* Products */;
@@ -829,6 +833,14 @@
 				kind = branch;
 			};
 		};
+		3FD2628F2EF0543D0094F754 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -846,6 +858,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3F91C2692EEDB21D0085193D /* XCRemoteSwiftPackageReference "WaitWhile" */;
 			productName = WaitWhile;
+		};
+		3FD262902EF0543D0094F754 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FD2628F2EF0543D0094F754 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

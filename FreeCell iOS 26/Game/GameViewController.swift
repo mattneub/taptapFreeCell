@@ -24,6 +24,8 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     var gameViewCardSizer: (any GameViewCardSizerType)? = GameViewCardSizer()
 
+    lazy var debouncer: any DebouncerType = Debouncer(interval: 0.2, delegate: self)
+
     // Confetti
 
     var confetti: ConfettiDropper?
@@ -522,26 +524,39 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         navigationController?.view.isUserInteractionEnabled = true
     }
 
+    /// We have two problem here: if the user resizes "by hand", we get a rapid series of `viewWillTransition`
+    /// calls, and in order to ask the processor for presentation, we need to be async. We solve
+    /// both of these by passing thru a debouncer object; here we simple remove all the card
+    /// views (and no penalty if we try to do this multiple times), and then we send a message
+    /// into the debounce and just wait to be called back as the debouncer delegate.
     override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
-        print(size)
         super.viewWillTransition(to: size, with: coordinator)
         (foundations + freeCells + columns).forEach {
             $0.removeFromSuperview()
         }
-        coordinator.animate { [self] context in // wait until size change has finished, then layout
-            // (and indeed, this is almost a repetition of `didLayoutSubviews`)
-            CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: size.width) ?? .zero
-            if let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view) {
-                foundations = cardViews[0]
-                freeCells = cardViews[1]
-                columns = cardViews[2]
-            }
-            for cardView in foundations + freeCells + columns {
-                cardView.processor = self.processor
-            }
-            Task {
-                await processor?.receive(.resized) // request presentation
-            }
+        foundations = []
+        freeCells = []
+        columns = []
+        debouncer.eventOccurred()
+    }
+}
+
+extension GameViewController: DebouncerDelegate {
+    /// The view has been resized and all card views have been removed. Build the interface,
+    /// much as in `viewDidLayout`.
+    func debounced() async {
+        guard foundations.count == 0 else {
+            return
         }
+        CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: view.bounds.size.width) ?? .zero
+        if let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view) {
+            foundations = cardViews[0]
+            freeCells = cardViews[1]
+            columns = cardViews[2]
+        }
+        for cardView in foundations + freeCells + columns {
+            cardView.processor = self.processor
+        }
+        await processor?.receive(.resized) // request presentation
     }
 }
