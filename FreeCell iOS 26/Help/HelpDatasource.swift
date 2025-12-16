@@ -45,18 +45,22 @@ final class HelpDatasource: NSObject, PageViewControllerDatasourceType {
         switch effect {
         case .goLeft:
             if let pvc {
-                if let viewController = pageViewController(pvc, viewControllerBefore: pvc.children[0]) {
-                    pvc.setViewControllers([viewController], direction: .reverse, animated: true, completion: nil)
+                if let currentViewController = pvc.viewControllers?[0] {
+                    if let viewController = pageViewController(pvc, viewControllerBefore: currentViewController) {
+                        pvc.setViewControllers([viewController], direction: .reverse, animated: true, completion: nil)
+                    }
                 }
             }
         case .goRight:
             if let pvc {
-                if let viewController = pageViewController(pvc, viewControllerAfter: pvc.children[0]) {
-                    pvc.setViewControllers([viewController], direction: .forward, animated: true, completion: nil)
+                if let currentViewController = pvc.viewControllers?[0] {
+                    if let viewController = pageViewController(pvc, viewControllerAfter: currentViewController) {
+                        pvc.setViewControllers([viewController], direction: .forward, animated: true, completion: nil)
+                    }
                 }
             }
         case .navigate(let targetPageName):
-            guard let viewController = pvc?.children[0] as? WebViewViewController else { return }
+            guard let viewController = pvc?.viewControllers?[0] as? WebViewViewController else { return }
             guard let sourceIndex = data.firstIndex(of: viewController.currentPageName) else { return }
             guard let targetIndex = data.firstIndex(of: targetPageName) else { return }
             let direction: UIPageViewController.NavigationDirection = sourceIndex < targetIndex ? .forward : .reverse

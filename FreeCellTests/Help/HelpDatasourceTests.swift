@@ -48,7 +48,8 @@ private struct HelpDatasourceTests {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
         initialViewController.currentPageName = "rules2"
-        pvc.addChild(initialViewController)
+        pvc.setViewControllers([initialViewController], direction: .forward, animated: false)
+        pvc.methodsCalled = []
         await subject.receive(.goLeft)
         let viewController = try #require(pvc.viewController as? MockWebViewViewController)
         #expect(viewController.methodsCalled == ["loadPage(name:)"])
@@ -65,7 +66,9 @@ private struct HelpDatasourceTests {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
         initialViewController.currentPageName = subject.data.first ?? "dummy"
-        pvc.addChild(initialViewController)
+        pvc.setViewControllers([initialViewController], direction: .forward, animated: false)
+        pvc.methodsCalled = []
+        pvc.viewController = nil
         await subject.receive(.goLeft)
         #expect(pvc.viewController == nil)
         #expect(pvc.methodsCalled.isEmpty)
@@ -76,7 +79,8 @@ private struct HelpDatasourceTests {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
         initialViewController.currentPageName = "rules2"
-        pvc.addChild(initialViewController)
+        pvc.setViewControllers([initialViewController], direction: .forward, animated: false)
+        pvc.methodsCalled = []
         await subject.receive(.goRight)
         let viewController = try #require(pvc.viewController as? MockWebViewViewController)
         #expect(viewController.methodsCalled == ["loadPage(name:)"])
@@ -93,7 +97,9 @@ private struct HelpDatasourceTests {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
         initialViewController.currentPageName = subject.data.last ?? "dummy"
-        pvc.addChild(initialViewController)
+        pvc.setViewControllers([initialViewController], direction: .forward, animated: false)
+        pvc.methodsCalled = []
+        pvc.viewController = nil
         await subject.receive(.goRight)
         #expect(pvc.viewController == nil)
         #expect(pvc.methodsCalled.isEmpty)
@@ -104,7 +110,8 @@ private struct HelpDatasourceTests {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
         initialViewController.currentPageName = "rules2"
-        pvc.addChild(initialViewController)
+        pvc.setViewControllers([initialViewController], direction: .forward, animated: false)
+        pvc.methodsCalled = []
         await subject.receive(.navigate(to: "rules"))
         let viewController = try #require(pvc.viewController as? MockWebViewViewController)
         #expect(viewController.methodsCalled == ["loadPage(name:)"])
@@ -121,7 +128,8 @@ private struct HelpDatasourceTests {
         subject.data = HelpState(helpType: .rules).nextPrevsArray
         let initialViewController = MockWebViewViewController()
         initialViewController.currentPageName = "rules2"
-        pvc.addChild(initialViewController)
+        pvc.setViewControllers([initialViewController], direction: .forward, animated: false)
+        pvc.methodsCalled = []
         await subject.receive(.navigate(to: "rules3"))
         let viewController = try #require(pvc.viewController as? MockWebViewViewController)
         #expect(viewController.methodsCalled == ["loadPage(name:)"])
@@ -164,5 +172,6 @@ private final class MockPageViewController: UIPageViewController {
         self.direction = direction
         self.animated = animated
         self.completion = completion
+        super.setViewControllers(viewControllers, direction: direction, animated: animated, completion: completion)
     }
 }
