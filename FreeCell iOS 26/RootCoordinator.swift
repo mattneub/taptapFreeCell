@@ -7,7 +7,7 @@ protocol RootCoordinatorType: AnyObject {
     func showStats()
     func popToGame() async
     func showMail(message: String)
-    func showPreview(stat: Stat) async
+    func showPreview(stat: Stat, source: UIView?) async
     func showHelp(_: HelpState.HelpType)
     func showSafari(url: URL)
     func showImportExport()
@@ -26,6 +26,11 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
     var exportProcessor: (any Processor<ExportAction, ExportState, Void>)?
     var microsoftProcessor: (any Processor<MicrosoftAction, MicrosoftState, Void>)?
     var prefsProcessor: (any Processor<PrefsAction, PrefsState, PrefsEffect>)?
+
+    var oniPad: Bool {
+        guard let traits = rootViewController?.traitCollection else { return false }
+        return traits.userInterfaceIdiom == .pad
+    }
 
     func createInterface(window: UIWindow) {
         let processor = GameProcessor()
@@ -85,9 +90,13 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         }
     }
 
-    func showPreview(stat: Stat) async {
-        if let viewController = await services.previewer.viewController(for: stat) {
-            (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: true)
+    func showPreview(stat: Stat, source: UIView?) async {
+        if let viewController = await services.previewer.viewController(for: stat, source: source) {
+            if source != nil {
+                rootViewController?.present(viewController, animated: true)
+            } else {
+                (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: true)
+            }
         }
     }
 
@@ -99,13 +108,18 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         processor.presenter = viewController
         processor.coordinator = self
         viewController.processor = processor
-        (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
+        if !oniPad {
+            (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
+        } else {
+            let navigationController = UINavigationController(rootViewController: viewController)
+            rootViewController?.present(navigationController, animated: unlessTesting(true))
+        }
     }
 
     func showSafari(url: URL) {
         let viewController = services.safariProvider.provide(for: url)
         viewController.modalPresentationStyle = .overCurrentContext
-        rootViewController?.present(viewController, animated: unlessTesting(true))
+        (rootViewController as? UINavigationController)?.visibleViewController?.present(viewController, animated: unlessTesting(true))
     }
 
     func showImportExport() {
@@ -150,7 +164,12 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         processor.delegate = gameProcessor as? any PrefsDelegate
         processor.state = prefsState
         viewController.processor = processor
-        (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
+        if !oniPad {
+            (rootViewController as? UINavigationController)?.pushViewController(viewController, animated: unlessTesting(true))
+        } else {
+            let navigationController = UINavigationController(rootViewController: viewController)
+            rootViewController?.present(navigationController, animated: unlessTesting(true))
+        }
     }
 }
 

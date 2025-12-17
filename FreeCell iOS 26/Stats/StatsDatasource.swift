@@ -210,8 +210,9 @@ extension StatsDatasource: UITableViewDelegate {
         let previewAction = MyUIContextualAction(myStyle: .normal, title: "View") { [weak self] (action, view, completion) in
             guard let self else { return completion(false) }
             let stat = sortedData[indexPath.row].value
+            let cell = tableView.cellForRow(at: indexPath)
             Task {
-                await processor?.receive(.snapshot(stat: stat))
+                await processor?.receive(.showSnapshot(stat: stat, source: cell))
                 completion(true)
             }
         }

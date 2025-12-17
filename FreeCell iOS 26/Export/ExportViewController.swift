@@ -89,24 +89,24 @@ final class ExportViewController: UIViewController, ReceiverPresenter {
         contentView.addSubview(exportLabel)
         NSLayoutConstraint.activate([
             exportLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
-            exportLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            exportLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            exportLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 16),
+            exportLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -16),
         ])
         contentView.addSubview(cancelButton1)
         NSLayoutConstraint.activate([
             cancelButton1.topAnchor.constraint(equalTo: exportLabel.bottomAnchor, constant: 16),
-            cancelButton1.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            cancelButton1.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 16),
         ])
         contentView.addSubview(exportButton)
         NSLayoutConstraint.activate([
             exportButton.topAnchor.constraint(equalTo: exportLabel.bottomAnchor, constant: 16),
-            exportButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            exportButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -16),
         ])
         contentView.addSubview(importLabel)
         NSLayoutConstraint.activate([
             importLabel.topAnchor.constraint(equalTo: exportLabel.bottomAnchor, constant: 80),
-            importLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            importLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            importLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 16),
+            importLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -16),
         ])
         contentView.addSubview(textView)
         NSLayoutConstraint.activate([
@@ -118,12 +118,12 @@ final class ExportViewController: UIViewController, ReceiverPresenter {
         contentView.addSubview(cancelButton2)
         NSLayoutConstraint.activate([
             cancelButton2.topAnchor.constraint(equalTo: textView.bottomAnchor, constant: 16),
-            cancelButton2.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            cancelButton2.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor, constant: 16),
         ])
         contentView.addSubview(importButton)
         NSLayoutConstraint.activate([
             importButton.topAnchor.constraint(equalTo: textView.bottomAnchor, constant: 16),
-            importButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            importButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -16),
             importButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
         ])
         Task {

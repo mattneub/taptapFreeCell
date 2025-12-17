@@ -11,6 +11,8 @@ final class HelpProcessor: Processor {
 
     func receive(_ action: HelpAction) async {
         switch action {
+        case .dismiss:
+            await coordinator?.dismiss()
         case .goBack:
             if let name = state.undoStack.popLast() {
                 await presenter?.receive(.navigate(to: name))

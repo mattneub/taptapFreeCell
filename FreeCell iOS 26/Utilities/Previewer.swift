@@ -2,15 +2,19 @@ import UIKit
 import QuickLook
 
 protocol PreviewerType {
-    func viewController(for stat: Stat) async -> UIViewController?
+    func viewController(for stat: Stat, source: UIView?) async -> UIViewController?
 }
 
-final class Previewer: PreviewerType {
+final class Previewer: NSObject, PreviewerType {
     var previewImageURL : URL {
         return URL.temporaryDirectory.appendingPathComponent("Deal.png")
     }
 
-    func viewController(for stat: Stat) async -> UIViewController? {
+    /// Here we save off a weak ref to the source view, so we can return it in `transitionViewFor`.
+    weak var source: UIView?
+
+    func viewController(for stat: Stat, source: UIView?) async -> UIViewController? {
+        self.source = source
         let image = await UIImage.snapshot(for: stat)
         try? services.fileManager.removeItem(at: previewImageURL)
         do {
@@ -20,6 +24,7 @@ final class Previewer: PreviewerType {
         }
         let controller = QLPreviewController()
         controller.dataSource = self
+        controller.delegate = self
         return controller
     }
 }
@@ -31,5 +36,14 @@ extension Previewer: QLPreviewControllerDataSource {
 
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> any QLPreviewItem {
         return self.previewImageURL as NSURL
+    }
+}
+
+extension Previewer: QLPreviewControllerDelegate {
+    func previewController(
+        _ controller: QLPreviewController,
+        transitionViewFor item: any QLPreviewItem
+    ) -> UIView? {
+        return source
     }
 }

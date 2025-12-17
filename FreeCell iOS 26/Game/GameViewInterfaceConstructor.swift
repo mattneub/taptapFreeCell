@@ -112,7 +112,8 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
             contentView.addSubview($0)
         }
         stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: margin).activate()
-        stackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -margin).activate()
+        /// Sometimes the runtime chokes on layout, so try reducing this one constraint's priority.
+        stackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -margin).activate(priority: 999)
         stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8).activate()
         stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).activate()
         for index in 0..<8 {

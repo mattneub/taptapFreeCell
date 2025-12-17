@@ -19,6 +19,7 @@ private struct PrefsDatasourceTests {
         #expect(tableView.delegate === subject)
         #expect(tableView.rowHeight == 52)
         #expect(tableView.allowsSelection == false)
+        #expect(tableView.sectionHeaderHeight == 0)
     }
 
     @Test("present: sets data, configures the contents of the datasource")
@@ -96,5 +97,22 @@ private struct PrefsDatasourceTests {
         #expect(subject.speed == .fast)
         config2 = try #require(cell2?.contentConfiguration as? SpeedCellContentConfiguration)
         #expect(config2.speed == .fast)
+    }
+
+    @Test("section header heights are 1 and 46")
+    func sectionHeaderHeights() {
+        #expect(subject.tableView(tableView, heightForHeaderInSection: 0) == 1)
+        #expect(subject.tableView(tableView, heightForHeaderInSection: 1) == 46)
+    }
+
+    @Test("titleForHeaderInSection: is nil and section identifier")
+    func titleForHeader() async {
+        let prefs: [Pref] = [
+            Pref(key: .automoveToFoundations, value: true),
+            Pref(key: .automoveOnFirstTap, value: false)
+        ]
+        await subject.present(PrefsState(prefs: prefs, speed: .glacial))
+        #expect(subject.datasource.tableView(tableView, titleForHeaderInSection: 0) == nil)
+        #expect(subject.datasource.tableView(tableView, titleForHeaderInSection: 1) == "Card Animation Speed")
     }
 }

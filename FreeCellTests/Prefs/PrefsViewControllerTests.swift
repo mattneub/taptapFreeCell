@@ -16,6 +16,7 @@ private struct PrefsViewControllerTests {
     @Test("viewDidLoad: sends initialData")
     func viewDidLoad() async {
         subject.loadViewIfNeeded()
+        #expect(subject.title == "Settings")
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.initialData])
     }

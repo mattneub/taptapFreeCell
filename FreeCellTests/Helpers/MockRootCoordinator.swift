@@ -9,6 +9,7 @@ final class MockRootCoordinator: RootCoordinatorType {
     var buttonTitles = [String]()
     var buttonTitleToReturn: String?
     var stat: Stat?
+    var source: UIView?
     var helpType: HelpState.HelpType?
     var url: URL?
     var wrapper: SourceItemWrapper?
@@ -40,9 +41,10 @@ final class MockRootCoordinator: RootCoordinatorType {
         self.message = message
     }
 
-    func showPreview(stat: Stat) async {
+    func showPreview(stat: Stat, source: UIView?) async {
         methodsCalled.append(#function)
         self.stat = stat
+        self.source = source
     }
 
     func showHelp(_ helpType: HelpState.HelpType) {

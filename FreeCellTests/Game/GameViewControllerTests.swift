@@ -188,6 +188,29 @@ private struct GameViewControllerTests {
         #expect(allCards.allSatisfy { $0.processor === processor })
     }
 
+    @Test("viewIsAppearing: normally does nothing")
+    func viewIsAppearingNormal() throws {
+        sizer.sizeToReturn = CGSize(width: 50, height: 100)
+        subject.view.bounds.size.width = 400
+        subject.viewWillLayoutSubviews()
+        subject.viewIsAppearing(false)
+        let foundation = try #require(subject.foundations.first)
+        #expect(foundation.location.category == .foundation)
+        #expect(debouncer.methodsCalled.isEmpty)
+    }
+
+    @Test("viewIsAppearing: if stored width non-nil and different from view width, empties interface, calls debouncer")
+    func viewIsAppearingSizeChanmged() throws {
+        sizer.sizeToReturn = CGSize(width: 50, height: 100)
+        subject.view.bounds.size.width = 400
+        subject.viewWillLayoutSubviews()
+        subject.lastWidth = 500
+        subject.viewIsAppearing(false)
+        #expect(subject.foundations.isEmpty)
+        #expect(subject.view.subviews.count == 1) // image view
+        #expect(debouncer.methodsCalled == ["eventOccurred()"])
+    }
+
     @Test("viewDidAppear: attaches long press gesture recognizer to left bar button item view")
     func viewDidAppearLongPresser() async throws {
         let window = makeWindow(viewController: UINavigationController(rootViewController: subject))
@@ -201,6 +224,14 @@ private struct GameViewControllerTests {
         let count = leftItemView.gestureRecognizers!.count
         subject.viewDidAppear(false)
         #expect(leftItemView.gestureRecognizers!.count == count) // we don't add twice
+    }
+
+    @Test("viewWillDisappear: writes down current width")
+    func viewWillDisappear() {
+        subject.view.bounds.size.width = 400
+        #expect(subject.lastWidth == nil)
+        subject.viewWillDisappear(false)
+        #expect(subject.lastWidth == 400)
     }
 
     @Test("present: distributes state layout cards into card views, tells them to redraw")

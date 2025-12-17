@@ -32,8 +32,8 @@ final class StatsProcessor: Processor {
                 await coordinator?.popToGame()
                 await delegate?.resume(initialLayout: stat.initialLayout, timeTaken: stat.timeTaken)
             }
-        case .snapshot(let stat):
-            await coordinator?.showPreview(stat: stat)
+        case .showSnapshot(let stat, let source):
+            await coordinator?.showPreview(stat: stat, source: source)
         case .totalChanged(let total, let won):
             await presenter?.receive(.totalChanged(total: total, won: won))
         }

@@ -2,6 +2,7 @@
 import Testing
 import UIKit
 import WaitWhile
+import SnapshotTesting
 
 private struct StatsViewControllerTests {
     let subject = StatsViewController()
@@ -48,7 +49,10 @@ private struct StatsViewControllerTests {
         let view = subject.tableHeaderView
         #expect(subject.sortSegmentedControl.isDescendant(of: view))
         #expect(subject.recordLabel.isDescendant(of: view))
-        // good enough
+        subject.recordLabel.text = "This is not the real text"
+        view.isHidden = false
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 70)
+        assertSnapshot(of: view, as: .image())
     }
 
     @Test("spinner is correctly constructed")
@@ -88,8 +92,8 @@ private struct StatsViewControllerTests {
         viewController.view.addSubview(view)
         viewController.view.layoutIfNeeded()
         #expect(subject.tableView.tableHeaderView?.bounds.height == 60)
-        #expect(subject.sortSegmentedControl.widthForSegment(at: 3) == 62)
-        #expect(subject.sortSegmentedControl.widthForSegment(at: 0) == 112)
+        #expect(subject.sortSegmentedControl.widthForSegment(at: 3) == 50)
+        #expect(subject.sortSegmentedControl.widthForSegment(at: 0).rounded(.down) == 110)
         #expect(subject.sortSegmentedControl.widthForSegment(at: 1) == 0) // automatic
         #expect(subject.sortSegmentedControl.widthForSegment(at: 2) == 0) // automatic
     }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
     <device id="retina4_0" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -17,30 +17,30 @@
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <view contentMode="scaleToFill" id="iN0-l3-epB">
+        <view contentMode="scaleToFill" layoutMarginsFollowReadableWidth="YES" id="iN0-l3-epB">
             <rect key="frame" x="0.0" y="0.0" width="712" height="242"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsLetterSpacingToFitWidth="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YGi-4B-LIp" userLabel="Date Label">
-                    <rect key="frame" x="8" y="8" width="177.5" height="16"/>
+                    <rect key="frame" x="20" y="8" width="171" height="16"/>
                     <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="h1u-9b-5jL" userLabel="Time Label">
-                    <rect key="frame" x="193.5" y="8" width="222.5" height="16"/>
+                    <rect key="frame" x="199" y="8" width="213.5" height="16"/>
                     <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="joQ-wl-AHf" userLabel="Moves Label">
-                    <rect key="frame" x="424" y="8" width="222" height="16"/>
+                    <rect key="frame" x="420.5" y="8" width="213.5" height="16"/>
                     <fontDescription key="fontDescription" name="Georgia" family="Georgia" pointSize="14"/>
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Pux-MK-SSG" userLabel="Won Label">
-                    <rect key="frame" x="654" y="8" width="50" height="16"/>
+                    <rect key="frame" x="642" y="8" width="50" height="16"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="50" id="3lM-Iz-D6m"/>
                     </constraints>
@@ -63,13 +63,13 @@
                 <constraint firstItem="VHC-ih-Kfz" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="8" id="Ghe-qD-PVy"/>
                 <constraint firstItem="Pux-MK-SSG" firstAttribute="leading" secondItem="joQ-wl-AHf" secondAttribute="trailing" constant="8" id="HXG-Aj-nEE"/>
                 <constraint firstItem="h1u-9b-5jL" firstAttribute="width" secondItem="YGi-4B-LIp" secondAttribute="width" multiplier="1.25" id="Ohw-gI-IUQ"/>
-                <constraint firstAttribute="trailing" secondItem="Pux-MK-SSG" secondAttribute="trailing" constant="8" id="QWA-VS-rJr"/>
+                <constraint firstAttribute="trailingMargin" secondItem="Pux-MK-SSG" secondAttribute="trailing" id="QWA-VS-rJr"/>
                 <constraint firstItem="VHC-ih-Kfz" firstAttribute="top" secondItem="YGi-4B-LIp" secondAttribute="bottom" constant="4" id="SzP-tg-32L"/>
                 <constraint firstAttribute="trailing" secondItem="VHC-ih-Kfz" secondAttribute="trailing" constant="8" id="TCZ-pZ-57V"/>
                 <constraint firstItem="h1u-9b-5jL" firstAttribute="bottom" secondItem="YGi-4B-LIp" secondAttribute="bottom" id="Vbu-t4-bJL"/>
                 <constraint firstItem="Pux-MK-SSG" firstAttribute="top" secondItem="joQ-wl-AHf" secondAttribute="top" id="WQl-Pa-pZ1"/>
                 <constraint firstItem="h1u-9b-5jL" firstAttribute="top" secondItem="YGi-4B-LIp" secondAttribute="top" id="aEO-2K-ZBz"/>
-                <constraint firstItem="YGi-4B-LIp" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="8" id="fKk-Q3-U33"/>
+                <constraint firstItem="YGi-4B-LIp" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leadingMargin" id="fKk-Q3-U33"/>
                 <constraint firstItem="Pux-MK-SSG" firstAttribute="bottom" secondItem="joQ-wl-AHf" secondAttribute="bottom" id="ksp-xf-wM4"/>
                 <constraint firstItem="h1u-9b-5jL" firstAttribute="leading" secondItem="YGi-4B-LIp" secondAttribute="trailing" constant="8" id="toV-vX-OcR"/>
                 <constraint firstItem="joQ-wl-AHf" firstAttribute="leading" secondItem="h1u-9b-5jL" secondAttribute="trailing" constant="8" id="ul7-rO-KEm"/>

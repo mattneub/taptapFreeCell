@@ -95,9 +95,25 @@ private struct RootCoordinatorTests {
         let navigationController = UINavigationController(rootViewController: viewController)
         subject.rootViewController = navigationController
         makeWindow(viewController: navigationController)
-        await subject.showPreview(stat: stat)
-        #expect(previewer.methodsCalled == ["viewController(for:)"])
+        await subject.showPreview(stat: stat, source: nil)
+        #expect(previewer.methodsCalled == ["viewController(for:source:)"])
         #expect(navigationController.topViewController === previewer.viewControllerToReturn)
+    }
+
+    @Test("showPreview: with non-nil source calls Previewer to get view controller, presents it")
+    func showPreviewWithSource() async {
+        let stat = Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1)
+        let previewer = MockPreviewer()
+        previewer.viewControllerToReturn = UIViewController()
+        services.previewer = previewer
+        let viewController = UIViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        subject.rootViewController = navigationController
+        makeWindow(viewController: navigationController)
+        let source = UIView()
+        await subject.showPreview(stat: stat, source: source)
+        #expect(previewer.methodsCalled == ["viewController(for:source:)"])
+        #expect(navigationController.presentedViewController === previewer.viewControllerToReturn)
     }
 
     @Test("showHelp: constructs module, pushes it")
@@ -113,6 +129,23 @@ private struct RootCoordinatorTests {
         #expect(navigationController.children.first == viewController)
     }
 
+    @Test("showHelp: on iPad, constructs module, presents it wrapped in navigation controller")
+    func showHelpPad() async throws {
+        let navigationController = UINavigationController()
+        makeWindow(viewController: navigationController)
+        subject.rootViewController = navigationController
+        subject.rootViewController?.traitOverrides.userInterfaceIdiom = .pad
+        subject.showHelp(.help)
+        let processor = try #require(subject.helpProcessor as? HelpProcessor)
+        #expect(processor.coordinator === subject)
+        #expect(processor.state.helpType == .help) // *
+        let viewController = try #require(processor.presenter as? HelpViewController)
+        #expect(viewController.processor === processor)
+        await #while(navigationController.presentedViewController == nil)
+        let presented = try #require(navigationController.presentedViewController as? UINavigationController)
+        #expect(presented.viewControllers.first === viewController)
+    }
+
     @Test("showSafari: asks safari provider for view controller, presents it over current context")
     func showSafari() {
         let provider = MockSafariProvider()
@@ -124,6 +157,25 @@ private struct RootCoordinatorTests {
         subject.showSafari(url: URL(string: "manny")!)
         #expect(provider.methodsCalled == ["provide(for:)"])
         #expect(navigationController.presentedViewController is MockSafariViewController)
+        #expect(navigationController.presentedViewController?.modalPresentationStyle == .overCurrentContext)
+    }
+
+    @Test("showSafari: if there is a presented view controller, asks safari provider for view controller, presents it on presented view controller")
+    func showSafariPad() async {
+        let provider = MockSafariProvider()
+        services.safariProvider = provider
+        let viewController = UIViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        subject.rootViewController = navigationController
+        subject.rootViewController?.traitOverrides.userInterfaceIdiom = .pad
+        makeWindow(viewController: navigationController)
+        subject.rootViewController?.present(UIViewController(), animated: false)
+        await #while(subject.rootViewController?.presentedViewController == nil)
+        subject.showSafari(url: URL(string: "manny")!)
+        #expect(provider.methodsCalled == ["provide(for:)"])
+        await #while(subject.rootViewController?.presentedViewController?.presentedViewController == nil)
+        #expect(navigationController.presentedViewController?.presentedViewController is MockSafariViewController)
+        #expect(navigationController.presentedViewController?.presentedViewController?.modalPresentationStyle == .overCurrentContext)
     }
 
     @Test("showImportExport: constructs the module and presents it")
@@ -190,5 +242,26 @@ private struct RootCoordinatorTests {
         let viewController = try #require(processor.presenter as? PrefsViewController)
         #expect(viewController.processor === processor)
         #expect(navigationController.children.first == viewController)
+    }
+
+    @Test("showPrefs: on iPad, assembles modules, presents it")
+    func showPrefsPad() async throws {
+        let gameProcessor = GameProcessor()
+        subject.gameProcessor = gameProcessor
+        let navigationController = UINavigationController()
+        makeWindow(viewController: navigationController)
+        subject.rootViewController = navigationController
+        subject.rootViewController?.traitOverrides.userInterfaceIdiom = .pad
+        let prefsState = PrefsState(prefs: [Pref(key: .automoveToFoundations, value: true)], speed: .glacial)
+        subject.showPrefs(prefsState)
+        let processor = try #require(subject.prefsProcessor as? PrefsProcessor)
+        #expect(processor.coordinator === subject)
+        #expect(processor.state == prefsState)
+        #expect(processor.delegate === gameProcessor)
+        let viewController = try #require(processor.presenter as? PrefsViewController)
+        #expect(viewController.processor === processor)
+        await #while(navigationController.presentedViewController == nil)
+        let presented = try #require(navigationController.presentedViewController as? UINavigationController)
+        #expect(presented.viewControllers.first === viewController)
     }
 }

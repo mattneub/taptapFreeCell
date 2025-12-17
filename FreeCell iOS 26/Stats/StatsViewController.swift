@@ -38,8 +38,8 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
         $0.addSubview(sortSegmentedControl)
         sortSegmentedControl.topAnchor.constraint(equalTo: recordLabel.bottomAnchor, constant: 4).activate()
         NSLayoutConstraint.activate([
-            $0.leadingAnchor.constraint(equalTo: sortSegmentedControl.leadingAnchor),
-            $0.trailingAnchor.constraint(equalTo: sortSegmentedControl.trailingAnchor),
+            $0.readableContentGuide.leadingAnchor.constraint(equalTo: sortSegmentedControl.leadingAnchor),
+            $0.readableContentGuide.trailingAnchor.constraint(equalTo: sortSegmentedControl.trailingAnchor),
         ])
         $0.bottomAnchor.constraint(equalTo: sortSegmentedControl.bottomAnchor, constant: 4).activate(priority: 999)
         $0.isHidden = true
@@ -89,8 +89,8 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
 
     override func viewWillLayoutSubviews() {
         tableHeaderView.bounds.size.height = 30 + 22 + 4 + 4
-        sortSegmentedControl.setWidth(62, forSegmentAt: 3)
-        sortSegmentedControl.setWidth((view.bounds.width - 62)/3.5 + 4, forSegmentAt: 0)
+        sortSegmentedControl.setWidth(50, forSegmentAt: 3)
+        sortSegmentedControl.setWidth((sortSegmentedControl.bounds.width - 50)/3.5 + 4, forSegmentAt: 0)
         super.viewWillLayoutSubviews()
     }
 

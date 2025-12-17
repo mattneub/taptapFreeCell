@@ -68,12 +68,38 @@ private struct HelpViewControllerTests {
         #expect(processor.thingsReceived == [.initialData])
     }
 
+    @Test("viewWillAppear: if not being presented, does nothing")
+    func viewWillAppearNotPresented() {
+        let navigationController = UINavigationController(rootViewController: subject)
+        makeWindow(viewController: navigationController)
+        subject.loadViewIfNeeded()
+        subject.viewWillAppear(false)
+        #expect(subject.navigationItem.leftBarButtonItems?.count == 1)
+        #expect(subject.navigationItem.leftBarButtonItem?.image == UIImage(systemName: "arrow.uturn.backward"))
+    }
+
+    @Test("viewWillAppear: if being presented, injects cancel left bar button item")
+    func viewWillAppearPresented() {
+        let viewController = UIViewController()
+        makeWindow(viewController: viewController)
+        let navigationController = UINavigationController(rootViewController: subject)
+        viewController.present(navigationController, animated: false)
+        subject.loadViewIfNeeded()
+        subject.viewWillAppear(false)
+        #expect(subject.navigationItem.leftBarButtonItems?.count == 3)
+        #expect(subject.navigationItem.leftBarButtonItems?[2].image == UIImage(systemName: "arrow.uturn.backward"))
+        #expect(subject.navigationItem.leftBarButtonItems?[1] == UIBarButtonItem.fixedSpace())
+        #expect(subject.navigationItem.leftBarButtonItems?[0].target === subject)
+        #expect(subject.navigationItem.leftBarButtonItems?[0].action == #selector(subject.doCancel))
+    }
+
     @Test("viewDidAppear: turns off nav controller interactive pop gestures")
     func viewDidAppear() {
         let navigationController = UINavigationController(rootViewController: subject)
         subject.viewDidAppear(false)
         #expect(navigationController.interactivePopGestureRecognizer?.isEnabled == false)
         #expect(navigationController.interactiveContentPopGestureRecognizer?.isEnabled == false)
+        #expect(navigationController.isModalInPresentation == true)
     }
 
     @Test("viewWillDisappear: turns on nav controller interactive pop gestures")
@@ -129,6 +155,13 @@ private struct HelpViewControllerTests {
         subject.goBack()
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.goBack])
+    }
+
+    @Test("doCancel: sends .dismiss to processor")
+    func cancel() async {
+        subject.doCancel()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.dismiss])
     }
 }
 

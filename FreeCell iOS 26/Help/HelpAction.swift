@@ -1,6 +1,7 @@
 import Foundation
 
 enum HelpAction: Equatable {
+    case dismiss
     case goBack
     case goLeft
     case goRight

@@ -27,8 +27,14 @@ extension UIImage {
             await cardView.redraw()
         }
         let renderer = UIGraphicsImageRenderer(size: view.bounds.size)
-        return renderer.image { context in
+        let result = renderer.image { context in
             view.layer.render(in: context.cgContext)
+        }
+        // scale down
+        let scale = 300.0 / view.bounds.size.width
+        let newSize = CGSize(width: view.bounds.width * scale, height: view.bounds.height * scale)
+        return UIGraphicsImageRenderer(size: newSize).image { _ in
+            result.draw(in: CGRect(origin: .zero, size: newSize))
         }
     }
 }

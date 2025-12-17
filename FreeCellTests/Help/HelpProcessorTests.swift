@@ -13,6 +13,12 @@ private struct HelpProcessorTests {
         subject.presenter = presenter
     }
 
+    @Test("receive dismiss: calls coordinator dismiss")
+    func dismiss() async {
+        await subject.receive(.dismiss)
+        #expect(coordinator.methodsCalled == ["dismiss()"])
+    }
+
     @Test("receive goBack: pops the last off the undo stack and sends .navigate with it, presents")
     func goBack() async {
         subject.state.undoStack = ["manny", "moe", "jack"]

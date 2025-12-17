@@ -40,6 +40,10 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         CGPoint(x: view.bounds.midX, y: -(CardView.baseSize.height))
     }
 
+    /// Scratchpad where we note down our width when we disappear, in case it has changed
+    /// when we reappear (and so we will need to refresh our layout).
+    var lastWidth: CGFloat?
+
     /// Label that shows the elapsed time of the game.
     lazy var timerLabel = UILabel().applying {
         $0.text = "00:00:00"
@@ -152,6 +156,13 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        if let lastWidth, lastWidth != view.bounds.width {
+            regenerateLayout()
+        }
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // attach long press option to deal button, https://stackoverflow.com/a/61006024/341994
@@ -164,6 +175,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
         let gestureRecognizer = MyLongPressGestureRecognizer(target: self, action: #selector(doMicrosoftDeal))
         view.addGestureRecognizer(gestureRecognizer)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.lastWidth = view.bounds.width
     }
 
     func present(_ state: GameState) async {
@@ -529,13 +545,22 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         navigationController?.view.isUserInteractionEnabled = true
     }
 
-    /// We have two problem here: if the user resizes "by hand", we get a rapid series of `viewWillTransition`
-    /// calls, and in order to ask the processor for presentation, we need to be async. We solve
-    /// both of these by passing thru a debouncer object; here we simple remove all the card
-    /// views (and no penalty if we try to do this multiple times), and then we send a message
-    /// into the debounce and just wait to be called back as the debouncer delegate.
     override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
+        regenerateLayout()
+    }
+
+    /// Called by `viewWillTransition` and by `viewIsAppearing` if the size changed while we
+    /// were offscreen: remove the existing interface and request a new one.
+    ///
+    /// We have two problems here: if the user resizes "by hand", we get many `viewWillTransition`
+    /// calls; and, in order to ask the processor for presentation, we need to be async. We solve
+    /// both of these by passing thru a debouncer object; here, we simply remove the whole interface
+    /// (and no penalty if we try to do this multiple times), and then we send a message
+    /// into the debouncer and just wait to be called back as the debouncer delegate to reconstruct
+    /// the interface.
+    func regenerateLayout() {
+        (foundations + freeCells + columns).forEach { $0.removeFromSuperview() }
         view.subviews.filter { !($0 is UIImageView) }.forEach { $0.removeFromSuperview() }
         foundations = []
         freeCells = []

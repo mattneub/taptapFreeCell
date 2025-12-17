@@ -1,6 +1,6 @@
 @testable import TTFreeCell
 import Testing
-import Foundation
+import UIKit
 
 private struct StatsProcessorTests {
     let subject = StatsProcessor()
@@ -95,12 +95,14 @@ private struct StatsProcessorTests {
         #expect(delegate.timeTaken == 2)
     }
 
-    @Test("receive snapshot: calls coordinator preview")
+    @Test("receive showSnapshot: calls coordinator preview")
     func snapshot() async {
+        let cell = UITableViewCell()
         let stat = Stat(dateFinished: Date(timeIntervalSince1970: 2), won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1)
-        await subject.receive(.snapshot(stat: stat))
-        #expect(coordinator.methodsCalled == ["showPreview(stat:)"])
+        await subject.receive(.showSnapshot(stat: stat, source: cell))
+        #expect(coordinator.methodsCalled == ["showPreview(stat:source:)"])
         #expect(coordinator.stat == stat)
+        #expect(coordinator.source === cell)
     }
 
     @Test("receive totalChanged sends totalChanged")

@@ -34,6 +34,7 @@ final class PrefsDatasource: NSObject, PrefsDatasourceType {
         tableView.delegate = self
         tableView.rowHeight = 52
         tableView.allowsSelection = false
+        tableView.sectionHeaderHeight = 0 // trust me on this one
     }
 
     func present(_ state: PrefsState) async {
@@ -131,6 +132,14 @@ final class PrefsDatasource: NSObject, PrefsDatasourceType {
             if let cell = tableView?.cellForRow(at: indexPath) {
                 cell.contentConfiguration = SpeedCellContentConfiguration(speed: speed)
             }
+        }
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return switch section {
+        case 0: 1 // cannot say 0 without reverting to tall default height
+        case 1: 46
+        default: 1
         }
     }
 }

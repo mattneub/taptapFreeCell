@@ -15,6 +15,7 @@ final class PrefsViewController: UITableViewController, ReceiverPresenter {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Settings"
         Task {
             await processor?.receive(.initialData)
         }

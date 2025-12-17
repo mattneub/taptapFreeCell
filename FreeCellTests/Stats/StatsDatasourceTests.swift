@@ -231,13 +231,14 @@ private struct StatsDatasourceTests {
         ]
         await subject.present(StatsState(stats: stats))
         let config = subject.tableView(tableView, trailingSwipeActionsConfigurationForRowAt: IndexPath(row: 0, section: 0))
+        let cell = tableView.cellForRow(at: IndexPath(row: 0, section: 0))
         let action = try #require(config?.actions[2] as? MyUIContextualAction)
         var ok: Bool?
         func completion(_ success: Bool) { ok = success }
         action.myHandler?(action, UIView(), completion)
         await #while(processor.thingsReceived.count < 2)
         let expected = Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2)
-        #expect(processor.thingsReceived.last == .snapshot(stat: expected))
+        #expect(processor.thingsReceived.last == .showSnapshot(stat: expected, source: cell))
         #expect(ok == true)
     }
 }

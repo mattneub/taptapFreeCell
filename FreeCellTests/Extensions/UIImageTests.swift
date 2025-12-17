@@ -12,6 +12,7 @@ private struct UIImageTests {
         layout.deal(deck)
         let stat = Stat(dateFinished: Date.distantPast, won: false, initialLayout: layout, movesCount: 0, timeTaken: 0)
         let result = await UIImage.snapshot(for: stat)
+        #expect(result.size == CGSize(width: 300, height: 243))
         assertSnapshot(of: result, as: .image)
     }
 }
