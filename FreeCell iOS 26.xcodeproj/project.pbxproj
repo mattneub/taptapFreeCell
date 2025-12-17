@@ -14,6 +14,7 @@
 		3F91C2682EEDB2030085193D /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C2672EEDB2030085193D /* SnapshotTesting */; };
 		3F91C26B2EEDB21D0085193D /* WaitWhile in Frameworks */ = {isa = PBXBuildFile; productRef = 3F91C26A2EEDB21D0085193D /* WaitWhile */; };
 		3FD262912EF0543D0094F754 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 3FD262902EF0543D0094F754 /* AsyncAlgorithms */; };
+		3FD338EA2EF324B600F59DC2 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3FD338E92EF324B600F59DC2 /* AppIcon.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +63,7 @@
 		3F36043A2ECA267400487EF9 /* Confetti.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Confetti.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FB3F2AB2EB8E76C00689661 /* FreeCell iOS 26.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FreeCell iOS 26.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FB3F4B12EB8F8E600689661 /* FreeCellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FreeCellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FD338E92EF324B600F59DC2 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -213,6 +215,7 @@
 		3FB3F2A22EB8E76C00689661 = {
 			isa = PBXGroup;
 			children = (
+				3FD338E92EF324B600F59DC2 /* AppIcon.icon */,
 				3F058ECF2EE32BF6000BB938 /* FreeCellHelpHTML */,
 				3F058EAA2EE32BB5000BB938 /* FreeCellHelp */,
 				3FB3F2AD2EB8E76C00689661 /* FreeCell iOS 26 */,
@@ -383,6 +386,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FD338EA2EF324B600F59DC2 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -526,6 +530,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "FreeCell\\ iOS\\ 26/IconGenerator/IconGenerator.storyboard FreeCell\\ iOS\\ 26/IconGenerator/IconGeneratorViewController.swift";
 				DEVELOPMENT_TEAM = W3LHX5RGV2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FreeCell iOS 26/Info.plist";
@@ -562,6 +567,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "FreeCell\\ iOS\\ 26/IconGenerator/IconGenerator.storyboard FreeCell\\ iOS\\ 26/IconGenerator/IconGeneratorViewController.swift";
 				DEVELOPMENT_TEAM = W3LHX5RGV2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FreeCell iOS 26/Info.plist";

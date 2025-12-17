@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="19162" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="eOd-f6-Jfp">
+    <device id="ipad12_9" orientation="portrait" layout="fullscreen" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19144"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Icon Generator View Controller-->
+        <scene sceneID="BYx-sD-DAr">
+            <objects>
+                <viewController id="eOd-f6-Jfp" customClass="IconGeneratorViewController" customModule="FreeCell" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Yad-ng-nah">
+                        <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="wallpaper" translatesAutoresizingMaskIntoConstraints="NO" id="1tA-Vd-LPb">
+                                <rect key="frame" x="0.0" y="0.0" width="1024" height="1366"/>
+                            </imageView>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fkU-Ge-4Rv" customClass="CardView" customModule="FreeCell" customModuleProvider="target">
+                                <rect key="frame" x="184" y="123" width="368" height="562"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <view opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xbe-ep-eir" customClass="CardView" customModule="FreeCell" customModuleProvider="target">
+                                <rect key="frame" x="270" y="210" width="421" height="562"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="BBp-WC-d7H"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="1tA-Vd-LPb" firstAttribute="leading" secondItem="Yad-ng-nah" secondAttribute="leading" id="3Ko-LI-4AH"/>
+                            <constraint firstAttribute="bottom" secondItem="1tA-Vd-LPb" secondAttribute="bottom" id="e3r-CH-GfV"/>
+                            <constraint firstAttribute="trailing" secondItem="1tA-Vd-LPb" secondAttribute="trailing" id="gP2-XY-bGG"/>
+                            <constraint firstItem="1tA-Vd-LPb" firstAttribute="top" secondItem="Yad-ng-nah" secondAttribute="top" id="qc7-dk-Xfw"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="emptyCardView" destination="fkU-Ge-4Rv" id="blt-SH-o96"/>
+                        <outlet property="fullCardView" destination="Xbe-ep-eir" id="ocD-xx-kKs"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="nFY-lY-O33" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="117.18749999999999" y="196.33967789165445"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="wallpaper" width="2160" height="1920"/>
+    </resources>
+</document>

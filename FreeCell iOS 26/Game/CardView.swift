@@ -65,8 +65,9 @@ class CardView: UIView {
         self.addGestureRecognizer(longPresser)
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    required init?(coder: NSCoder) { // needed for icon generation
+        self.location = Location(category: .freeCell, index: 0)
+        super.init(coder: coder)
     }
 
     func redraw(movableCount: Int = 0) async {

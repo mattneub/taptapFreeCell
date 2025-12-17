@@ -25,6 +25,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
         coordinator.createInterface(window: window)
         window.makeKeyAndVisible()
+        // uncomment to draw icon in simulator (use iPad simulator)
+        // window.rootViewController = UIStoryboard(name: "IconGenerator", bundle: nil).instantiateInitialViewController()
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
