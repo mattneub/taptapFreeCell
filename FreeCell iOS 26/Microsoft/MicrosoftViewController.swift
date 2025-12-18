@@ -71,7 +71,6 @@ final class MicrosoftViewController: UIViewController, ReceiverPresenter {
     }
 
     @IBAction func doDealButton(_ sender: Any) {
-        print("doDealButton")
         Task {
             await processor?.receive(.deal)
         }

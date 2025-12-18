@@ -378,7 +378,6 @@ private struct GameProcessorTests {
             LocationAndCard(location: Location(category: .column, index: 3), internalIndex: 0, card: Card(rank: .six, suit: .diamonds)),
         ]
         #expect(presenter.thingsReceived == [.tint(expected)])
-        print(presenter.thingsReceived)
     }
 
     @Test("receive longPressEnded: sends tintsOff")

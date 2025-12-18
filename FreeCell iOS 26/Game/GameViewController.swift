@@ -301,6 +301,15 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
+    @objc func doMenuMicrosoftDeal() {
+        ensureNoConfetti()
+        if let item = navigationItem.leftBarButtonItem {
+            Task {
+                await processor?.receive(.showMicrosoft(SourceItemWrapper(sourceItem: item)))
+            }
+        }
+    }
+
     @objc func doUndo() {
         ensureNoConfetti()
         Task {
@@ -347,6 +356,36 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         ensureNoConfetti()
         Task {
             await processor?.receive(.hint)
+        }
+    }
+
+    @objc func doRules() {
+        Task {
+            await processor?.receive(.showRules)
+        }
+    }
+
+    @objc func doHelp() {
+        Task {
+            await processor?.receive(.showHelp)
+        }
+    }
+
+    @objc func doStatistics() {
+        Task {
+            await processor?.receive(.showStats)
+        }
+    }
+
+    @objc func doImportExport() {
+        Task {
+            await processor?.receive(.showImportExport)
+        }
+    }
+
+    @objc func doPrefs() {
+        Task {
+            await processor?.receive(.showPrefs)
         }
     }
 

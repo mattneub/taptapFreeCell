@@ -437,6 +437,41 @@ private struct GameViewControllerTests {
         #expect(processor.thingsReceived == [.redoAll])
     }
 
+    @Test("doRules: sends showRules")
+    func doRules() async {
+        subject.doRules()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.showRules])
+    }
+
+    @Test("doHelp: sends showHelp")
+    func doHelp() async {
+        subject.doHelp()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.showHelp])
+    }
+
+    @Test("doStatistics: sends showStats")
+    func doStatistics() async {
+        subject.doStatistics()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.showStats])
+    }
+
+    @Test("doImportExport: sends showImportExport")
+    func doImportExport() async {
+        subject.doImportExport()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.showImportExport])
+    }
+
+    @Test("doPrefs: sends showPrefs")
+    func doPrefs() async {
+        subject.doPrefs()
+        await #while(processor.thingsReceived.isEmpty)
+        #expect(processor.thingsReceived == [.showPrefs])
+    }
+
     @Test("receive animate: calls hide/show index/border on destination card(s)")
     func animate() async throws {
         subject.loadViewIfNeeded()

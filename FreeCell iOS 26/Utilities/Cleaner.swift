@@ -72,7 +72,7 @@ final class Cleaner: CleanerType {
             }
             let success = await self.success
             if success {
-                await logger.log("settings task completed success")
+                await logger.log("setting task completed success")
             } else {
                 await logger.log("setting task completed failure")
             }
