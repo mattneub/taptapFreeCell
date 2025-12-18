@@ -3,20 +3,17 @@ import UIKit
 
 @Observable
 final class MockLifetime: LifetimeType {
-    var methodsCalled = [String]()
+    var stream: AsyncStream<LifetimeEvent>!
 
-    var event: LifetimeEvent?
+    nonisolated(unsafe) var continuation: AsyncStream<LifetimeEvent>.Continuation?
 
-    func didBecomeActive() {
-        methodsCalled.append(#function)
+    init() {
+        self.stream = AsyncStream<LifetimeEvent>() { continuation in
+            self.continuation = continuation
+        }
     }
 
-    func willResignActive() {
-        methodsCalled.append(#function)
+    deinit {
+        self.continuation?.finish()
     }
-
-    func didEnterBackground() {
-        methodsCalled.append(#function)
-    }
-
 }

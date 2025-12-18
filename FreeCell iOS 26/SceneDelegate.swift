@@ -1,4 +1,5 @@
 import UIKit
+import os.log
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -27,17 +28,5 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.makeKeyAndVisible()
         // uncomment to draw icon in simulator (use iPad simulator)
         // window.rootViewController = UIStoryboard(name: "IconGenerator", bundle: nil).instantiateInitialViewController()
-    }
-
-    func sceneDidBecomeActive(_ scene: UIScene) {
-        services.lifetime.didBecomeActive()
-    }
-
-    func sceneWillResignActive(_ scene: UIScene) {
-        services.lifetime.willResignActive()
-    }
-
-    func sceneDidEnterBackground(_ scene: UIScene) {
-        services.lifetime.didEnterBackground()
     }
 }

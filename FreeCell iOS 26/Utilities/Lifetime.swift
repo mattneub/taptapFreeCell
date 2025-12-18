@@ -1,25 +1,47 @@
-import Observation
+import UIKit
 
 protocol LifetimeType {
-    var event: LifetimeEvent? { get }
-
-    func didBecomeActive()
-    func didEnterBackground()
-    func willResignActive()
+    var stream: AsyncStream<LifetimeEvent>! { get }
 }
 
-@Observable
 final class Lifetime: LifetimeType {
-    var event: LifetimeEvent?
+    /// Retain notification observers here.
+    var observers: [NotificationCenter.ObservationToken] = []
 
-    func didBecomeActive() {
-        event = .becomeActive
+    /// Public stream, to which anyone can subscribe.
+    var stream: AsyncStream<LifetimeEvent>!
+
+    /// Private continuation of the above stream, so we can yield into the stream.
+    var continuation: AsyncStream<LifetimeEvent>.Continuation?
+
+    init() {
+        // configure notification observers; we yield into our async stream on each event received
+        do {
+            let observer = NotificationCenter.default.addObserver(of: UIScene.self, for: .didActivate) { [weak self] _ in
+                self?.continuation?.yield(.becomeActive)
+            }
+            observers.append(observer)
+        }
+        do {
+            let observer = NotificationCenter.default.addObserver(of: UIScene.self, for: .didEnterBackground) { [weak self] _ in
+                self?.continuation?.yield(.enterBackground)
+            }
+            observers.append(observer)
+        }
+        do {
+            let observer = NotificationCenter.default.addObserver(of: UIScene.self, for: .willDeactivate) { [weak self] _ in
+                self?.continuation?.yield(.resignActive)
+            }
+            observers.append(observer)
+        }
+        // and create the stream
+        self.stream = AsyncStream<LifetimeEvent> { continuation in
+            self.continuation = continuation
+        }
     }
-    func willResignActive() {
-        event = .resignActive
-    }
-    func didEnterBackground() {
-        event = .enterBackground
+
+    deinit {
+        continuation?.finish()
     }
 }
 

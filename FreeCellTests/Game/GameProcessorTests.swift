@@ -232,44 +232,44 @@ private struct GameProcessorTests {
         subject.listenForEventTask?.cancel()
     }
 
-    @Test("receive didInitialLayout: setting the lifetime's becomeActive calls the stopwatch resumeIfPaused")
+    @Test("receive didInitialLayout: lifetime emitting becomeActive calls the stopwatch resumeIfPaused")
     func didInitialLayoutBecomeActive() async {
         await subject.receive(.didInitialLayout)
+        lifetime.continuation?.yield(.becomeActive) // thrown away by `dropFirst()`
         await #while(stopwatch.methodsCalled.isEmpty)
         stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
-        Task {
-            lifetime.event = .becomeActive
-        }
+        lifetime.continuation?.yield(.becomeActive)
         await #while(stopwatch.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
         subject.listenForEventTask?.cancel()
     }
 
-    @Test("receive didInitialLayout: setting the lifetime's resignActive calls the stopwatch pause")
+    @Test("receive didInitialLayout: lifetime emitting resignActive calls the stopwatch pause")
     func didInitialLayoutResignActive() async {
         await subject.receive(.didInitialLayout)
+        lifetime.continuation?.yield(.becomeActive) // thrown away by `dropFirst()`
         await #while(stopwatch.methodsCalled.isEmpty)
         stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
-        Task {
-            lifetime.event = .resignActive
-        }
+        lifetime.continuation?.yield(.resignActive)
         await #while(stopwatch.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled == ["pause()"])
         subject.listenForEventTask?.cancel()
     }
 
-    @Test("receive didInitialLayout: setting the lifetime's enterBackground sends remove confetti, tells persistence to save game")
+    @Test("receive didInitialLayout: lifetime emitting enterBackground sends remove confetti, tells persistence to save game")
     func didInitialLayoutEnterBackground() async {
         await subject.receive(.didInitialLayout)
+        lifetime.continuation?.yield(.becomeActive) // thrown away by `dropFirst()`
+        await #while(stopwatch.methodsCalled.isEmpty)
+        stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
-        Task {
-            lifetime.event = .enterBackground
-        }
+        lifetime.continuation?.yield(.enterBackground)
         await #while(!persistence.methodsCalled.contains("saveGame(_:)"))
         #expect(persistence.methodsCalled.last == "saveGame(_:)")
         #expect(presenter.thingsReceived == [.removeConfetti])
+        subject.listenForEventTask?.cancel()
     }
 
     @Test("receive didInitialLayout: sets state prefs from persistence value")

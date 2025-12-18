@@ -16,28 +16,26 @@ final class GameProcessor: Processor {
     /// Lifetime instance. Once called, it sets up a Task that loops forever. The `dropFirst` is
     /// because we get a `.becomeActive` message when subscribing in the first place, which we ignore.
     func listenForEvent() async throws {
-        let observations = Observations {
-            return services.lifetime.event
-        }
-        for await event in observations.dropFirst() {
+        for await event in services.lifetime.stream.dropFirst() {
             try Task.checkCancellation()
-            if let event {
-                switch event {
-                case .becomeActive:
-                    await stopwatch.resumeIfPaused()
-                case .enterBackground:
-                    await presenter?.receive(.removeConfetti)
-                    services.persistence.saveGame(
-                        SavedGame(
-                            layout: state.layout,
-                            undoStack: state.undoStack,
-                            redoStack: state.redoStack,
-                            timeTaken: stopwatch.elapsedTime
-                        )
+            switch event {
+            case .becomeActive:
+                logger.log("become active")
+                await stopwatch.resumeIfPaused()
+            case .enterBackground:
+                logger.log("enter background")
+                await presenter?.receive(.removeConfetti)
+                services.persistence.saveGame(
+                    SavedGame(
+                        layout: state.layout,
+                        undoStack: state.undoStack,
+                        redoStack: state.redoStack,
+                        timeTaken: stopwatch.elapsedTime
                     )
-                case .resignActive:
-                    await stopwatch.pause()
-                }
+                )
+            case .resignActive:
+                logger.log("resign active")
+                await stopwatch.pause()
             }
         }
     }

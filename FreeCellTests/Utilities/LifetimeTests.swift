@@ -1,50 +1,51 @@
 @testable import TTFreeCell
 import Testing
-import Observation
+import UIKit
+import WaitWhile
 
 private struct LifetimeTests {
-    @Test("didBecomeActive: publishes from event")
-    func didBecomeActive() async {
+    @Test("did activate emits becomeActive")
+    func didBecomeActive() async throws {
         let subject = Lifetime()
-        let observation = Observations { return subject.event }
-        var observed = [LifetimeEvent?]()
+        var observed = [LifetimeEvent]()
         _ = Task {
-            for await event in observation {
+            for await event in subject.stream {
                 observed.append(event)
             }
         }
-        subject.didBecomeActive()
-        await Task.yield()
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        NotificationCenter.default.post(UIScene.DidActivateMessage(scene: scene))
+        await #while(observed.isEmpty)
         #expect(observed == [.becomeActive])
     }
 
-    @Test("willResignActive: publishes from event")
-    func willResignActive() async {
+    @Test("will deactivate emits resign active")
+    func willResignActive() async throws {
         let subject = Lifetime()
-        let observation = Observations { return subject.event }
-        var observed = [LifetimeEvent?]()
+        var observed = [LifetimeEvent]()
         _ = Task {
-            for await event in observation {
+            for await event in subject.stream {
                 observed.append(event)
             }
         }
-        subject.willResignActive()
-        await Task.yield()
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        NotificationCenter.default.post(UIScene.WillDeactivateMessage(scene: scene))
+        await #while(observed.isEmpty)
         #expect(observed == [.resignActive])
     }
 
-    @Test("didEnterBackground: publishes from event")
-    func didEnterBackground() async {
+    @Test("didEnterBackground emits enter background")
+    func didEnterBackground() async throws {
         let subject = Lifetime()
-        let observation = Observations { return subject.event }
-        var observed = [LifetimeEvent?]()
+        var observed = [LifetimeEvent]()
         _ = Task {
-            for await event in observation {
+            for await event in subject.stream {
                 observed.append(event)
             }
         }
-        subject.didEnterBackground()
-        await Task.yield()
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        NotificationCenter.default.post(UIScene.DidEnterBackgroundMessage(scene: scene))
+        await #while(observed.isEmpty)
         #expect(observed == [.enterBackground])
     }
 }
