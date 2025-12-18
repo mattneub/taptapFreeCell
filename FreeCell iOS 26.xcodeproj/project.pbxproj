@@ -530,7 +530,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "FreeCell\\ iOS\\ 26/IconGenerator/IconGenerator.storyboard FreeCell\\ iOS\\ 26/IconGenerator/IconGeneratorViewController.swift";
+				DEVELOPMENT_ASSET_PATHS = "FreeCell\\ iOS\\ 26/IconGenerator/IconGenerator.storyboard FreeCell\\ iOS\\ 26/IconGenerator/IconGeneratorViewController.swift FreeCell\\ iOS\\ 26/Resources/stats";
 				DEVELOPMENT_TEAM = W3LHX5RGV2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FreeCell iOS 26/Info.plist";
@@ -567,7 +567,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "FreeCell\\ iOS\\ 26/IconGenerator/IconGenerator.storyboard FreeCell\\ iOS\\ 26/IconGenerator/IconGeneratorViewController.swift";
+				DEVELOPMENT_ASSET_PATHS = "FreeCell\\ iOS\\ 26/IconGenerator/IconGenerator.storyboard FreeCell\\ iOS\\ 26/IconGenerator/IconGeneratorViewController.swift FreeCell\\ iOS\\ 26/Resources/stats";
 				DEVELOPMENT_TEAM = W3LHX5RGV2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FreeCell iOS 26/Info.plist";

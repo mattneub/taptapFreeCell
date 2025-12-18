@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 
 protocol StatsType: Actor {
     var stats: StatsDictionary { get }
@@ -37,16 +38,24 @@ actor Stats: StatsType {
         if !didMigration3 {
             do {
                 try await doMigration3()
+                await logger.log("did migration 3")
                 await services.persistence.setDidMigration3(true)
             } catch {
-                print("failed to do migration 3")
+                await logger.log("failed to do migration 3")
             }
         }
     }
 
     /// Subroutine of `loadStats`, for neatness.
     private func loadStatsFile() async {
-        if let url = await services.fileManager.urlInDocuments(name: Defaults.stats) {
+        var url: URL? = await services.fileManager.urlInDocuments(name: Defaults.stats)
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.environment["INTERNALSTATS"] != nil { // mostly for screenshots
+            url = Bundle.main.url(forResource: "stats", withExtension: nil)
+        }
+        #endif
+        // print(url)
+        if let url {
             do {
                 let data = try Data(contentsOf: url, options: [])
                 let stats = try PropertyListDecoder().decode(StatsDictionary.self, from: data)
