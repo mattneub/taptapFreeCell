@@ -10,6 +10,8 @@ final class GameProcessor: Processor {
 
     lazy var animator: any AnimatorType = Animator(processor: self)
 
+    lazy var endgame: any EndgameType = Endgame()
+
     var state = GameState()
 
     /// This method effectively subscribes to the publishable property in the observable
@@ -236,24 +238,6 @@ final class GameProcessor: Processor {
         state.enablements = state.baseEnablements
         await presenter?.present(state)
     }
-    
-    /// If you can make a safe move from the given location to the foundations, make it and
-    /// return true; otherwise, return false.
-    /// - Parameter location: The location from which to try to move safely to a foundation.
-    /// - Returns: Whether the move was safe and possible. If we return `true`, the move has
-    /// been made — the layout has been altered. If we return `false`, nothing has happened at all.
-    func playToFoundationIfSafeAndPossible(location: Location) -> Bool {
-        if let card = state.layout.card(at: location) {
-            if card.canGoOn(state.layout.foundations) {
-                if !state.layout.mightNeed(card: card) {
-                    let card = state.layout.surrenderCard(from: location)
-                    state.layout.foundations.accept(card: card)
-                    return true
-                }
-            }
-        }
-        return false
-    }
 
     /// Do a complete round of autoplay to foundations, i.e. make every possible safe move to
     /// the foundations. This call should be made only from a neutral state, and it constitutes
@@ -264,19 +248,7 @@ final class GameProcessor: Processor {
     /// the job _of the caller_ to check `state.autoplay` before making this call, if needed.
     func autoplay() async {
         let oldLayout = state.layout
-        var moved = false
-        let locations: [Location] = (
-            (0..<8).map { Location(category: .column, index: $0) } +
-            (0..<4).map { Location(category: .freeCell, index: $0) }
-        )
-        repeat {
-            moved = false
-            for location in locations {
-                if playToFoundationIfSafeAndPossible(location: location) {
-                    moved = true
-                }
-            }
-        } while moved
+        state.layout.autoplay()
         if state.layout != oldLayout {
             state.undoStack.append(oldLayout)
             state.redoStack = []
@@ -299,7 +271,7 @@ final class GameProcessor: Processor {
         // Tap on a safe autoplayable: just play it! This is a complete move of itself, so we
         // respond just like the completion of a second tap.
         let oldLayout = state.layout
-        if playToFoundationIfSafeAndPossible(location: location) { // TODO: check a pref here?
+        if state.layout.playToFoundationIfSafeAndPossible(location: location) { // TODO: check a pref here?
             state.undoStack.append(oldLayout)
             state.redoStack = []
             state.layout.moveCode = nil // counts as an autoplay
@@ -605,6 +577,19 @@ final class GameProcessor: Processor {
         }
         if state[.automoveToFoundations] {
             await autoplay()
+            if state[.earlyEndgame] {
+                let winningLayouts = endgame.evaluate(state.layout)
+                for layout in winningLayouts { // exactly like coda of autoplay
+                    try? await Task.sleep(for: .seconds(0.1))
+                    let oldLayout = state.layout
+                    state.undoStack.append(oldLayout)
+                    state.redoStack = []
+                    state.layout = layout
+                    state.layout.moveCode = nil // user didn't do anything to get here
+                    await ensureNeutralState()
+                    await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
+                }
+            }
         }
     }
 

@@ -38,7 +38,31 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
     var numberOfCardsRemaining: Int { // i.e. remaining in play — not in the foundations
         (freeCells as [any Source] + columns as [any Source]).reduce(0) { $0 + $1.cards.count }
     }
-    
+
+    /// Rough measure of how close we are to a win.
+    var entropy: Double {
+        var sequentialCount = 0
+        var totalCount = 0
+        for column in columns {
+            if column.cards.count == 1 {
+                totalCount += 1
+                sequentialCount += 1
+            } else if column.cards.count > 1 {
+                totalCount += column.cards.count - 1
+                for index in 1..<column.cards.count {
+                    if column.cards[index].canGoOn(column.cards[index-1]) {
+                        sequentialCount += 1
+                    }
+                }
+            }
+        }
+        let result = Double(sequentialCount) / Double(totalCount)
+        if result.isNaN {
+            return 0
+        }
+        return result
+    }
+
     /// Convert from a location to its corresponding `card`.
     /// - Parameter location: The location in the layout.
     /// - Returns: The card, or `nil` if the location is empty.
@@ -268,6 +292,60 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
             number
         } else {
             0
+        }
+    }
+
+    /// If you can make a safe move from the given location to the foundations, make it and
+    /// return true; otherwise, return false.
+    /// - Parameter location: The location from which to try to move safely to a foundation.
+    /// - Returns: Whether the move was safe and possible. If we return `true`, the move has
+    /// been made — the layout has been altered. If we return `false`, nothing has happened at all.
+    mutating func playToFoundationIfSafeAndPossible(location: Location) -> Bool {
+        if let card = card(at: location) {
+            if card.canGoOn(foundations) {
+                if !mightNeed(card: card) {
+                    let card = surrenderCard(from: location)
+                    foundations.accept(card: card)
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /// Do a complete round of automove to foundations. It is up to the caller to save a copy
+    /// of the original layout (if desired) to see whether anything changed.
+    mutating func autoplay() {
+        var moved = false
+        let locations: [Location] = (
+            (0..<8).map { Location(category: .column, index: $0) } +
+            (0..<4).map { Location(category: .freeCell, index: $0) }
+        )
+        repeat {
+            moved = false
+            for location in locations {
+                if playToFoundationIfSafeAndPossible(location: location) {
+                    moved = true
+                }
+            }
+        } while moved
+    }
+
+    /// Splat as many cards as possible from the column with the given index to empty spaces.
+    mutating func splat(index: Int) {
+        guard columns[index].cards.count > 1 else {
+            return
+        }
+        for _ in 1..<columns[index].cards.count {
+            if let freeCellIndex = indexOfFirstEmptyFreeCell {
+                let card = columns[index].surrenderCard()
+                freeCells[freeCellIndex].accept(card: card)
+            } else if let columnIndex = indexOfFirstEmptyColumn {
+                let card = columns[index].surrenderCard()
+                columns[columnIndex].accept(card: card)
+            } else {
+                break
+            }
         }
     }
 

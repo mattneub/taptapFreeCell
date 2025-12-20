@@ -77,6 +77,32 @@ private struct LayoutTests {
         #expect(subject.numberOfCardsRemaining == 5)
     }
 
+    @Test("entropy: correctly describes the orderedness of the columns")
+    func entropy() {
+        do {
+            var subject = Layout()
+            subject.columns[0].cards = [
+                Card(rank: .queen, suit: .hearts),
+                Card(rank: .jack, suit: .spades),
+                Card(rank: .ten, suit: .hearts),
+                Card(rank: .nine, suit: .spades),
+            ]
+            let result = subject.entropy
+            #expect(result == 1)
+        }
+        do {
+            var subject = Layout()
+            subject.columns[0].cards = [
+                Card(rank: .queen, suit: .hearts),
+                Card(rank: .jack, suit: .spades),
+                Card(rank: .ten, suit: .hearts),
+                Card(rank: .nine, suit: .spades),
+            ].reversed()
+            let result = subject.entropy
+            #expect(result == 0)
+        }
+    }
+
     @Test("cardAtLocation: works correctly")
     func cardAtLocation() {
         var subject = Layout()
@@ -886,6 +912,125 @@ private struct LayoutTests {
             supermoves: true
         )
         #expect(result == 0) // *
+    }
+
+    @Test("playToFoundationIfSafeAndPossible: behaves as expected")
+    func playToFoundation() {
+        var subject = Layout()
+        subject.columns[0].cards = [
+            Card(rank: .three, suit: .spades),
+            Card(rank: .two, suit: .spades),
+            Card(rank: .ace, suit: .spades),
+        ]
+        var result = subject.playToFoundationIfSafeAndPossible(location: Location(category: .column, index: 0))
+        #expect(result == true)
+        #expect(subject.foundations[0].card == Card(rank: .ace, suit: .spades))
+        #expect(subject.columns[0].cards == [
+            Card(rank: .three, suit: .spades),
+            Card(rank: .two, suit: .spades),
+        ])
+        result = subject.playToFoundationIfSafeAndPossible(location: Location(category: .column, index: 0))
+        #expect(result == true)
+        #expect(subject.foundations[0].card == Card(rank: .two, suit: .spades))
+        #expect(subject.columns[0].cards == [
+            Card(rank: .three, suit: .spades),
+        ])
+        result = subject.playToFoundationIfSafeAndPossible(location: Location(category: .column, index: 0))
+        // nothing happens, might need the three
+        #expect(result == false)
+        #expect(subject.foundations[0].card == Card(rank: .two, suit: .spades))
+        #expect(subject.columns[0].cards == [
+            Card(rank: .three, suit: .spades),
+        ])
+        // okay, I'll prove you don't need the three after all
+        subject.foundations[1].cards = [Card(rank: .two, suit: .hearts)]
+        subject.foundations[3].cards = [Card(rank: .two, suit: .diamonds)]
+        result = subject.playToFoundationIfSafeAndPossible(location: Location(category: .column, index: 0))
+        #expect(result == true)
+        #expect(subject.foundations[0].card == Card(rank: .three, suit: .spades))
+        #expect(subject.columns[0].cards == [])
+        // and at this point we are merely repeating the tests for `mightNeed`, so enough
+    }
+
+    @Test("autoplay: behaves as expected")
+    func autoplay() {
+        do {
+            var subject = Layout()
+            subject.columns[0].cards = [
+                Card(rank: .three, suit: .spades),
+                Card(rank: .two, suit: .spades),
+                Card(rank: .ace, suit: .spades),
+            ]
+            subject.autoplay()
+            #expect(subject.foundations[0].cards == [
+                Card(rank: .ace, suit: .spades),
+                Card(rank: .two, suit: .spades),
+            ])
+            #expect(subject.columns[0].cards == [
+                Card(rank: .three, suit: .spades),
+            ])
+        }
+        do {
+            var subject = Layout()
+            subject.columns[0].cards = [
+                Card(rank: .three, suit: .spades),
+                Card(rank: .two, suit: .spades),
+                Card(rank: .ace, suit: .spades),
+            ]
+            subject.columns[1].cards = [
+                Card(rank: .two, suit: .hearts),
+                Card(rank: .ace, suit: .hearts),
+            ]
+            subject.columns[2].cards = [
+                Card(rank: .two, suit: .diamonds),
+                Card(rank: .ace, suit: .diamonds),
+            ]
+            subject.autoplay()
+            #expect(subject.foundations[0].cards == [
+                Card(rank: .ace, suit: .spades),
+                Card(rank: .two, suit: .spades),
+                Card(rank: .three, suit: .spades),
+            ])
+            #expect(subject.foundations[1].cards == [
+                Card(rank: .ace, suit: .hearts),
+                Card(rank: .two, suit: .hearts),
+            ])
+            #expect(subject.foundations[3].cards == [
+                Card(rank: .ace, suit: .diamonds),
+                Card(rank: .two, suit: .diamonds),
+            ])
+            #expect(subject.columns[0].cards == [])
+            #expect(subject.columns[1].cards == [])
+            #expect(subject.columns[2].cards == [])
+        }
+        // and again, any further testing would just repeat `mightNeed`
+    }
+
+    @Test("splat: behaves as expected")
+    func splat() {
+        var subject = Layout()
+        subject.columns[1].cards = [Card(rank: .ace, suit: .spades)]
+        subject.columns[2].cards = [Card(rank: .ace, suit: .spades)]
+        subject.columns[4].cards = [Card(rank: .ace, suit: .spades)]
+        subject.columns[6].cards = [Card(rank: .ace, suit: .spades)]
+        subject.columns[5].cards = [
+            Card(rank: .four, suit: .spades),
+            Card(rank: .seven, suit: .hearts),
+            Card(rank: .ten, suit: .diamonds),
+            Card(rank: .nine, suit: .diamonds),
+            Card(rank: .eight, suit: .diamonds),
+            Card(rank: .seven, suit: .diamonds),
+            Card(rank: .six, suit: .diamonds),
+        ]
+        subject.splat(index: 5)
+        #expect(subject.description == """
+        FOUNDATIONS: XX XX XX XX
+        FREE CELLS:  6D 7D 8D 9D
+        
+        TD AS AS 7H AS 4S AS
+        
+        
+        """)
     }
 
     @Test("tableauDescription looks right")
