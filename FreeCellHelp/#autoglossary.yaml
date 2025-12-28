@@ -3,129 +3,129 @@ cleanup:
   :path: !ruby/object:Pathname
     path: cleanup.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/cleanup.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/cleanup.txt"
   :linetext: Cleanup
 otherfeatures: &1
   :path: !ruby/object:Pathname
     path: otherfeatures.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/otherfeatures.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/otherfeatures.txt"
   :linetext: Import / Export
 import / export: *1
 preferences: &2
   :path: !ruby/object:Pathname
     path: preferences.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/preferences.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/preferences.txt"
   :linetext: Settings 1/5
 settings 1/5: *2
 preferences2: &3
   :path: !ruby/object:Pathname
     path: preferences2.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/preferences2.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/preferences2.txt"
   :linetext: Settings 2/5
 settings 2/5: *3
 preferences3: &4
   :path: !ruby/object:Pathname
     path: preferences3.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/preferences3.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/preferences3.txt"
   :linetext: Settings 3/5
 settings 3/5: *4
 preferences4: &5
   :path: !ruby/object:Pathname
     path: preferences4.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/preferences4.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/preferences4.txt"
   :linetext: Settings 4/5
 settings 4/5: *5
 preferences5: &6
   :path: !ruby/object:Pathname
     path: preferences5.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/preferences5.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/preferences5.txt"
   :linetext: Settings 5/5
 settings 5/5: *6
 rules: &7
   :path: !ruby/object:Pathname
     path: rules.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/rules.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/rules.txt"
   :linetext: Rules of FreeCell 1/5
 rules of freecell 1/5: *7
 rules2: &8
   :path: !ruby/object:Pathname
     path: rules2.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/rules2.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/rules2.txt"
   :linetext: Rules of FreeCell 2/5
 rules of freecell 2/5: *8
 rules3: &9
   :path: !ruby/object:Pathname
     path: rules3.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/rules3.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/rules3.txt"
   :linetext: Rules of FreeCell 3/5
 rules of freecell 3/5: *9
 rules4: &10
   :path: !ruby/object:Pathname
     path: rules4.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/rules4.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/rules4.txt"
   :linetext: Rules of FreeCell 4/5
 rules of freecell 4/5: *10
 rules5: &11
   :path: !ruby/object:Pathname
     path: rules5.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/rules5.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/rules5.txt"
   :linetext: Rules of FreeCell 5/5
 rules of freecell 5/5: *11
 statistics:
   :path: !ruby/object:Pathname
     path: statistics.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/statistics.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/statistics.txt"
   :linetext: Statistics
 strategy: &12
   :path: !ruby/object:Pathname
     path: strategy.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/strategy.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/strategy.txt"
   :linetext: Basic FreeCell Strategy
 basic freecell strategy: *12
 supermoves:
   :path: !ruby/object:Pathname
     path: supermoves.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/supermoves.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/supermoves.txt"
   :linetext: Supermoves
 taptap: &13
   :path: !ruby/object:Pathname
     path: taptap.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/taptap.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/taptap.txt"
   :linetext: How TapTapFreeCell Works 1/4
 how taptapfreecell works 1/4: *13
 taptap2: &14
   :path: !ruby/object:Pathname
     path: taptap2.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/taptap2.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/taptap2.txt"
   :linetext: How TapTapFreeCell Works 2/4
 how taptapfreecell works 2/4: *14
 taptap3: &15
   :path: !ruby/object:Pathname
     path: taptap3.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/taptap3.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/taptap3.txt"
   :linetext: How TapTapFreeCell Works 3/4
 how taptapfreecell works 3/4: *15
 taptap4: &16
   :path: !ruby/object:Pathname
     path: taptap4.html
   :adr: !ruby/object:Pathname
-    path: "/Users/mattm1/Desktop/FreeCell iOS 26/FreeCellHelp/taptap4.txt"
+    path: "/Users/mattm1/desire/cocoa/dev/FreeCell iOS 26/FreeCellHelp/taptap4.txt"
   :linetext: How TapTapFreeCell Works 4/4
 how taptapfreecell works 4/4: *16
