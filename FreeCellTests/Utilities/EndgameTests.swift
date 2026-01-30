@@ -4,175 +4,254 @@ import Foundation
 
 private struct EndgameTests {
     let subject = Endgame()
+    let helper = MockEndgameHelper()
 
-    @Test("evaluate: splats column, returns that layout and autoplay layout if win")
-    func splatOne() {
-        var layout = Layout()
-        layout.columns[1].cards = [Card(rank: .eight, suit: .hearts)]
-        layout.columns[2].cards = [Card(rank: .nine, suit: .hearts)]
-        layout.columns[4].cards = [Card(rank: .ten, suit: .hearts)]
-        layout.columns[5].cards = [
-            Card(rank: .nine, suit: .spades),
-            Card(rank: .ten, suit: .spades),
-            Card(rank: .jack, suit: .spades),
-            Card(rank: .queen, suit: .spades),
-            Card(rank: .king, suit: .spades),
+    init() {
+        subject.helper = helper
+    }
+
+    @Test("paths is correctly initialized")
+    func paths() {
+        let expected: [[EndgameStep]] = [
+            [.splat1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 1), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 1), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 2), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 3), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 3), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 4), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 4), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 5), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 5), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 6), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 6), .autoplay, .splat2(column: 7), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 1), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 2), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 2), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 3), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 3), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 4), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 4), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 5), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 5), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 6), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 6), .autoplay],
+            [.splat1(column: 7), .autoplay, .splat2(column: 7), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 7), .autoplay],
         ]
-        layout.columns[6].cards = [
-            Card(rank: .king, suit: .hearts),
-            Card(rank: .queen, suit: .hearts),
-            Card(rank: .jack, suit: .hearts),
+        #expect(subject.paths == expected)
+    }
+
+    @Test("basic functionality: runs thru paths calling shift, autoplay, or splat on each step")
+    func basicFunctionality() {
+        subject.paths = [
+            [.splat1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 7), .autoplay, .splat2(column: 7), .autoplay],
         ]
-        layout.foundations[0].cards = [Card(rank: .eight, suit: .spades)]
-        layout.foundations[1].cards = [Card(rank: .seven, suit: .hearts)]
-        layout.foundations[2].cards = [Card(rank: .king, suit: .clubs)]
-        layout.foundations[3].cards = [Card(rank: .king, suit: .diamonds)]
-        let result = subject.evaluate(layout)
+        // to test the base case, we make the helper return a different layout on each call
+        var layouts = [Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout()]
+        for index in 0..<8 {
+            layouts[index].columns[index].cards = [Card(rank: .ace, suit: .spades)]
+        }
+        helper.layoutsToReturn = layouts // NB mock layouts return in reverse order
+        let start = Layout()
+        let result = subject.evaluate(start)
+        #expect(helper.methodsCalled == [
+            "splat(layout:index:)", "autoplay(layout:)",
+            "splat(layout:index:)", "autoplay(layout:)",
+            "shift(layout:index:)", "autoplay(layout:)",
+            "splat(layout:index:)", "autoplay(layout:)",
+        ])
+        #expect(helper.indexes == [0, 0, 7, 7])
+        #expect(result == [])
+    }
+
+    @Test("shortcutting: if splat1 has no effect on a column, encountering same step with same column skips entire path")
+    func shortCuttingSplat1() {
+        subject.paths = [
+            [.splat1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 7), .autoplay, .shift1(column: 0), .autoplay],
+        ]
+        var layouts = [Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout()]
+        for index in 0..<8 {
+            layouts[index].columns[index].cards = [Card(rank: .ace, suit: .spades)]
+        }
+        helper.layoutsToReturn = layouts // NB mock layouts return in reverse order
+        var start = Layout()
+        start.columns[7].cards = [Card(rank: .ace, suit: .spades)]
+        let result = subject.evaluate(start)
+        #expect(helper.methodsCalled == [
+            "splat(layout:index:)",
+            "splat(layout:index:)", "autoplay(layout:)",
+            "shift(layout:index:)", "autoplay(layout:)",
+        ])
+        #expect(helper.indexes == [0, 7, 0])
+        #expect(result == [])
+    }
+
+    @Test("shortcutting: if shift has no effect on a column, encountering same step with same column skips entire path")
+    func shortCuttingShift1() {
+        subject.paths = [
+            [.shift1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.shift1(column: 0), .autoplay, .splat2(column: 0), .autoplay],
+            [.splat1(column: 7), .autoplay, .shift1(column: 1), .autoplay],
+        ]
+        var layouts = [Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout()]
+        for index in 0..<8 {
+            layouts[index].columns[index].cards = [Card(rank: .ace, suit: .spades)]
+        }
+        helper.layoutsToReturn = layouts // NB mock layouts return in reverse order
+        var start = Layout()
+        start.columns[7].cards = [Card(rank: .ace, suit: .spades)]
+        let result = subject.evaluate(start)
+        #expect(helper.methodsCalled == [
+            "shift(layout:index:)",
+            "splat(layout:index:)", "autoplay(layout:)",
+            "shift(layout:index:)", "autoplay(layout:)",
+        ])
+        #expect(helper.indexes == [0, 7, 1])
+        #expect(result == [])
+    }
+
+    @Test("finish: if a path ends with empty columns and freecells, all differing successive layouts are returned")
+    func finish() {
+        subject.paths = [
+            [.shift1(column: 0), .autoplay, .splat2(column: 1), .autoplay],
+            [.shift1(column: 2), .autoplay, .splat2(column: 3), .autoplay],
+        ]
+        var layouts = [Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout(), Layout()]
+        // first step does not end with a win, its layouts are thrown away
+        for index in 4..<8 {
+            layouts[index].columns[index].cards = [Card(rank: .ace, suit: .spades)]
+        }
+        // second step first returns two identical layouts, represented _once_ in result
+        for index in 2..<4 {
+            layouts[index].columns[1].cards = [Card(rank: .ace, suit: .spades)]
+        }
+        // second state then ends with a win, represented _once_ at end of result
+        for index in 0..<2 {
+            layouts[index].foundations[0].cards = [Card(rank: .ace, suit: .spades)]
+        }
+        helper.layoutsToReturn = layouts // NB mock layouts return in reverse order
+        let start = Layout()
+        let result = subject.evaluate(start)
+        #expect(helper.methodsCalled == [
+            "shift(layout:index:)", "autoplay(layout:)",
+            "splat(layout:index:)", "autoplay(layout:)",
+            "shift(layout:index:)", "autoplay(layout:)",
+            "splat(layout:index:)", "autoplay(layout:)",
+        ])
+        #expect(helper.indexes == [0, 1, 2, 3])
         #expect(result.count == 2)
-        #expect(result[0].description == """
-        FOUNDATIONS: 8S 7H KC KD
-        FREE CELLS:  KS QS JS TS
-        
-           8H 9H    TH 9S KH
-                          QH
-                          JH
-        
-        
-        """) // ... we splatted column 5
-        #expect(result[1].description == """
-        FOUNDATIONS: KS KH KC KD
-        FREE CELLS:  XX XX XX XX
-        
-        
-        
-        
-        """) // ... then we did a round of autoplay and won
-    }
-
-    @Test("evaluate: does not splat perfectly ordered column")
-    func splatOneNotOrdered() {
-        var layout = Layout()
-        layout.columns[5].cards = [
-            Card(rank: .king, suit: .spades),
-            Card(rank: .queen, suit: .hearts),
-            Card(rank: .jack, suit: .spades),
-            Card(rank: .ten, suit: .hearts),
-            Card(rank: .nine, suit: .spades),
-        ]
-        layout.columns[6].cards = [
-            Card(rank: .ten, suit: .spades),
-            Card(rank: .queen, suit: .spades),
-            Card(rank: .jack, suit: .hearts),
-        ]
-        layout.foundations[0].cards = [Card(rank: .eight, suit: .spades)]
-        layout.foundations[1].cards = [Card(rank: .nine, suit: .hearts)]
-        layout.foundations[2].cards = [Card(rank: .king, suit: .clubs)]
-        layout.foundations[3].cards = [Card(rank: .king, suit: .diamonds)]
-        let result = subject.evaluate(layout)
-        #expect(result.count == 2)
-        #expect(result[0].description == """
-        FOUNDATIONS: 8S 9H KC KD
-        FREE CELLS:  JH QS XX XX
-        
-                       KS TS
-                       QH
-                       JS
-                       TH
-                       9S
-        
-        
-        """) // we splatted column 6 — _not_ column 5
-        #expect(result[1].description == """
-        FOUNDATIONS: KS QH KC KD
-        FREE CELLS:  XX XX XX XX
-        
-        
-        
-        
-        """) // then we did a round of autoplay and won
-    }
-
-    @Test("evaluate: does splat unordered, can do a second round")
-    func splatOneUnordered() {
-        var layout = Layout()
-        layout.columns[5].cards = [
-            Card(rank: .nine, suit: .spades), // *
-            Card(rank: .king, suit: .spades),
-            Card(rank: .queen, suit: .hearts),
-            Card(rank: .jack, suit: .spades),
-            Card(rank: .ten, suit: .hearts),
-        ]
-        layout.columns[6].cards = [
-            Card(rank: .ten, suit: .spades),
-            Card(rank: .queen, suit: .spades),
-            Card(rank: .jack, suit: .hearts),
-        ]
-        layout.foundations[0].cards = [Card(rank: .eight, suit: .spades)]
-        layout.foundations[1].cards = [Card(rank: .nine, suit: .hearts)]
-        layout.foundations[2].cards = [Card(rank: .king, suit: .clubs)]
-        layout.foundations[3].cards = [Card(rank: .king, suit: .diamonds)]
-        let result = subject.evaluate(layout)
-        #expect(result.count == 4)
-        #expect(result[0].description == """
-        FOUNDATIONS: 8S 9H KC KD
-        FREE CELLS:  TH JS QH KS
-        
-                       9S TS
-                          QS
-                          JH
-        
-        
-        """) // we splatted column 5
-        #expect(result[1].description == """
-        FOUNDATIONS: 9S JH KC KD
-        FREE CELLS:  XX JS QH KS
-        
-                          TS
-                          QS
-        
-        
-        """) // then we did a round of autoplay
-        #expect(result[2].description == """
-        FOUNDATIONS: 9S JH KC KD
-        FREE CELLS:  QS JS QH KS
-        
-                          TS
-        
-        
-        """) // then we did a _second_ splat, splatting column 6
-        #expect(result[3].description == """
-        FOUNDATIONS: KS QH KC KD
-        FREE CELLS:  XX XX XX XX
-        
-        
-        
-        
-        """) // and when we did another round of autoplay, we won
-    }
-
-    @Test("endgame returns empty if we don't win")
-    func noWin() {
-        var layout = Layout()
-        layout.columns[1].cards = [Card(rank: .eight, suit: .hearts)]
-        layout.columns[2].cards = [Card(rank: .nine, suit: .hearts)]
-        layout.columns[4].cards = [Card(rank: .ten, suit: .hearts)]
-        layout.columns[5].cards = [
-            Card(rank: .nine, suit: .spades),
-            Card(rank: .ten, suit: .spades),
-            Card(rank: .jack, suit: .spades),
-            Card(rank: .queen, suit: .spades),
-            Card(rank: .king, suit: .spades),
-        ]
-        layout.columns[6].cards = [
-            Card(rank: .king, suit: .hearts),
-            Card(rank: .queen, suit: .hearts),
-            Card(rank: .jack, suit: .hearts),
-        ]
-        layout.foundations[0].cards = [Card(rank: .eight, suit: .spades)]
-        layout.foundations[1].cards = [Card(rank: .six, suit: .hearts)] // no seven so cannot win
-        layout.foundations[2].cards = [Card(rank: .king, suit: .clubs)]
-        layout.foundations[3].cards = [Card(rank: .king, suit: .diamonds)]
-        let result = subject.evaluate(layout)
-        #expect(result.isEmpty)
+        #expect(result[0].columns[1].cards == [Card(rank: .ace, suit: .spades)])
+        #expect(result[1].foundations[0].cards == [Card(rank: .ace, suit: .spades)])
     }
 }

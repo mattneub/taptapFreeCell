@@ -1006,33 +1006,6 @@ private struct LayoutTests {
         // and again, any further testing would just repeat `mightNeed`
     }
 
-    @Test("splat: behaves as expected")
-    func splat() {
-        var subject = Layout()
-        subject.columns[1].cards = [Card(rank: .ace, suit: .spades)]
-        subject.columns[2].cards = [Card(rank: .ace, suit: .spades)]
-        subject.columns[4].cards = [Card(rank: .ace, suit: .spades)]
-        subject.columns[6].cards = [Card(rank: .ace, suit: .spades)]
-        subject.columns[5].cards = [
-            Card(rank: .four, suit: .spades),
-            Card(rank: .seven, suit: .hearts),
-            Card(rank: .ten, suit: .diamonds),
-            Card(rank: .nine, suit: .diamonds),
-            Card(rank: .eight, suit: .diamonds),
-            Card(rank: .seven, suit: .diamonds),
-            Card(rank: .six, suit: .diamonds),
-        ]
-        subject.splat(index: 5)
-        #expect(subject.description == """
-        FOUNDATIONS: XX XX XX XX
-        FREE CELLS:  6D 7D 8D 9D
-        
-        TD AS AS 7H AS 4S AS
-        
-        
-        """)
-    }
-
     @Test("tableauDescription looks right")
     func tableauDescription() {
         do {

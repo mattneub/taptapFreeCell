@@ -331,24 +331,6 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
         } while moved
     }
 
-    /// Splat as many cards as possible from the column with the given index to empty spaces.
-    mutating func splat(index: Int) {
-        guard columns[index].cards.count > 1 else {
-            return
-        }
-        for _ in 1..<columns[index].cards.count {
-            if let freeCellIndex = indexOfFirstEmptyFreeCell {
-                let card = columns[index].surrenderCard()
-                freeCells[freeCellIndex].accept(card: card)
-            } else if let columnIndex = indexOfFirstEmptyColumn {
-                let card = columns[index].surrenderCard()
-                columns[columnIndex].accept(card: card)
-            } else {
-                break
-            }
-        }
-    }
-
     /// Vertical portrait of the columns, just like the way the game itself looks. This is used
     /// as unique the identifier for a game, because the initial layout when a deal is dealt
     /// consists entirely of columns; thus it is the key in the stats dictionary.

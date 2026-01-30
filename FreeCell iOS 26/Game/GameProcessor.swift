@@ -574,13 +574,13 @@ final class GameProcessor: Processor {
             await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
         } else {
             await ensureNeutralState() // bad second tap! restore neutrality, wait for another tap-tap
+            return
         }
         if state[.automoveToFoundations] {
             await autoplay()
             if state[.earlyEndgame] {
                 let winningLayouts = endgame.evaluate(state.layout)
                 for layout in winningLayouts { // exactly like coda of autoplay
-                    try? await Task.sleep(for: .seconds(0.1))
                     let oldLayout = state.layout
                     state.undoStack.append(oldLayout)
                     state.redoStack = []

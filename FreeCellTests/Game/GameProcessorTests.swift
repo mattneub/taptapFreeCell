@@ -1641,10 +1641,8 @@ private struct GameProcessorTests {
         }
     }
 
-    @Test("tapped: if autoplay is on, if early endgame is on, second tap is followed by a call to endgame evaluate")
-    func endgameAfterSecondTap() async {
-        subject.state[.automoveToFoundations] = false
-        subject.state[.earlyEndgame] = false
+    @Test("tapped: if autoplay is on, if early endgame is on, if second tap is good, call to endgame evaluate")
+    func endgameAfterSecondTapGood() async {
         subject.state.gameProgress = .inProgress
         subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
         subject.state.layout.columns[1].cards = [
@@ -1652,17 +1650,53 @@ private struct GameProcessorTests {
             Card(rank: .five, suit: .clubs),
             Card(rank: .four, suit: .diamonds)
         ]
+        let originalLayout = subject.state.layout
+        subject.state[.automoveToFoundations] = false
+        subject.state[.earlyEndgame] = false
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
         #expect(endgame.methodsCalled.isEmpty)
+        //
+        subject.state.layout = originalLayout
         subject.state[.automoveToFoundations] = true
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
         #expect(endgame.methodsCalled.isEmpty)
+        //
+        subject.state.layout = originalLayout
         subject.state[.earlyEndgame] = true
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
         #expect(endgame.methodsCalled == ["evaluate(_:)"])
+    }
+
+    @Test("tapped: if autoplay is on, if early endgame is on, if second tap is bad, no call to endgame evaluate")
+    func endgameAfterSecondTapBad() async {
+        subject.state.gameProgress = .inProgress
+        subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
+        subject.state.layout.columns[1].cards = [
+            Card(rank: .six, suit: .diamonds),
+            Card(rank: .five, suit: .clubs),
+            Card(rank: .four, suit: .diamonds)
+        ]
+        let originalLayout = subject.state.layout
+        subject.state[.automoveToFoundations] = false
+        subject.state[.earlyEndgame] = false
+        subject.state.firstTapLocation = Location(category: .column, index: 1)
+        await subject.receive(.tapped(Location(category: .column, index: 2)))
+        #expect(endgame.methodsCalled.isEmpty)
+        //
+        subject.state.layout = originalLayout
+        subject.state[.automoveToFoundations] = true
+        subject.state.firstTapLocation = Location(category: .column, index: 1)
+        await subject.receive(.tapped(Location(category: .column, index: 2)))
+        #expect(endgame.methodsCalled.isEmpty)
+        //
+        subject.state.layout = originalLayout
+        subject.state[.earlyEndgame] = true
+        subject.state.firstTapLocation = Location(category: .column, index: 1)
+        await subject.receive(.tapped(Location(category: .column, index: 2)))
+        #expect(endgame.methodsCalled.isEmpty)
     }
 
     @Test("tapped: when endgame evaluate is called, if layouts come back, they are added to undo stack and animated")
