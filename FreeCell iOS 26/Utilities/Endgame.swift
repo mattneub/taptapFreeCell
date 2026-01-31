@@ -16,8 +16,8 @@ final class Endgame: EndgameType {
     init() {
         for index1 in 0..<8 {
             for index2 in 0..<8 {
-                paths.append([.splat1(column: index1), .autoplay, .splat2(column: index2), .autoplay])
-                paths.append([.shift1(column: index1), .autoplay, .splat2(column: index2), .autoplay])
+                paths.append([.splat1(column: index1), .autoplay, .splat2(column: index2), .autoplay, .splat2(column: index2), .autoplay])
+                paths.append([.shift1(column: index1), .autoplay, .splat2(column: index2), .autoplay, .splat2(column: index2), .autoplay])
             }
         }
     }
@@ -33,6 +33,7 @@ final class Endgame: EndgameType {
     paths:
         for path in paths {
             var layouts = [Layout]()
+        steps:
             for step in path {
                 let layoutToTry: Layout = layouts.last ?? layout
                 var layout = layoutToTry
@@ -59,6 +60,9 @@ final class Endgame: EndgameType {
                     }
                 case .splat2(let index):
                     helper.splat(layout: &layout, index: index)
+                    if layout == layoutToTry {
+                        break steps
+                    }
                 }
                 if layout != layoutToTry {
                     layouts.append(layout)
