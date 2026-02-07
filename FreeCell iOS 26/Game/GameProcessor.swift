@@ -12,6 +12,8 @@ final class GameProcessor: Processor {
 
     lazy var endgame: any EndgameType = Endgame()
 
+    lazy var dealer: any DealerType = Dealer()
+
     var state = GameState()
 
     /// This method effectively subscribes to the publishable property in the observable
@@ -70,17 +72,19 @@ final class GameProcessor: Processor {
                 }
                 saveGame(won: false)
             }
-            // deal, ensuring this is not a duplicate of an existing deal
-            do {
-                let stats = await services.stats.stats
-                var deck: any DeckType = services.deckFactory.makeDeck()
-                repeat {
-                    deck.shuffle()
-                    state.layout.deal(deck)
-                } while stats[state.layout.tableauDescription] != nil
+            // set state layout to new deal, either from `reserveLayout` property or by making it
+            if let layout = state.reserveLayout {
+                state.layout = layout
+            } else {
+                state.layout = await dealer.newDeal()
             }
             // start game ex nihilo; `Layout()` tells the animator that this is a new deal
             await beginGame(from: 0, oldLayout: Layout())
+            // refresh the reserve layout
+            Task {
+                state.reserveLayout = await dealer.newDeal()
+                services.persistence.saveReserveLayout(state.reserveLayout)
+            }
         case .didInitialLayout:
             // called exactly once early in the lifetime of the app
             // set up our listener tasks
@@ -93,6 +97,7 @@ final class GameProcessor: Processor {
                 state[pref.key] = pref.value
             }
             state.animationSpeed = services.persistence.loadAnimationSpeed()
+            state.reserveLayout = services.persistence.loadReserveLayout()
             // restore game if there was one; this is a fully restorable game so cannot call `beginGame`
             if let game = services.persistence.loadGame() {
                 state.layout = game.layout
@@ -111,6 +116,13 @@ final class GameProcessor: Processor {
             await ensureNeutralState() // initial state presentation
             await services.stats.loadStats() // actor, interface not blocked
             logger.log("stats loaded")
+            // now that we have stats, set the reserve layout with a fresh deal if needed
+            if state.reserveLayout == nil {
+                Task {
+                    state.reserveLayout = await dealer.newDeal()
+                    services.persistence.saveReserveLayout(state.reserveLayout)
+                }
+            }
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()
@@ -212,7 +224,7 @@ final class GameProcessor: Processor {
             await checkStopwatch()
         }
     }
-    
+
     /// Animate layout and prepare for the user to make the first move. This could be because the
     /// user said "deal" (new game) or because the user asked to replay a previous lost game (in which
     /// case we start fresh at the opening layout but with time already on the clock).

@@ -2,6 +2,9 @@ struct GameState: Equatable {
     /// Source of truth for the game layout.
     var layout = Layout()
 
+    /// Secondary layout in "just dealt" condition, so that dealing on demand takes no time.
+    var reserveLayout: Layout?
+
     var undoStack = [Layout]()
     var redoStack = [Layout]()
 

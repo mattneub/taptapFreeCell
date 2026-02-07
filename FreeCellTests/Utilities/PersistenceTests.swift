@@ -236,4 +236,36 @@ private struct PersistenceTests {
         #expect(defaults.thingsSet["sequenceMoves"] as? Bool == true)
         #expect(defaults.thingsSet["animations"] as? Double == 0.3)
     }
+
+    @Test("loadReserveLayout: calls object for reserveLayout, decodes and returns")
+    func loadReserveLayout() throws {
+        var layout = Layout()
+        layout.foundations[0].cards = [Card(rank: .six, suit: .spades)]
+        let data = try PropertyListEncoder().encode(layout)
+        defaults.thingsToReturn["reserveLayout"] = data
+        let result = subject.loadReserveLayout()
+        #expect(defaults.methodsCalled == ["data(forKey:)"])
+        #expect(result == layout)
+    }
+
+    @Test("loadReserveLayout: if wrong kind of data, returns nil")
+    func loadReserveLayoutBad() throws {
+        let data = try PropertyListEncoder().encode(["hello"])
+        defaults.thingsToReturn["reserveLayout"] = data
+        let result = subject.loadReserveLayout()
+        #expect(defaults.methodsCalled == ["data(forKey:)"])
+        #expect(result == nil)
+    }
+
+    @Test("saveReserveLayout: encodes layout using property list encoder, calls set for reserveLayout")
+    func saveReserveLayout() throws {
+        var layout = Layout()
+        layout.foundations[0].cards = [Card(rank: .six, suit: .spades)]
+        subject.saveReserveLayout(layout)
+        #expect(defaults.methodsCalled == ["set(_:forKey:)"])
+        let data = try #require(defaults.thingsSet["reserveLayout"] as? Data)
+        let result = try PropertyListDecoder().decode(Layout.self, from: data)
+        #expect(result == layout)
+    }
+
 }

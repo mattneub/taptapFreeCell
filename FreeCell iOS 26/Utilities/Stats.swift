@@ -81,7 +81,7 @@ actor Stats: StatsType {
     /// Intended to be called when a game ends by win or loss. Save the given Stat into the
     /// stats dictionary and save the stats dictionary to disk.
     func saveStat(_ stat: Stat) async throws {
-        let key = await stat.initialLayout.tableauDescription
+        let key = stat.initialLayout.tableauDescription
         stats[key] = stat
         try await saveStats()
     }

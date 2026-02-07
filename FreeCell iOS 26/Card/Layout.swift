@@ -334,7 +334,7 @@ struct Layout: CustomStringConvertible, Codable, Equatable {
     /// Vertical portrait of the columns, just like the way the game itself looks. This is used
     /// as unique the identifier for a game, because the initial layout when a deal is dealt
     /// consists entirely of columns; thus it is the key in the stats dictionary.
-    var tableauDescription: String {
+    nonisolated var tableauDescription: String {
         var output = ""
         // kind of tricky: write until you've hit seven empties in a row
         var maxempty = 0

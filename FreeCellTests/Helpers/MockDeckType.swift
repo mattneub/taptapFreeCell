@@ -2,7 +2,7 @@
 import Foundation
 
 final class MockDeckFactory: DeckFactoryType {
-    var mockDeckToReturn = MockDeck()
+    nonisolated(unsafe) var mockDeckToReturn = MockDeck()
     func makeDeck() -> any DeckType {
         return mockDeckToReturn
     }

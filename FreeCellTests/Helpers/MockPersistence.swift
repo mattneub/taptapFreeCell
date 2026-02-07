@@ -13,6 +13,8 @@ final class MockPersistence: PersistenceType {
     nonisolated(unsafe) var prefsToReturn = [PrefKey: Bool]()
     nonisolated(unsafe) var speedSet: GameState.AnimationSpeed?
     nonisolated(unsafe) var speedToReturn: GameState.AnimationSpeed?
+    nonisolated(unsafe) var layoutSet: Layout?
+    nonisolated(unsafe) var layoutToReturn: Layout?
 
     func saveGame(_ savedGame: SavedGame) {
         methodsCalled.append(#function)
@@ -66,6 +68,16 @@ final class MockPersistence: PersistenceType {
 
     func registerDefaults() {
         methodsCalled.append(#function)
+    }
+
+    func loadReserveLayout() -> Layout? {
+        methodsCalled.append(#function)
+        return layoutToReturn
+    }
+
+    func saveReserveLayout(_ layout: Layout?) {
+        methodsCalled.append(#function)
+        layoutSet = layout
     }
 
 

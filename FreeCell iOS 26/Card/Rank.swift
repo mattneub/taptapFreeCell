@@ -1,4 +1,4 @@
-enum Rank : Int, CaseIterable, CustomStringConvertible, Codable {
+nonisolated enum Rank : Int, CaseIterable, CustomStringConvertible, Codable {
     // TODO: It was important that ace be first in my original, keep an eye on this
     // Plus king was next, but why do I not just let the numbering be automatic?
     case ace = 1

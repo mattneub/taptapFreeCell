@@ -6,6 +6,7 @@ struct Defaults {
     static let stats = "stats" // actually, this one keys into Documents
     static let lastMicrosoftDeal = "lastMicrosoftDeal"
     static let animations = "animations"
+    static let reserveLayout = "reserveLayout"
 }
 
 enum PrefKey: String, Hashable, CaseIterable {
@@ -102,12 +103,14 @@ struct SavedGame: Codable, Equatable {
 }
 
 protocol PersistenceType: Sendable {
-    func saveGame(_: SavedGame)
     func loadGame() -> SavedGame?
+    func saveGame(_: SavedGame)
     func setDidMigration3(_: Bool)
     func didMigration3() -> Bool
     func loadLastMicrosoftDeal() -> Int
     func saveLastMicrosoftDeal(_: Int)
+    func loadReserveLayout() -> Layout?
+    func saveReserveLayout(_: Layout?)
 
     // just hand me the whole pref and let me worry about the details
     func loadPref(_: Pref) -> Pref
@@ -120,17 +123,17 @@ protocol PersistenceType: Sendable {
 }
 
 final class Persistence: PersistenceType {
-    func saveGame(_ game: SavedGame) {
-        if let data = try? PropertyListEncoder().encode(game) {
-            services.userDefaults.set(data, forKey: Defaults.currentGame)
-        }
-    }
-
     func loadGame() -> SavedGame? {
         if let data = services.userDefaults.data(forKey: Defaults.currentGame) {
             return try? PropertyListDecoder().decode(SavedGame.self, from: data)
         }
         return nil
+    }
+
+    func saveGame(_ game: SavedGame) {
+        if let data = try? PropertyListEncoder().encode(game) {
+            services.userDefaults.set(data, forKey: Defaults.currentGame)
+        }
     }
 
     func setDidMigration3(_ bool: Bool) {
@@ -165,6 +168,23 @@ final class Persistence: PersistenceType {
 
     func saveAnimationSpeed(_ speed: GameState.AnimationSpeed) {
         services.userDefaults.set(speed.rawValue, forKey: Defaults.animations)
+    }
+
+    func loadReserveLayout() -> Layout? {
+        if let data = services.userDefaults.data(forKey: Defaults.reserveLayout) {
+            return try? PropertyListDecoder().decode(Layout.self, from: data)
+        }
+        return nil
+    }
+
+    func saveReserveLayout(_ layout: Layout?) {
+        guard let layout else {
+            services.userDefaults.set(nil, forKey: Defaults.reserveLayout)
+            return
+        }
+        if let data = try? PropertyListEncoder().encode(layout) {
+            services.userDefaults.set(data, forKey: Defaults.reserveLayout)
+        }
     }
 
     func registerDefaults() {

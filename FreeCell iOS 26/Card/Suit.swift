@@ -1,4 +1,4 @@
-enum Suit: String, CustomStringConvertible, CaseIterable, Codable {
+nonisolated enum Suit: String, CustomStringConvertible, CaseIterable, Codable {
     case hearts = "H"
     case diamonds = "D"
     case spades = "S"

@@ -6,6 +6,9 @@ protocol EndgameType {
 
 /// Class that embodies early endgame logic.
 final class Endgame: EndgameType {
+    /// Our extra ply object. It is a var so we can mock it for testing.
+    var extraPly: any EndgameExtraPlyType = EndgameExtraPly()
+
     /// Our helper object. It is a var so we can mock it for testing.
     var helper: any EndgameHelperType = EndgameHelper()
 
@@ -16,8 +19,8 @@ final class Endgame: EndgameType {
     init() {
         for index1 in 0..<8 {
             for index2 in 0..<8 {
-                paths.append([.splat1(column: index1), .autoplay, .splat2(column: index2), .autoplay, .splat2(column: index2), .autoplay])
-                paths.append([.shift1(column: index1), .autoplay, .splat2(column: index2), .autoplay, .splat2(column: index2), .autoplay])
+                paths.append([.splat1(column: index1), .autoplay, .splat2(column: index2), .autoplay])
+                paths.append([.shift1(column: index1), .autoplay, .splat2(column: index2), .autoplay])
             }
         }
     }
@@ -70,6 +73,14 @@ final class Endgame: EndgameType {
             }
             if let finalLayout = layouts.last, finalLayout.numberOfCardsRemaining == 0 {
                 return layouts
+            }
+            // Ok, fine, we didn't win on that path; but did we get close? Well, what's "close"?
+            // Minimum 3 successful steps (3 is pretty common, 4 is very rare);
+            // minimum eight cards already up (after those steps).
+            if layouts.count > 2, layouts.last?.numberOfCardsRemaining ?? 52 < 44 {
+                if let extraPlyLayouts = extraPly.doExtraPly(layouts) {
+                    return extraPlyLayouts
+                }
             }
         }
         return []

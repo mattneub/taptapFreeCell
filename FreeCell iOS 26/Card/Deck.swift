@@ -1,14 +1,14 @@
 import Foundation
 
 /// Protocol describing the public face of Deck, so we can mock it for testing.
-protocol DeckType {
+nonisolated protocol DeckType: Sendable {
     var isEmpty: Bool { get }
     mutating func shuffle()
     mutating func deal() -> Card
 }
 
 /// Protocol describing the public face of DeckFactory, so we can mock it for testing.
-protocol DeckFactoryType {
+nonisolated protocol DeckFactoryType: Sendable {
     func makeDeck() -> any DeckType
 }
 
@@ -21,7 +21,7 @@ final class DeckFactory: DeckFactoryType {
 
 /// The full deck of cards. The reason this can be a struct is that we only ever deal out _all_
 /// the cards, once, and then we're done with it, so there is no need to keep a master reference.
-struct Deck: DeckType {
+nonisolated struct Deck: DeckType {
     var cards = [Card]()
 
     var isEmpty: Bool { cards.isEmpty }

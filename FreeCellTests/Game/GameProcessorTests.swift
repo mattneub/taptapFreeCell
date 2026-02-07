@@ -12,9 +12,9 @@ private struct GameProcessorTests {
     let persistence = MockPersistence()
     let coordinator = MockRootCoordinator()
     let stats = MockStats()
-    let deckFactory = MockDeckFactory()
     let exporter = MockExporter()
     let endgame = MockEndgame()
+    let dealer = MockDealer()
 
     init() {
         subject.coordinator = coordinator
@@ -22,11 +22,11 @@ private struct GameProcessorTests {
         subject.stopwatch = stopwatch
         subject.animator = animator
         subject.endgame = endgame
+        subject.dealer = dealer
         services.lifetime = lifetime
         services.persistence = persistence
         services.stats = stats
         services.dateType = MockDate.self
-        services.deckFactory = deckFactory
         services.exporter = exporter
     }
 
@@ -104,25 +104,25 @@ private struct GameProcessorTests {
         #expect(stopwatch.methodsCalled == ["advance()"])
     }
 
-    @Test("receive deal: creates a new full-deal layout, puts it in the state, and presents it, empties undo/redo")
+    @Test("receive deal: asks dealer for deal, sets layout, presents, empties undo/redo, asks dealer for deal, sets reserve")
     func deal() async {
         stopwatch.elapsedTime = 200
-        let deck = MockDeck()
-        deckFactory.mockDeckToReturn = deck
-        deck.cardsToDeal = [Card(rank: .jack, suit: .hearts)]
         subject.state.gameProgress = .gameOver
         subject.state.firstTapLocation = Location(category: .column, index: 0)
         subject.state.undoStack = [Layout(), Layout()]
         subject.state.redoStack = [Layout(), Layout()]
         subject.state.layout.moveCode = "yoho"
-        #expect(subject.state.layout == Layout())
+        var newLayout = Layout()
+        newLayout.columns[0].cards = [Card(rank: .king, suit: .hearts)]
+        await dealer.setLayoutToReturn(newLayout)
         await subject.receive(.deal)
-        #expect(deck.methodsCalled == ["shuffle()", "deal()"])
+        #expect(await dealer.methodsCalled == ["newDeal()"])
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])
         #expect(subject.state.undoStack.isEmpty)
         #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout == newLayout)
         #expect(subject.state.layout.moveCode == nil)
         #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
         #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
@@ -131,6 +131,50 @@ private struct GameProcessorTests {
         #expect(animator.speed == subject.state.animationSpeed)
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
         #expect(stopwatch.resetTimeInterval == 0)
+        // then we ask for another new deal and put it in reserve layout
+        await #while(await dealer.methodsCalled.count < 2)
+        #expect(await dealer.methodsCalled == ["newDeal()", "newDeal()"])
+        #expect(subject.state.reserveLayout == newLayout) // in real life it would be different
+        #expect(persistence.methodsCalled == ["saveReserveLayout(_:)"])
+        #expect(persistence.layoutSet == newLayout)
+    }
+
+    @Test("receive deal: if already have reserveLayout, uses it; the rest is like the previous test")
+    func receiveDealReserveLayout() async {
+        stopwatch.elapsedTime = 200
+        subject.state.gameProgress = .gameOver
+        subject.state.firstTapLocation = Location(category: .column, index: 0)
+        subject.state.undoStack = [Layout(), Layout()]
+        subject.state.redoStack = [Layout(), Layout()]
+        subject.state.layout.moveCode = "yoho"
+        var newLayout = Layout()
+        newLayout.columns[0].cards = [Card(rank: .king, suit: .hearts)]
+        await dealer.setLayoutToReturn(newLayout)
+        var reserveLayout = Layout()
+        reserveLayout.columns[1].cards = [Card(rank: .king, suit: .hearts)]
+        subject.state.reserveLayout = reserveLayout
+        await subject.receive(.deal)
+        #expect(await dealer.methodsCalled.isEmpty) // *
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented == [subject.state])
+        #expect(subject.state.undoStack.isEmpty)
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.layout == reserveLayout) // *
+        #expect(subject.state.layout.moveCode == nil)
+        #expect(subject.state.gameProgress == .dealtWaitingForFirstMove)
+        #expect(animator.methodsCalled == ["animate(oldLayout:newLayout:speed:)"])
+        #expect(animator.oldLayout == Layout()) // special signal indicating that this is a deal
+        #expect(animator.newLayout == subject.state.layout)
+        #expect(animator.speed == subject.state.animationSpeed)
+        #expect(stopwatch.methodsCalled == ["reset(to:)"])
+        #expect(stopwatch.resetTimeInterval == 0)
+        // then we ask for another new deal and put it in reserve layout
+        await #while(await dealer.methodsCalled.count < 1)
+        #expect(await dealer.methodsCalled == ["newDeal()"])
+        #expect(subject.state.reserveLayout == newLayout)
+        #expect(persistence.methodsCalled == ["saveReserveLayout(_:)"])
+        #expect(persistence.layoutSet == newLayout)
     }
 
     @Test("receive deal: if game is not gameOver, puts up alert; if user cancels, stops")
@@ -149,33 +193,11 @@ private struct GameProcessorTests {
         #expect(stats.methodsCalled.isEmpty)
     }
 
-    @Test("receive deal: deals repeatedly until layout tableau description is not in stats")
-    func dealRepeatedly() async {
-        let deck = MockDeck()
-        deckFactory.mockDeckToReturn = deck
-        deck.cardsToDeal = [
-            Card(rank: .jack, suit: .hearts),
-            Card(rank: .queen, suit: .hearts),
-            Card(rank: .king, suit: .hearts)
-        ]
-        var stats = StatsDictionary()
-        let stat = Stat(dateFinished: Date.now, won: true, initialLayout: Layout(), movesCount: 1, timeTaken: 1)
-        var layout = Layout()
-        layout.columns[0].cards = [deck.cardsToDeal[0]]
-        stats[layout.tableauDescription] = stat
-        layout.columns[0].cards = [deck.cardsToDeal[1]]
-        stats[layout.tableauDescription] = stat
-        // okay, we've stacked the deck (ha ha), here comes the test
-        self.stats.stats = stats
-        await subject.receive(.deal)
-        #expect(deck.methodsCalled == ["shuffle()", "deal()", "shuffle()", "deal()", "shuffle()", "deal()"])
-    }
-
     @Test("receive deal: if game is not gameOver, puts up alert; if user does not cancel, saves lost game, proceeds to deal")
     func dealNotWaitingForDealUserSaysDeal() async {
-        let deck = MockDeck()
-        deckFactory.mockDeckToReturn = deck
-        deck.cardsToDeal = [Card(rank: .jack, suit: .hearts)]
+        var newLayout = Layout()
+        newLayout.columns[0].cards = [Card(rank: .king, suit: .hearts)]
+        await dealer.setLayoutToReturn(newLayout)
         stopwatch.elapsedTime = 200
         subject.state.gameProgress = .inProgress
         coordinator.buttonTitleToReturn = "Deal"
@@ -202,7 +224,8 @@ private struct GameProcessorTests {
             timeTaken: 200,
             codes: ["hey", "ho"]
         ))
-        #expect(deck.methodsCalled == ["shuffle()", "deal()"])
+        #expect(await dealer.methodsCalled == ["newDeal()"])
+        #expect(subject.state.layout == newLayout)
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented == [subject.state])
@@ -216,6 +239,10 @@ private struct GameProcessorTests {
         #expect(animator.speed == subject.state.animationSpeed)
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
         #expect(stopwatch.resetTimeInterval == 0)
+        // then we ask for another new deal and put it in reserve layout
+        await #while(await dealer.methodsCalled.count < 2)
+        #expect(await dealer.methodsCalled == ["newDeal()", "newDeal()"])
+        #expect(subject.state.reserveLayout == newLayout) // in real life it would be different
     }
 
     @Test("receive didInitialLayout: sets up the lifetime listener task, resets stopwatch to zero, presents neutral state, tells stats to load stats")
@@ -241,6 +268,7 @@ private struct GameProcessorTests {
         await #while(stopwatch.methodsCalled.isEmpty)
         stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
+        try? await Task.sleep(for: .seconds(0.1))
         lifetime.continuation?.yield(.becomeActive)
         await #while(stopwatch.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled == ["resumeIfPaused()"])
@@ -254,6 +282,7 @@ private struct GameProcessorTests {
         await #while(stopwatch.methodsCalled.isEmpty)
         stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
+        try? await Task.sleep(for: .seconds(0.1))
         lifetime.continuation?.yield(.resignActive)
         await #while(stopwatch.methodsCalled.isEmpty)
         #expect(stopwatch.methodsCalled == ["pause()"])
@@ -267,9 +296,11 @@ private struct GameProcessorTests {
         await #while(stopwatch.methodsCalled.isEmpty)
         stopwatch.methodsCalled = []
         await #while(subject.listenForEventTask == nil)
+        try? await Task.sleep(for: .seconds(0.1))
+        persistence.methodsCalled = []
         lifetime.continuation?.yield(.enterBackground)
-        await #while(!persistence.methodsCalled.contains("saveGame(_:)"))
-        #expect(persistence.methodsCalled.last == "saveGame(_:)")
+        await #while(persistence.methodsCalled.isEmpty)
+        #expect(persistence.methodsCalled == ["saveGame(_:)"])
         #expect(presenter.thingsReceived == [.removeConfetti])
         subject.listenForEventTask?.cancel()
     }
@@ -282,7 +313,8 @@ private struct GameProcessorTests {
         await subject.receive(.didInitialLayout)
         #expect(persistence.methodsCalled == [
             "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)",
-            "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadAnimationSpeed()", "loadGame()"
+            "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadPref(_:)", "loadAnimationSpeed()", 
+            "loadReserveLayout()", "loadGame()"
         ])
         #expect(subject.state.prefs == [
             .automoveOnFirstTap: true, .showClock: false,
@@ -312,6 +344,28 @@ private struct GameProcessorTests {
         #expect(presenter.statesPresented == [subject.state])
         #expect(stopwatch.methodsCalled == ["reset(to:)"])
         #expect(stopwatch.resetTimeInterval == 3)
+    }
+
+    @Test("receive didInitialLayout: asks dealer to deal, stores in reserveLayout")
+    func didInitialLayoutReserveLayout() async {
+        var layout = Layout()
+        layout.columns[0].cards = [Card(rank: .six, suit: .spades)]
+        await dealer.setLayoutToReturn(layout)
+        await subject.receive(.didInitialLayout)
+        await #while(await dealer.methodsCalled.isEmpty)
+        #expect(await dealer.methodsCalled == ["newDeal()"])
+        #expect(subject.state.reserveLayout == layout)
+    }
+
+    @Test("receive didInitialLayout: if persistence provided a reserve layout, doesn't ask dealer to deal etc.")
+    func didInitialLayoutReserveLayoutFromPersistence() async {
+        var layout = Layout()
+        layout.columns[0].cards = [Card(rank: .six, suit: .spades)]
+        persistence.layoutToReturn = layout
+        await subject.receive(.didInitialLayout)
+        try? await Task.sleep(for: .seconds(0.1))
+        #expect(await dealer.methodsCalled.isEmpty)
+        #expect(subject.state.reserveLayout == layout)
     }
 
     @Test("receive didInitialLayout: restores game if there is one saved and that game is over")

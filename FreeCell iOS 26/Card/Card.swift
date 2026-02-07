@@ -1,5 +1,5 @@
 
-struct Card: Equatable, Hashable, CustomStringConvertible, Codable {
+nonisolated struct Card: Equatable, Hashable, CustomStringConvertible, Codable {
     let rank: Rank
     let suit: Suit
 
