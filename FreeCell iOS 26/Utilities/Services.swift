@@ -9,6 +9,7 @@ final class Services {
     var exporter: any ExporterType = Exporter()
     var dateType: any DateType.Type = Date.self
     var deckFactory: any DeckFactoryType = DeckFactory()
+    var endgameStateMachineFactory: any EndgameStateMachineFactoryType = EndgameStateMachineFactory()
     var lifetime: any LifetimeType = Lifetime()
     var mailer: any MailerType = Mailer()
     var mailComposeViewControllerType: any MailComposeViewControllerType.Type = MFMailComposeViewController.self

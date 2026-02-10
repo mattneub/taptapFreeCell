@@ -13,21 +13,23 @@ private struct GameProcessorTests {
     let coordinator = MockRootCoordinator()
     let stats = MockStats()
     let exporter = MockExporter()
-    let endgame = MockEndgame()
     let dealer = MockDealer()
+    let stateMachine = MockEndgameStateMachine()
+    let stateMachineFactory: MockEndgameStateMachineFactory!
 
     init() {
         subject.coordinator = coordinator
         subject.presenter = presenter
         subject.stopwatch = stopwatch
         subject.animator = animator
-        subject.endgame = endgame
         subject.dealer = dealer
         services.lifetime = lifetime
         services.persistence = persistence
         services.stats = stats
         services.dateType = MockDate.self
         services.exporter = exporter
+        stateMachineFactory = MockEndgameStateMachineFactory(stateMachine: stateMachine)
+        services.endgameStateMachineFactory = stateMachineFactory
     }
 
     @Test("receive autoplay: plays all can-go non-needed from columns and freecells to foundations, updates undo/redo")
@@ -943,6 +945,7 @@ private struct GameProcessorTests {
 
     @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if unambiguous move, makes it, undo/redo, move code")
     func tapFirstUnambiguousYesFreeCell() async {
+        subject.state[.earlyEndgame] = false
         subject.state.gameProgress = .inProgress
         do {
             subject.state.layout.foundations[1].cards = [Card(rank: .jack, suit: .hearts)]
@@ -1100,6 +1103,7 @@ private struct GameProcessorTests {
     // same idea as preceding except that the tap is a column instead of a freecell
     @Test("tapped: if firstTapLocation is nil, if state unambiguousMove is true, if unambiguous move, makes it, undo/redo")
     func tapFirstUnambiguousYesColumn() async {
+        subject.state[.earlyEndgame] = false
         subject.state.gameProgress = .inProgress
         do {
             subject.state.layout.foundations[1].cards = [Card(rank: .jack, suit: .hearts)]
@@ -1310,6 +1314,7 @@ private struct GameProcessorTests {
 
     @Test("tapped: unambiguous edge case: if there are multiple moves to empty columns, moves to first one")
     func unambiguousEdgeCase() async {
+        subject.state[.earlyEndgame] = false
         subject.state.gameProgress = .inProgress
         do {
             subject.state.layout.freeCells[0].cards = [Card(rank: .queen, suit: .hearts)]
@@ -1695,7 +1700,7 @@ private struct GameProcessorTests {
         }
     }
 
-    @Test("tapped: if autoplay is on, if early endgame is on, if second tap is good, call to endgame evaluate")
+    @Test("tapped: if autoplay is on, if early endgame is on, if second tap is good, call state machine")
     func endgameAfterSecondTapGood() async {
         subject.state.gameProgress = .inProgress
         subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
@@ -1709,22 +1714,26 @@ private struct GameProcessorTests {
         subject.state[.earlyEndgame] = false
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
-        #expect(endgame.methodsCalled.isEmpty)
+        #expect(stateMachineFactory.methodsCalled.isEmpty)
+        #expect(stateMachine.methodsCalled.isEmpty)
         //
         subject.state.layout = originalLayout
         subject.state[.automoveToFoundations] = true
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
-        #expect(endgame.methodsCalled.isEmpty)
+        #expect(stateMachineFactory.methodsCalled.isEmpty)
+        #expect(stateMachine.methodsCalled.isEmpty)
         //
         subject.state.layout = originalLayout
         subject.state[.earlyEndgame] = true
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
-        #expect(endgame.methodsCalled == ["evaluate(_:)"])
+        #expect(stateMachineFactory.methodsCalled == ["makeStateMachine(initialLayout:)"])
+        #expect(stateMachineFactory.layout == subject.state.layout)
+        #expect(stateMachine.methodsCalled == ["proceedToNextState()", "currentState"])
     }
 
-    @Test("tapped: if autoplay is on, if early endgame is on, if second tap is bad, no call to endgame evaluate")
+    @Test("tapped: if autoplay is on, if early endgame is on, if second tap is bad, no call to state machine")
     func endgameAfterSecondTapBad() async {
         subject.state.gameProgress = .inProgress
         subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
@@ -1738,22 +1747,25 @@ private struct GameProcessorTests {
         subject.state[.earlyEndgame] = false
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 2)))
-        #expect(endgame.methodsCalled.isEmpty)
+        #expect(stateMachineFactory.methodsCalled.isEmpty)
+        #expect(stateMachine.methodsCalled.isEmpty)
         //
         subject.state.layout = originalLayout
         subject.state[.automoveToFoundations] = true
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 2)))
-        #expect(endgame.methodsCalled.isEmpty)
+        #expect(stateMachineFactory.methodsCalled.isEmpty)
+        #expect(stateMachine.methodsCalled.isEmpty)
         //
         subject.state.layout = originalLayout
         subject.state[.earlyEndgame] = true
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 2)))
-        #expect(endgame.methodsCalled.isEmpty)
+        #expect(stateMachineFactory.methodsCalled.isEmpty)
+        #expect(stateMachine.methodsCalled.isEmpty)
     }
 
-    @Test("tapped: when endgame evaluate is called, if layouts come back, they are added to undo stack and animated")
+    @Test("tapped: when state machine is called, if OutcomeWin comes back, its layouts are added to undo stack and animated")
     func endgameAfterSecondTapResults() async {
         subject.state[.automoveToFoundations] = true
         subject.state[.earlyEndgame] = true
@@ -1782,11 +1794,14 @@ private struct GameProcessorTests {
         var layout2 = Layout()
         layout2.columns[7].cards = [Card(rank: .king, suit: .spades)]
         layout2.moveCode = "yyy"
-        endgame.layoutsToReturn = [layout1, layout2]
+        let win = EndgameStateMachine.OutcomeWin(accumulatedLayouts: [layout1, layout2])
+        stateMachine.statesToReturn = [MockEndgameState(), MockEndgameState(), nil] // cycles until nil terminator
+        stateMachine._currentState = win // fetches current state
         subject.state.firstTapLocation = Location(category: .column, index: 1)
         await subject.receive(.tapped(Location(category: .column, index: 0)))
-        #expect(endgame.methodsCalled == ["evaluate(_:)"])
-        #expect(endgame.layout == expectedLayout)
+        #expect(stateMachineFactory.methodsCalled == ["makeStateMachine(initialLayout:)"])
+        #expect(stateMachineFactory.layout == expectedLayout)
+        #expect(stateMachine.methodsCalled == ["proceedToNextState()", "proceedToNextState()", "proceedToNextState()", "currentState"])
         #expect(subject.state.redoStack.isEmpty)
         #expect(subject.state.undoStack == [oldLayout, expectedLayout, layout1])
         #expect(subject.state.layout == layout2)
@@ -1804,6 +1819,59 @@ private struct GameProcessorTests {
         #expect(subject.state.firstTapLocation == nil)
         #expect(subject.state.enablements == subject.state.baseEnablements)
         #expect(presenter.statesPresented.count == 3)
+        #expect(presenter.statesPresented.last == subject.state)
+    }
+
+    @Test("tapped: when state machine is called, if OutcomeLose comes back, just stops after tap animation")
+    func endgameAfterSecondTapNoResults() async {
+        subject.state[.automoveToFoundations] = true
+        subject.state[.earlyEndgame] = true
+        subject.state.gameProgress = .inProgress
+        subject.state.layout.columns[0].cards = [Card(rank: .six, suit: .hearts)]
+        subject.state.layout.columns[1].cards = [
+            Card(rank: .six, suit: .diamonds),
+            Card(rank: .five, suit: .clubs),
+            Card(rank: .four, suit: .diamonds)
+        ]
+        subject.state.layout.moveCode = "howdy"
+        let oldLayout = subject.state.layout
+        var expectedLayout = Layout()
+        expectedLayout.columns[0].cards = [
+            Card(rank: .six, suit: .hearts),
+            Card(rank: .five, suit: .clubs),
+            Card(rank: .four, suit: .diamonds)
+        ]
+        expectedLayout.columns[1].cards = [
+            Card(rank: .six, suit: .diamonds),
+        ]
+        subject.state.redoStack = [Layout(), Layout()]
+        var layout1 = Layout()
+        layout1.columns[7].cards = [Card(rank: .king, suit: .clubs)]
+        layout1.moveCode = "xxx"
+        var layout2 = Layout()
+        layout2.columns[7].cards = [Card(rank: .king, suit: .spades)]
+        layout2.moveCode = "yyy"
+        let lose = EndgameStateMachine.OutcomeLose()
+        stateMachine.statesToReturn = [MockEndgameState(), MockEndgameState(), nil] // cycles until nil terminator
+        stateMachine._currentState = lose // fetches current state
+        subject.state.firstTapLocation = Location(category: .column, index: 1)
+        await subject.receive(.tapped(Location(category: .column, index: 0)))
+        #expect(stateMachineFactory.methodsCalled == ["makeStateMachine(initialLayout:)"])
+        #expect(stateMachineFactory.layout == expectedLayout)
+        #expect(stateMachine.methodsCalled == ["proceedToNextState()", "proceedToNextState()", "proceedToNextState()", "currentState"])
+        #expect(subject.state.redoStack.isEmpty)
+        #expect(subject.state.undoStack == [oldLayout])
+        #expect(subject.state.layout == expectedLayout)
+        #expect(animator.methodsCalled == [
+            "animate(oldLayout:newLayout:speed:)", // tap
+        ])
+        #expect(animator.oldLayouts == [oldLayout])
+        #expect(animator.newLayouts == [expectedLayout])
+        #expect(subject.state.undoStack[0].moveCode == "howdy")
+        #expect(subject.state.layout.moveCode == "21")
+        #expect(subject.state.firstTapLocation == nil)
+        #expect(subject.state.enablements == subject.state.baseEnablements)
+        #expect(presenter.statesPresented.count == 1)
         #expect(presenter.statesPresented.last == subject.state)
     }
 

@@ -10,8 +10,6 @@ final class GameProcessor: Processor {
 
     lazy var animator: any AnimatorType = Animator(processor: self)
 
-    lazy var endgame: any EndgameType = Endgame()
-
     lazy var dealer: any DealerType = Dealer()
 
     var state = GameState()
@@ -591,15 +589,18 @@ final class GameProcessor: Processor {
         if state[.automoveToFoundations] {
             await autoplay()
             if state[.earlyEndgame] {
-                let winningLayouts = endgame.evaluate(state.layout)
-                for layout in winningLayouts { // exactly like coda of autoplay
-                    let oldLayout = state.layout
-                    state.undoStack.append(oldLayout)
-                    state.redoStack = []
-                    state.layout = layout
-                    state.layout.moveCode = nil // user didn't do anything to get here
-                    await ensureNeutralState()
-                    await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
+                let stateMachine = services.endgameStateMachineFactory.makeStateMachine(initialLayout: state.layout)
+                while stateMachine.proceedToNextState() != nil {}
+                if let win = stateMachine.currentState as? EndgameStateMachine.OutcomeWin {
+                    for layout in win.accumulatedLayouts { // exactly like coda of autoplay
+                        let oldLayout = state.layout
+                        state.undoStack.append(oldLayout)
+                        state.redoStack = []
+                        state.layout = layout
+                        state.layout.moveCode = nil // user didn't do anything to get here
+                        await ensureNeutralState()
+                        await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
+                    }
                 }
             }
         }
