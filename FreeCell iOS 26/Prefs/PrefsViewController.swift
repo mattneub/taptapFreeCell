@@ -16,7 +16,7 @@ final class PrefsViewController: UITableViewController, ReceiverPresenter {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Settings"
-        Task {
+        Task.immediate {
             await processor?.receive(.initialData)
         }
     }
@@ -33,7 +33,7 @@ final class PrefsViewController: UITableViewController, ReceiverPresenter {
     @objc func prefSwitchChanged(_ sender: Any) {
         guard let sender = sender as? PrefSwitch else { return }
         guard let prefKey = sender.prefKey else { return }
-        Task {
+        Task.immediate {
             await processor?.receive(.prefChanged(prefKey, value: sender.isOn))
         }
     }
@@ -41,7 +41,7 @@ final class PrefsViewController: UITableViewController, ReceiverPresenter {
     /// Called as a nil-targeted action from UISegmentedControl in cell.
     @objc func segmentedControlChanged(_ sender: Any) {
         guard let sender = sender as? UISegmentedControl else { return }
-        Task {
+        Task.immediate {
             await processor?.receive(.speedChanged(index: sender.selectedSegmentIndex))
         }
     }

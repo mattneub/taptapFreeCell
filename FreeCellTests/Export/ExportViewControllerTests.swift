@@ -1,7 +1,6 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
-import WaitWhile
 import SnapshotTesting
 
 private struct ExportViewControllerTests {
@@ -95,7 +94,7 @@ private struct ExportViewControllerTests {
     }
 
     @Test("viewDidLoad: sets background Color, adds subviews, sends initialData")
-    func viewDidLoad() async {
+    func viewDidLoad() {
         subject.loadViewIfNeeded()
         #expect(subject.view.backgroundColor == .secondarySystemBackground)
         #expect(subject.cancelButton1.isDescendant(of: subject.view))
@@ -107,7 +106,6 @@ private struct ExportViewControllerTests {
         #expect(subject.exportLabel.isDescendant(of: subject.view))
         #expect(subject.contentView.isDescendant(of: subject.view))
         #expect(subject.scrollView.isDescendant(of: subject.view))
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.initialData])
     }
 
@@ -129,24 +127,21 @@ private struct ExportViewControllerTests {
     }
 
     @Test("doCancel: sends cancel")
-    func doCancel() async {
+    func doCancel() {
         subject.doCancel()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.cancel])
     }
 
     @Test("doImportAndDeal: sends import with text view text")
-    func doImport() async {
+    func doImport() {
         subject.textView.text = "howdy"
         subject.doImportAndDeal()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.import("howdy")])
     }
 
     @Test("doExport: sends export")
-    func doExport() async {
+    func doExport() {
         subject.doExport()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.export])
     }
 }

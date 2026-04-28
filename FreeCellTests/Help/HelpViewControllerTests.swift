@@ -38,7 +38,7 @@ private struct HelpViewControllerTests {
     }
 
     @Test("viewDidLoad: does all the things")
-    func viewDidLoad() async throws {
+    func viewDidLoad() throws {
         subject.pageViewController = pageViewController
         subject.loadViewIfNeeded()
         #expect(subject.title == "Help")
@@ -64,7 +64,6 @@ private struct HelpViewControllerTests {
         #expect(pageViewController.view.isDescendant(of: subject.view))
         #expect(pageViewController.dataSource === subject.datasource)
         #expect(pageViewController.delegate === subject.datasource)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.initialData])
     }
 
@@ -137,30 +136,26 @@ private struct HelpViewControllerTests {
     }
 
     @Test("goLeft: sends .goLeft to processor")
-    func goLeft() async {
+    func goLeft() {
         subject.goLeft()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.goLeft])
     }
 
     @Test("goRight: sends .goRight to processor")
-    func goRight() async {
+    func goRight() {
         subject.goRight()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.goRight])
     }
 
     @Test("goBack: sends .goBack to processor")
-    func goBack() async {
+    func goBack() {
         subject.goBack()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.goBack])
     }
 
     @Test("doCancel: sends .dismiss to processor")
-    func cancel() async {
+    func cancel() {
         subject.doCancel()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.dismiss])
     }
 }

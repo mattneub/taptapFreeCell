@@ -154,7 +154,6 @@ private struct StatsDatasourceTests {
         #expect(tableView.indexPathForSelectedRow != nil)
         // all of that was prep, this is the test
         subject.tableView(tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.resume(key: "ho")])
         #expect(tableView.indexPathForSelectedRow == nil)
     }
@@ -199,7 +198,8 @@ private struct StatsDatasourceTests {
         action.myHandler?(action, UIView(), completion)
         #expect(subject.sortedData.count == 1)
         #expect(subject.sortedData.first?.key == "hey") // "ho" was deleted
-        await #while(processor.thingsReceived.count < 3)
+        await #while(processor.thingsReceived.count < 3) // needed, but I don't know why
+        #expect(processor.thingsReceived.count == 3)
         #expect(processor.thingsReceived[1] == .totalChanged(total: 1, won: 1))
         #expect(processor.thingsReceived[2] == .delete(key: "ho"))
         #expect(ok == true)
@@ -217,7 +217,7 @@ private struct StatsDatasourceTests {
         var ok: Bool?
         func completion(_ success: Bool) { ok = success }
         action.myHandler?(action, UIView(), completion)
-        await #while(processor.thingsReceived.count < 2)
+        #expect(processor.thingsReceived.count == 2)
         let expected = Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2)
         #expect(processor.thingsReceived.last == .mail(stat: expected))
         #expect(ok == true)
@@ -236,7 +236,7 @@ private struct StatsDatasourceTests {
         var ok: Bool?
         func completion(_ success: Bool) { ok = success }
         action.myHandler?(action, UIView(), completion)
-        await #while(processor.thingsReceived.count < 2)
+        #expect(processor.thingsReceived.count == 2)
         let expected = Stat(dateFinished: Date(timeIntervalSince1970: 3), won: false, initialLayout: Layout(), movesCount: 2, timeTaken: 2)
         #expect(processor.thingsReceived.last == .showSnapshot(stat: expected, source: cell))
         #expect(ok == true)

@@ -16,7 +16,7 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             myTitle: "Rules",
             image: UIImage(systemName: "lightbulb")
         ) { [weak processor] _ in
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
                 }
@@ -27,7 +27,7 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             myTitle: "About",
             image: UIImage(systemName: "questionmark.circle")
         ) { [weak processor] _ in
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
                 }
@@ -38,7 +38,7 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             myTitle: "Statistics",
             image: UIImage(systemName: "pencil.and.list.clipboard")
         ) { [weak processor] _ in
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
                 }
@@ -50,7 +50,7 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             myTitle: "Import / Export",
             image: UIImage(systemName: "arrow.up.arrow.down.circle")
         ) { [weak processor] _ in
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
                 }
@@ -61,7 +61,7 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             myTitle: "Settings",
             image: UIImage(systemName: "gear")
         ) { [weak processor] _ in
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
                 }
@@ -83,7 +83,7 @@ struct GameViewMenuBuilder: GameViewMenuBuilderType {
             myTitle: "Cleanup",
             image: UIImage(systemName: "tray.full")
         ) { _ in
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.4)) // give the menu time to collapse
                 }

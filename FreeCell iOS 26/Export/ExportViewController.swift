@@ -126,7 +126,7 @@ final class ExportViewController: UIViewController, ReceiverPresenter {
             importButton.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor, constant: -16),
             importButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
         ])
-        Task {
+        Task.immediate {
             await processor?.receive(.initialData)
         }
     }
@@ -137,19 +137,19 @@ final class ExportViewController: UIViewController, ReceiverPresenter {
     }
 
     @objc func doCancel() {
-        Task {
+        Task.immediate {
             await processor?.receive(.cancel)
         }
     }
 
     @objc func doImportAndDeal() {
-        Task {
+        Task.immediate {
             await processor?.receive(.import(textView.text))
         }
     }
 
     @objc func doExport() {
-        Task {
+        Task.immediate {
             await processor?.receive(.export)
         }
     }

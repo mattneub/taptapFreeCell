@@ -39,7 +39,7 @@ final class MicrosoftViewController: UIViewController, ReceiverPresenter {
         dealStepper.addTarget(self, action: #selector(doDealStepper), for: .primaryActionTriggered)
         dealButton.addTarget(self, action: #selector(doDealButton), for: .primaryActionTriggered)
         cancelButton.addTarget(self, action: #selector(doCancelButton), for: .primaryActionTriggered)
-        Task {
+        Task.immediate {
             await processor?.receive(.initialData)
         }
     }
@@ -71,19 +71,19 @@ final class MicrosoftViewController: UIViewController, ReceiverPresenter {
     }
 
     @IBAction func doDealButton(_ sender: Any) {
-        Task {
+        Task.immediate {
             await processor?.receive(.deal)
         }
     }
 
     @IBAction func doCancelButton(_ sender: Any) {
-        Task {
+        Task.immediate {
             await processor?.receive(.cancel)
         }
     }
 
     @IBAction func doDealStepper(_ sender: Any) {
-        Task {
+        Task.immediate {
             await processor?.receive(.stepper(dealStepper.value))
         }
     }
@@ -94,7 +94,7 @@ extension MicrosoftViewController: UITextFieldDelegate {
         // is this a legal game number, and does it exist in stats?
         if let num = Int(textField.text ?? "0") {
             if (1...1_000_000).contains(num) {
-                Task {
+                Task.immediate {
                     await processor?.receive(.userTyped(num))
                 }
                 return

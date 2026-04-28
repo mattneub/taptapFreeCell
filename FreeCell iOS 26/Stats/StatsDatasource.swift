@@ -106,7 +106,7 @@ final class StatsDatasource: NSObject, StatsDatasourceType {
         snapshot.deleteAllItems()
         snapshot.appendSections(["dummy"])
         snapshot.appendItems(sortedData.map { $0.key })
-        await datasource?.apply(snapshot, animatingDifferences: animating)
+        await datasource?.apply(snapshot, animatingDifferences: unlessTesting(animating))
         let total = sortedData.count
         let won = sortedData.filter { $0.value.won }.count
         await processor?.receive(.totalChanged(total: total, won: won))
@@ -178,7 +178,7 @@ extension StatsDatasource: UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        Task {
+        Task.immediate {
             await processor?.receive(.resume(key: sortedData[indexPath.row].key))
             tableView.selectRow(at: nil, animated: false, scrollPosition: .none)
         }
@@ -192,29 +192,29 @@ extension StatsDatasource: UITableViewDelegate {
             guard let self else { return completion(false) }
             let stat = sortedData[indexPath.row].key
             sortedData.remove(at: indexPath.row)
-            Task {
+            Task.immediate {
                 await updateTable(animating: true)
                 await processor?.receive(.delete(key: stat))
-                completion(true) // looks great and the runtime is not complaining so what the heck
             }
+            completion(true)
         }
         let exportAction = MyUIContextualAction(myStyle: .normal, title: "Export") { [weak self] (action, view, completion) in
             guard let self else { return completion(false) }
             let stat = sortedData[indexPath.row].value
-            Task {
+            Task.immediate {
                 await processor?.receive(.mail(stat: stat))
-                completion(true)
             }
+            completion(true)
         }
         exportAction.backgroundColor = .systemGreen
         let previewAction = MyUIContextualAction(myStyle: .normal, title: "View") { [weak self] (action, view, completion) in
             guard let self else { return completion(false) }
             let stat = sortedData[indexPath.row].value
             let cell = tableView.cellForRow(at: indexPath)
-            Task {
+            Task.immediate {
                 await processor?.receive(.showSnapshot(stat: stat, source: cell))
-                completion(true)
             }
+            completion(true)
         }
         previewAction.backgroundColor = .systemBlue
         return UISwipeActionsConfiguration(actions: [deleteAction, exportAction, previewAction]).applying {

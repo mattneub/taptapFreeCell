@@ -27,7 +27,7 @@ final class IconGeneratorViewController: UIViewController {
             fullCardView.bounds.size.height = CardView.baseSize.height
             emptyCardView.backgroundColor = nil
             fullCardView.backgroundColor = nil
-            Task {
+            Task.immediate {
                 try? await Task.sleep(for: .seconds(1))
                 await emptyCardView.redraw()
                 await fullCardView.redraw()

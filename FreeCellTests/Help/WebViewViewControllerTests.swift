@@ -2,7 +2,6 @@
 import Testing
 import UIKit
 import WebKit
-import WaitWhile
 
 private struct WebViewViewControllerTests {
     let subject = WebViewViewController()
@@ -69,7 +68,6 @@ private struct WebViewViewControllerTests {
         let action = MockNavigationAction(request: request, navigationType: .linkActivated)
         let result = await subject.webView(subject.webView!, decidePolicyFor: action)
         #expect(result == .cancel)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.showSafari(url: URL(string: "http://www.example.com")!)])
     }
 
@@ -93,7 +91,6 @@ private struct WebViewViewControllerTests {
         let action = MockNavigationAction(request: request, navigationType: .linkActivated)
         let result = await subject.webView(subject.webView!, decidePolicyFor: action)
         #expect(result == .cancel)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.navigate(to: "moe", from: "manny")])
     }
 }

@@ -221,12 +221,11 @@ private struct CardViewTests {
     }
 
     @Test("tapped: sends tapped to processor")
-    func tapped() async {
+    func tapped() {
         let processor = MockReceiver<GameAction>()
         let subject = CardView(location: Location(category: .column, index: 0))
         subject.processor = processor
         subject.tapped()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.tapped(Location(category: .column, index: 0))])
     }
 

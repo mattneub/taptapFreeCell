@@ -1,7 +1,6 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
-import WaitWhile
 import SnapshotTesting
 
 private struct StatsViewControllerTests {
@@ -26,7 +25,7 @@ private struct StatsViewControllerTests {
     }
 
     @Test("sortSegmentedControl is correctly constructed")
-    func sortSegmentedControl() async throws {
+    func sortSegmentedControl() throws {
         let seg = subject.sortSegmentedControl
         #expect(seg.numberOfSegments == 4)
         #expect(seg.titleForSegment(at: 0) == "Date")
@@ -40,7 +39,6 @@ private struct StatsViewControllerTests {
         #expect(height.constant == 22)
         #expect(height.firstAttribute == .height)
         seg.sendActions(for: .valueChanged)
-        await #while(datasource.thingsReceived.isEmpty)
         #expect(datasource.thingsReceived == [.sort(.date)])
     }
 
@@ -102,7 +100,6 @@ private struct StatsViewControllerTests {
     func viewDidAppear() async {
         subject.spinner.startAnimating()
         subject.viewDidAppear(false)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.initialData])
         #expect(subject.spinner.isAnimating == false)
         subject.viewDidAppear(false)
@@ -125,9 +122,8 @@ private struct StatsViewControllerTests {
     }
 
     @Test("doMicrosofts: sends toggleMicrosofts")
-    func doMicrosofts() async {
+    func doMicrosofts() {
         subject.doMicrosofts()
-        await #while(datasource.thingsReceived.isEmpty)
         #expect(datasource.thingsReceived == [.toggleMicrosofts])
     }
 }

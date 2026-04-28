@@ -15,21 +15,21 @@ protocol DebouncerType {
 
     init(interval: TimeInterval, delegate: (any DebouncerDelegate)?) {
         self.delegate = delegate
-        Task {
-            await listenForEvent(interval: interval)
-        }
+        listenForEvent(interval: interval)
     }
 
     func eventOccurred() {
         event.toggle()
     }
 
-    private func listenForEvent(interval: TimeInterval) async {
+    private func listenForEvent(interval: TimeInterval) {
         let observations = Observations { [weak self] in
             return self?.event
         }
-        for await _ in observations.debounce(for: .seconds(interval)) {
-            await delegate?.debounced()
+        Task {
+            for await _ in observations.debounce(for: .seconds(interval)) {
+                await delegate?.debounced()
+            }
         }
     }
 }

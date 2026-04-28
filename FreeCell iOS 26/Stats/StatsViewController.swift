@@ -76,7 +76,7 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if !didInitialData {
-            Task {
+            Task.immediate {
                 try? await unlessTesting {
                     try? await Task.sleep(for: .seconds(0.25))
                 }
@@ -108,13 +108,13 @@ final class StatsViewController: UITableViewController, ReceiverPresenter {
     }
 
     func doSegmentedControl(_ seg: UISegmentedControl) {
-        Task {
+        Task.immediate {
             await datasource.receive(.sort(StatsSorting(rawValue: seg.selectedSegmentIndex) ?? .date))
         }
     }
 
     @objc func doMicrosofts() {
-        Task {
+        Task.immediate {
             await datasource.receive(.toggleMicrosofts)
         }
     }

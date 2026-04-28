@@ -60,7 +60,7 @@ final class HelpViewController: UIViewController, ReceiverPresenter {
             pageViewController.delegate = datasource
         }
 
-        Task {
+        Task.immediate {
             await processor?.receive(.initialData)
         }
     }
@@ -99,25 +99,25 @@ final class HelpViewController: UIViewController, ReceiverPresenter {
     }
 
     @objc func goBack() {
-        Task {
+        Task.immediate {
             await processor?.receive(.goBack)
         }
     }
 
     @objc func goLeft() {
-        Task {
+        Task.immediate {
             await processor?.receive(.goLeft)
         }
     }
 
     @objc func goRight() {
-        Task {
+        Task.immediate {
             await processor?.receive(.goRight)
         }
     }
 
     @objc func doCancel() {
-        Task {
+        Task.immediate {
             await processor?.receive(.dismiss)
         }
     }

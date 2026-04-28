@@ -103,7 +103,7 @@ final class HelpDatasource: NSObject, PageViewControllerDatasourceType {
         previousViewControllers: [UIViewController],
         transitionCompleted completed: Bool
     ) {
-        Task {
+        Task.immediate {
             await processor?.receive(.userSwiped)
         }
     }

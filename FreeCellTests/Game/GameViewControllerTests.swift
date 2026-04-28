@@ -138,7 +138,6 @@ private struct GameViewControllerTests {
         #expect(freeCell.location.category == .freeCell)
         let column = try #require(subject.columns.first)
         #expect(column.location.category == .column)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.didInitialLayout])
         sizer.methodsCalled = []
         constructor.methodsCalled = []
@@ -151,7 +150,7 @@ private struct GameViewControllerTests {
     }
 
     @Test("view will layout: configures all card views as empty, sets processor; card views category and index are right")
-    func viewWillLayoutRedraw() async throws {
+    func viewWillLayoutRedraw() throws {
         constructor.cardViews =  [
             [
                 MockCardView(location: Location(category: .foundation, index: 0)),
@@ -184,7 +183,6 @@ private struct GameViewControllerTests {
         })
         let allCards = try #require((subject.foundations + subject.freeCells + subject.columns) as? [MockCardView])
         #expect(allCards.allSatisfy { $0.cards.isEmpty })
-        await #while(!(allCards.allSatisfy { $0.processor === processor }))
         #expect(allCards.allSatisfy { $0.processor === processor })
     }
 
@@ -366,9 +364,8 @@ private struct GameViewControllerTests {
     }
 
     @Test("doDeal: sends deal")
-    func doDeal() async {
+    func doDeal() {
         subject.doDeal()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.deal])
     }
 
@@ -389,86 +386,74 @@ private struct GameViewControllerTests {
     }
 
     @Test("singleTap: sends tapBackground")
-    func singleTap() async {
+    func singleTap() {
         subject.singleTap()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.tapBackground])
     }
 
     @Test("doubleTap: sends autoplay")
-    func doubleTap() async {
+    func doubleTap() {
         subject.doubleTap()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.autoplay])
     }
 
     @Test("twoFingerTap: sends hint")
-    func twoFingerTap() async {
+    func twoFingerTap() {
         subject.twoFingerTap()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.hint])
     }
 
     @Test("doUndo: sends undo")
-    func undo() async {
+    func undo() {
         subject.doUndo()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.undo])
     }
 
     @Test("doRedo: sends redo")
-    func redo() async {
+    func redo() {
         subject.doRedo()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.redo])
     }
 
     @Test("doUndoAll: sends undoAll")
-    func undoAll() async {
+    func undoAll() {
         subject.doUndoAll()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.undoAll])
     }
 
     @Test("doRedoAll: sends redoAll")
-    func redoAll() async {
+    func redoAll() {
         subject.doRedoAll()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.redoAll])
     }
 
     @Test("doRules: sends showRules")
-    func doRules() async {
+    func doRules() {
         subject.doRules()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.showRules])
     }
 
     @Test("doHelp: sends showHelp")
-    func doHelp() async {
+    func doHelp() {
         subject.doHelp()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.showHelp])
     }
 
     @Test("doStatistics: sends showStats")
-    func doStatistics() async {
+    func doStatistics() {
         subject.doStatistics()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.showStats])
     }
 
     @Test("doImportExport: sends showImportExport")
-    func doImportExport() async {
+    func doImportExport() {
         subject.doImportExport()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.showImportExport])
     }
 
     @Test("doPrefs: sends showPrefs")
-    func doPrefs() async {
+    func doPrefs() {
         subject.doPrefs()
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.showPrefs])
     }
 
@@ -691,7 +676,6 @@ private struct GameViewControllerTests {
     @Test("viewWillTransition: removes all card views, calls debouncer")
     func viewWillTransition() async {
         subject.viewWillLayoutSubviews()
-        await #while(processor.thingsReceived.isEmpty)
         let cardView = subject.foundations[0]
         subject.view.addSubview(cardView)
         let viewController = UIViewController()

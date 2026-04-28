@@ -151,7 +151,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         for cardView in foundations + freeCells + columns {
             cardView.processor = self.processor
         }
-        Task {
+        Task.immediate {
             await processor?.receive(.didInitialLayout) // request presentation
         }
     }
@@ -285,7 +285,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     @objc func doDeal() {
         ensureNoConfetti()
-        Task {
+        Task .immediate{
             await processor?.receive(.deal)
         }
     }
@@ -294,7 +294,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         ensureNoConfetti()
         if let item = navigationItem.leftBarButtonItem {
             if gestureRecognizer.state == .began {
-                Task {
+                Task.immediate {
                     await processor?.receive(.showMicrosoft(SourceItemWrapper(sourceItem: item)))
                 }
             }
@@ -304,7 +304,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     @objc func doMenuMicrosoftDeal() {
         ensureNoConfetti()
         if let item = navigationItem.leftBarButtonItem {
-            Task {
+            Task.immediate {
                 await processor?.receive(.showMicrosoft(SourceItemWrapper(sourceItem: item)))
             }
         }
@@ -312,79 +312,79 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     @objc func doUndo() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.undo)
         }
     }
 
     @objc func doRedo() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.redo)
         }
     }
 
     @objc func doUndoAll() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.undoAll)
         }
     }
 
     @objc func doRedoAll() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.redoAll)
         }
     }
 
     @objc func singleTap() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.tapBackground)
         }
     }
 
     @objc func doubleTap() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.autoplay)
         }
     }
 
     @objc func twoFingerTap() {
         ensureNoConfetti()
-        Task {
+        Task.immediate {
             await processor?.receive(.hint)
         }
     }
 
     @objc func doRules() {
-        Task {
+        Task.immediate {
             await processor?.receive(.showRules)
         }
     }
 
     @objc func doHelp() {
-        Task {
+        Task.immediate {
             await processor?.receive(.showHelp)
         }
     }
 
     @objc func doStatistics() {
-        Task {
+        Task.immediate {
             await processor?.receive(.showStats)
         }
     }
 
     @objc func doImportExport() {
-        Task {
+        Task.immediate {
             await processor?.receive(.showImportExport)
         }
     }
 
     @objc func doPrefs() {
-        Task {
+        Task.immediate {
             await processor?.receive(.showPrefs)
         }
     }

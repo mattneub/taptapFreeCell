@@ -1,7 +1,6 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
-import WaitWhile
 
 private struct HelpDatasourceTests {
     var subject: HelpDatasource!
@@ -142,9 +141,8 @@ private struct HelpDatasourceTests {
     }
 
     @Test("didFinishAnimating: sends userSwiped to processor")
-    func didFinish() async {
+    func didFinish() {
         subject.pageViewController(pvc, didFinishAnimating: true, previousViewControllers: [UIViewController()], transitionCompleted: true)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.userSwiped])
     }
 }

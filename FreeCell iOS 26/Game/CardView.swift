@@ -154,7 +154,7 @@ class CardView: UIView {
     }
 
     @objc func tapped() {
-        Task {
+        Task.immediate {
             await processor?.receive(.tapped(location))
         }
     }
@@ -166,7 +166,7 @@ class CardView: UIView {
         switch gestureRecognizer.state {
         case .began:
             if location.category == .foundation || location.category == .freeCell {
-                Task {
+                Task.immediate {
                     await processor?.receive(.longPress(location, -1)) // -1 means use `card`
                 }
             } else {
@@ -174,13 +174,13 @@ class CardView: UIView {
                 let superlayerPoint = convert(point, to: self.superview)
                 let hitLayer = layer.hitTest(superlayerPoint)
                 if let cardLayer = hitLayer?.superlayer as? CardLayer {
-                    Task {
+                    Task.immediate {
                         await processor?.receive(.longPress(location, Int(cardLayer.zPosition)))
                     }
                 }
             }
         case .ended:
-            Task {
+            Task.immediate {
                 await processor?.receive(.longPressEnded)
             }
         default: break

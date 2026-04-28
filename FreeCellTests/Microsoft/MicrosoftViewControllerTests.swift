@@ -91,35 +91,31 @@ private struct MicrosoftViewControllerTests {
     }
 
     @Test("doDealButton: sends .deal")
-    func deal() async {
+    func deal() {
         subject.doDealButton(self)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.deal])
     }
 
     @Test("doCancelButton: sends .cancel")
-    func cancel() async {
+    func cancel() {
         subject.doCancelButton(self)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.cancel])
     }
 
     @Test("doDealStepper: sends .stepper")
-    func stepper() async {
+    func stepper() {
         subject.loadViewIfNeeded()
         subject.dealStepper.value = 42
         subject.doDealStepper(self)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived.last == .stepper(42))
     }
 
     @Test("textFieldDidChangeSelection: if valid number, sends .userTyped")
-    func textFieldDidChange() async {
+    func textFieldDidChange() {
         subject.loadViewIfNeeded()
         let textField = UITextField()
         textField.text = "42"
         subject.textFieldDidChangeSelection(textField)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived.last == .userTyped(42))
     }
 

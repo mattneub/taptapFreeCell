@@ -1,12 +1,11 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
-import WaitWhile
 import BackgroundTasks
 
 private struct GameViewMenuBuilderTests {
     @Test("menu is correctly built")
-    func build() async throws {
+    func build() throws {
         let fileManager = MockFileManager()
         fileManager.countToReturn = 1
         services.fileManager = fileManager
@@ -22,7 +21,6 @@ private struct GameViewMenuBuilderTests {
             #expect(action.title == "Rules")
             #expect(action.image == UIImage(systemName: "lightbulb"))
             (action as? MyUIAction)?.handler?(action)
-            await #while(processor.thingsReceived.isEmpty)
             #expect(processor.thingsReceived == [.showRules])
         }
         processor.thingsReceived = []
@@ -31,7 +29,6 @@ private struct GameViewMenuBuilderTests {
             #expect(action.title == "About")
             #expect(action.image == UIImage(systemName: "questionmark.circle"))
             (action as? MyUIAction)?.handler?(action)
-            await #while(processor.thingsReceived.isEmpty)
             #expect(processor.thingsReceived == [.showHelp])
         }
         processor.thingsReceived = []
@@ -40,7 +37,6 @@ private struct GameViewMenuBuilderTests {
             #expect(action.title == "Statistics")
             #expect(action.image == UIImage(systemName: "pencil.and.list.clipboard"))
             (action as? MyUIAction)?.handler?(action)
-            await #while(processor.thingsReceived.isEmpty)
             #expect(processor.thingsReceived == [.showStats])
         }
         processor.thingsReceived = []
@@ -59,7 +55,6 @@ private struct GameViewMenuBuilderTests {
             #expect(action.title == "Import / Export")
             #expect(action.image == UIImage(systemName: "arrow.up.arrow.down.circle"))
             (action as? MyUIAction)?.handler?(action)
-            await #while(processor.thingsReceived.isEmpty)
             #expect(processor.thingsReceived == [.showImportExport])
         }
         processor.thingsReceived = []
@@ -68,13 +63,12 @@ private struct GameViewMenuBuilderTests {
             #expect(action.title == "Settings")
             #expect(action.image == UIImage(systemName: "gear"))
             (action as? MyUIAction)?.handler?(action)
-            await #while(processor.thingsReceived.isEmpty)
             #expect(processor.thingsReceived == [.showPrefs])
         }
     }
 
     @Test("The cleanup item action behaves as expected")
-    func cleanup() async throws {
+    func cleanup() throws {
         let cleaner = MockCleaner()
         services.cleaner = cleaner
         let taskScheduler = MockTaskScheduler()
@@ -94,7 +88,6 @@ private struct GameViewMenuBuilderTests {
         #expect(action.attributes == []) // not hidden, because there were 201 files in documents
         // okay, here comes the _real_ test! what happens when the user _chooses_ this menu item?
         action.handler?(action)
-        await #while(taskScheduler.methodsCalled.isEmpty)
         #expect(cleaner.methodsCalled == ["register()"])
         #expect(taskScheduler.methodsCalled == ["submit(_:)"])
         let request = try #require(taskScheduler.request as? BGContinuedProcessingTaskRequest)

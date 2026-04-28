@@ -1,7 +1,6 @@
 @testable import TTFreeCell
 import Testing
 import UIKit
-import WaitWhile
 
 private struct PrefsViewControllerTests {
     let subject = PrefsViewController()
@@ -14,10 +13,9 @@ private struct PrefsViewControllerTests {
     }
 
     @Test("viewDidLoad: sends initialData")
-    func viewDidLoad() async {
+    func viewDidLoad() {
         subject.loadViewIfNeeded()
         #expect(subject.title == "Settings")
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.initialData])
     }
 
@@ -34,21 +32,19 @@ private struct PrefsViewControllerTests {
     }
 
     @Test("prefSwitchChanged: sends processor prefChanged")
-    func prefSwitchChanged() async {
+    func prefSwitchChanged() {
         let prefSwitch = PrefSwitch()
         prefSwitch.prefKey = .automoveToFoundations
         prefSwitch.isOn = true
         subject.prefSwitchChanged(prefSwitch)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.prefChanged(.automoveToFoundations, value: true)])
     }
 
     @Test("segmentedControlChanged: sends processor speedChanged")
-    func segmentedControlChanged() async {
+    func segmentedControlChanged() {
         let seg = UISegmentedControl(items: ["hey", "ho"])
         seg.selectedSegmentIndex = 1
         subject.segmentedControlChanged(seg)
-        await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.speedChanged(index: 1)])
     }
 }

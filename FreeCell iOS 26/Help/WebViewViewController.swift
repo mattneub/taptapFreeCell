@@ -49,9 +49,7 @@ extension WebViewViewController: WKNavigationDelegate {
             return .cancel
         }
         if url.host != nil {
-            Task {
-                await processor?.receive(.showSafari(url: url))
-            }
+            await processor?.receive(.showSafari(url: url))
             return .cancel
         }
         if url.scheme == "file" { // this is the Really Interesting Part
@@ -62,9 +60,7 @@ extension WebViewViewController: WKNavigationDelegate {
             if targetPageName == currentPageName { // internal link, no problem
                 return .allow
             }
-            Task {
-                await processor?.receive(.navigate(to: targetPageName, from: currentPageName))
-            }
+            await processor?.receive(.navigate(to: targetPageName, from: currentPageName))
             // and fallthrough to return `.cancel`; we will handle this in our own way
         }
         return .cancel
