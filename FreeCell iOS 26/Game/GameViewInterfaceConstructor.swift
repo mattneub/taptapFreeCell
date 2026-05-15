@@ -2,9 +2,14 @@ import UIKit
 
 protocol GameViewInterfaceConstructorType {
     func constructInterface(in view: UIView) -> [[CardView]]
+    func configureFoundationTapperConstraints(
+        in view: UIView,
+        foundationTapper: UIView,
+        foundations: [CardView]
+    )
 }
 
-/// Helper object that builds the interface by laying out card views.
+/// Helper object that builds the interface by creating and laying out card views.
 struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
     func constructInterface(in view: UIView) -> [[CardView]] {
         let margin: CGFloat = max(16, (view.bounds.width - MAXWIDTH) / 2)
@@ -136,4 +141,27 @@ struct GameViewInterfaceConstructor : GameViewInterfaceConstructorType {
             stackView.arrangedSubviews.compactMap { $0 as? CardView }
         ]
     }
+
+    /// The card views have been created and configured. Insert (or move) the foundation tapper
+    /// just behind the four foundation card views and configure its constraints.
+    /// Should be called whenever we have called GameViewInterfaceConstructor and set
+    /// our CardView arrays. Assumes that `foundations[3]` is furthest back, furthest right
+    /// (which is true because that's how GameViewInterfaceConstructor arranges things).
+    func configureFoundationTapperConstraints(
+        in view: UIView,
+        foundationTapper: UIView,
+        foundations: [CardView]
+    ) {
+        guard foundations.count == 4 else {
+            return
+        }
+        view.insertSubview(foundationTapper, belowSubview: foundations[3])
+        NSLayoutConstraint.activate([
+            foundationTapper.topAnchor.constraint(equalTo: foundations[0].topAnchor, constant: -2),
+            foundationTapper.leadingAnchor.constraint(equalTo: foundations[0].leadingAnchor, constant: -8),
+            foundationTapper.bottomAnchor.constraint(equalTo: foundations[0].bottomAnchor, constant: 2),
+            foundationTapper.trailingAnchor.constraint(equalTo: foundations[3].trailingAnchor, constant: 8),
+        ])
+    }
+
 }

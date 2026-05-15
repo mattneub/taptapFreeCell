@@ -12,6 +12,14 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     var columns = [CardView]()
 
+    // Foundation tap zone view
+
+    lazy var foundationTapper = UIView().applying {
+        $0.translatesAutoresizingMaskIntoConstraints = false
+        let tapper = MyTapGestureRecognizer(target: self, action: #selector(foundationTap))
+        $0.addGestureRecognizer(tapper)
+    }
+
     // Highlight layer
 
     var highlightLayer: CALayer?
@@ -147,6 +155,11 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             foundations = cardViews[0]
             freeCells = cardViews[1]
             columns = cardViews[2]
+            gameViewInterfaceConstructor?.configureFoundationTapperConstraints(
+                in: view,
+                foundationTapper: foundationTapper,
+                foundations: foundations
+            )
         }
         for cardView in foundations + freeCells + columns {
             cardView.processor = self.processor
@@ -389,6 +402,13 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
     }
 
+    @objc func foundationTap() {
+        Task.immediate {
+            // pretend that a foundation (any foundation) was tapped
+            await processor?.receive(.tapped(foundations[0].location))
+        }
+    }
+
     func group(for location: Location) -> [CardView] {
         switch location.category {
         case .foundation: foundations
@@ -620,6 +640,11 @@ extension GameViewController: DebouncerDelegate {
             foundations = cardViews[0]
             freeCells = cardViews[1]
             columns = cardViews[2]
+            gameViewInterfaceConstructor?.configureFoundationTapperConstraints(
+                in: view,
+                foundationTapper: foundationTapper,
+                foundations: foundations
+            )
         }
         for cardView in foundations + freeCells + columns {
             cardView.processor = self.processor

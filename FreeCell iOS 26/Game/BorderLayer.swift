@@ -8,7 +8,7 @@ final class BorderLayer: CALayer {
     override init() {
         super.init()
         borderColor = UIColor.blue.cgColor
-        borderWidth = 2
+        borderWidth = 3 // was 2; 3 is slightly more emphatic, looks better on iPad
         cornerRadius = 4
     }
 

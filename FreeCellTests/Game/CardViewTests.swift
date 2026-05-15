@@ -144,7 +144,7 @@ private struct CardViewTests {
         #expect(subject.heightConstraint.constant == 400)
         let border = try #require(subject.layer.sublayers?.last)
         #expect(border.borderColor == UIColor.blue.cgColor)
-        #expect(border.borderWidth == 2)
+        #expect(border.borderWidth == 3)
         #expect(border.frame == CGRect(x: 0, y: 101, width: 100, height: 298))
         #expect(border.zPosition == 3)
         #expect(border.cornerRadius == 4)

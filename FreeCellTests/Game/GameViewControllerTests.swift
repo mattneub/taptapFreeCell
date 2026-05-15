@@ -19,6 +19,15 @@ private struct GameViewControllerTests {
         subject.debouncer = debouncer
     }
 
+    @Test("foundationTapper: is correctly configured")
+    func foundationTapper() throws {
+        let tapper = subject.foundationTapper
+        #expect(tapper.translatesAutoresizingMaskIntoConstraints == false)
+        let tapRecognizer = try #require(tapper.gestureRecognizers?.first as? MyTapGestureRecognizer)
+        #expect(tapRecognizer.target === subject)
+        #expect(tapRecognizer.action == #selector(subject.foundationTap))
+    }
+
     @Test("deckPoint: is correctly defined in terms of view bounds and card size")
     func deckPoint() {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
@@ -130,8 +139,13 @@ private struct GameViewControllerTests {
         #expect(sizer.methodsCalled == ["cardSize(boardWidth:)"])
         #expect(sizer.boardWidth == 400)
         #expect(CardView.baseSize == CGSize(width: 50, height: 100))
-        #expect(constructor.methodsCalled == ["constructInterface(in:)"])
+        #expect(constructor.methodsCalled == [
+            "constructInterface(in:)",
+            "configureFoundationTapperConstraints(in:foundationTapper:foundations:)",
+        ])
         #expect(constructor.view === subject.view)
+        #expect(constructor.foundationTapper === subject.foundationTapper)
+        #expect(constructor.foundations == subject.foundations)
         let foundation = try #require(subject.foundations.first)
         #expect(foundation.location.category == .foundation)
         let freeCell = try #require(subject.freeCells.first)
@@ -457,6 +471,14 @@ private struct GameViewControllerTests {
         #expect(processor.thingsReceived == [.showPrefs])
     }
 
+    @Test("foundationTap: sends tapped with location of first foundation card view")
+    func foundationTap() {
+        let cardView = CardView(location: .init(category: .foundation, index: 2))
+        subject.foundations = [cardView]
+        subject.foundationTap()
+        #expect(processor.thingsReceived == [.tapped(cardView.location)])
+    }
+
     @Test("receive animate: calls hide/show index/border on destination card(s)")
     func animate() async throws {
         subject.loadViewIfNeeded()
@@ -704,8 +726,13 @@ private struct GameViewControllerTests {
         #expect(sizer.methodsCalled == ["cardSize(boardWidth:)"])
         #expect(sizer.boardWidth == 400)
         #expect(CardView.baseSize == CGSize(width: 50, height: 100))
-        #expect(constructor.methodsCalled == ["constructInterface(in:)"])
+        #expect(constructor.methodsCalled == [
+            "constructInterface(in:)",
+            "configureFoundationTapperConstraints(in:foundationTapper:foundations:)",
+        ])
         #expect(constructor.view === subject.view)
+        #expect(constructor.foundationTapper === subject.foundationTapper)
+        #expect(constructor.foundations == subject.foundations)
         let foundation = try #require(subject.foundations.first)
         #expect(foundation.location.category == .foundation)
         let freeCell = try #require(subject.freeCells.first)

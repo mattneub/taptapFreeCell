@@ -57,4 +57,29 @@ private struct GameViewInterfaceConstructorTests {
         // key thing here is the wide margins at both sides
         assertSnapshot(of: view, as: .image(size: CGSize(width: 1000, height: 400)))
     }
+
+    @Test("configureFoundationTapperConstraints: inserts tapper behind foundations with correct frame")
+    func configureFoundationTapperConstraints() {
+        CardView.baseSize = CGSize(width: 35, height: 60)
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 400, height: 400))
+        let result = GameViewInterfaceConstructor().constructInterface(in: view)
+        let viewController = UIViewController()
+        makeWindow(viewController: viewController)
+        viewController.view.addSubview(view)
+        let tapper = UIView()
+        tapper.translatesAutoresizingMaskIntoConstraints = false
+        let foundations = result[0]
+        GameViewInterfaceConstructor().configureFoundationTapperConstraints(
+            in: view, foundationTapper: tapper, foundations: foundations
+        )
+        view.layoutIfNeeded()
+        #expect(view.subviews.firstIndex(of: tapper)! < view.subviews.firstIndex(of: foundations[0])!)
+        #expect(view.subviews.firstIndex(of: tapper)! < view.subviews.firstIndex(of: foundations[1])!)
+        #expect(view.subviews.firstIndex(of: tapper)! < view.subviews.firstIndex(of: foundations[2])!)
+        #expect(view.subviews.firstIndex(of: tapper)! < view.subviews.firstIndex(of: foundations[3])!)
+        #expect(tapper.frame.minX == foundations[0].frame.minX - 8)
+        #expect(tapper.frame.maxX == foundations[3].frame.maxX + 8)
+        #expect(tapper.frame.minY == foundations[0].frame.minY - 2)
+        #expect(tapper.frame.maxY == foundations[0].frame.maxY + 2)
+    }
 }

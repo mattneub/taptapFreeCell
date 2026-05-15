@@ -7,7 +7,7 @@ private struct BorderLayerTests {
     func initialize() {
         let subject = BorderLayer()
         #expect(subject.borderColor == UIColor.blue.cgColor)
-        #expect(subject.borderWidth == 2)
+        #expect(subject.borderWidth == 3)
         #expect(subject.cornerRadius == 4)
     }
 
