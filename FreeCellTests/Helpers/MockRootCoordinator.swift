@@ -75,4 +75,12 @@ final class MockRootCoordinator: RootCoordinatorType {
         self.prefsState = prefsState
     }
 
+    func hideInterface() {
+        methodsCalled.append(#function)
+    }
+
+    func updateInterface() {
+        methodsCalled.append(#function)
+    }
+
 }

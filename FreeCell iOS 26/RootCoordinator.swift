@@ -14,6 +14,8 @@ protocol RootCoordinatorType: AnyObject {
     func dismiss() async
     func showMicrosoft(_: SourceItemWrapper)
     func showPrefs(_: PrefsState)
+    func hideInterface()
+    func updateInterface()
 }
 
 /// Object that constructs modules and manipulates view controllers.
@@ -169,6 +171,20 @@ final class RootCoordinator: NSObject, RootCoordinatorType {
         } else {
             let navigationController = UINavigationController(rootViewController: viewController)
             rootViewController?.present(navigationController, animated: unlessTesting(true))
+        }
+    }
+
+    /// Called by the scene delegate as window resizing begins.
+    func hideInterface() {
+        Task.immediate {
+            await gameProcessor?.receive(.hideInterface)
+        }
+    }
+
+    /// Called by the scene delegate as window resizing ends.
+    func updateInterface() {
+        Task.immediate {
+            await gameProcessor?.receive(.updateInterface)
         }
     }
 }

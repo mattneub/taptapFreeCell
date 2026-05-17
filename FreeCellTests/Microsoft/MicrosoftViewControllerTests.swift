@@ -45,6 +45,7 @@ private struct MicrosoftViewControllerTests {
         #expect(subject.cancelButton.actions(forTarget: subject, forControlEvent: .primaryActionTriggered)?.first == "doCancelButton:")
         await #while(processor.thingsReceived.isEmpty)
         #expect(processor.thingsReceived == [.initialData])
+        // TODO: why does this snapshot test usually fail the first time?
         assertSnapshot(
             of: viewController.view,
             as: .image(

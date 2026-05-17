@@ -32,8 +32,6 @@ final class GameViewController: UIViewController, ReceiverPresenter {
 
     var gameViewCardSizer: (any GameViewCardSizerType)? = GameViewCardSizer()
 
-    lazy var debouncer: any DebouncerType = Debouncer(interval: 0.2, delegate: self)
-
     // Confetti
 
     var confetti: ConfettiDropper?
@@ -172,7 +170,9 @@ final class GameViewController: UIViewController, ReceiverPresenter {
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
         if let lastWidth, lastWidth != view.bounds.width {
-            regenerateLayout()
+            Task.immediate {
+                await updateInterface()
+            }
         }
     }
 
@@ -259,12 +259,16 @@ final class GameViewController: UIViewController, ReceiverPresenter {
             }
             try? await confettiTask?.value
             ensureNoConfetti()
+        case .hideInterface:
+            await hideInterface()
         case .removeConfetti:
             ensureNoConfetti()
         case .tint(let locationsAndCards):
             tint(locationsAndCards)
         case .tintsOff:
             removeAllTints()
+        case .updateInterface:
+            await updateInterface()
         case .updateStopwatch(let timeInterval):
             if let string = Stopwatch.timeTakenFormatter.string(from: timeInterval) {
                 timerLabel.text = string
@@ -455,7 +459,7 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         }
         self.highlightLayer = highlightLayer
     }
-    
+
     /// Animate an enactment of the card moves described in the Moves list, using "fake" card
     /// layers. *Assumption*: The _real_ card layers have _already_ been removed from their
     /// source card views and have _already_ been created in their destination card views.
@@ -604,37 +608,19 @@ final class GameViewController: UIViewController, ReceiverPresenter {
         navigationController?.view.isUserInteractionEnabled = true
     }
 
-    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        regenerateLayout()
-    }
-
-    /// Called by `viewWillTransition` and by `viewIsAppearing` if the size changed while we
-    /// were offscreen: remove the existing interface and request a new one.
-    ///
-    /// We have two problems here: if the user resizes "by hand", we get many `viewWillTransition`
-    /// calls; and, in order to ask the processor for presentation, we need to be async. We solve
-    /// both of these by passing thru a debouncer object; here, we simply remove the whole interface
-    /// (and no penalty if we try to do this multiple times), and then we send a message
-    /// into the debouncer and just wait to be called back as the debouncer delegate to reconstruct
-    /// the interface.
-    func regenerateLayout() {
+    /// Strip off the interface because the user is resizing the window and we don't want the
+    /// intermediate "wrong" layout to visible while this happens.
+    func hideInterface() async {
         (foundations + freeCells + columns).forEach { $0.removeFromSuperview() }
         view.subviews.filter { !($0 is UIImageView) }.forEach { $0.removeFromSuperview() }
         foundations = []
         freeCells = []
         columns = []
-        debouncer.eventOccurred()
     }
-}
 
-extension GameViewController: DebouncerDelegate {
-    /// The view has been resized and all card views have been removed. Build the interface,
-    /// much as in `viewDidLayout`.
-    func debounced() async {
-        guard foundations.count == 0 else {
-            return
-        }
+    /// The user has resized the window; rebuild the interface.
+    func updateInterface() async {
+        await hideInterface()
         CardView.baseSize = gameViewCardSizer?.cardSize(boardWidth: view.bounds.size.width) ?? .zero
         if let cardViews = gameViewInterfaceConstructor?.constructInterface(in: view) {
             foundations = cardViews[0]

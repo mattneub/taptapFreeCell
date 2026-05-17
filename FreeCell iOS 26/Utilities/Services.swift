@@ -19,4 +19,5 @@ final class Services {
     var stats: any StatsType = Stats()
     var taskScheduler: any TaskSchedulerType = BGTaskScheduler.shared
     var userDefaults: any UserDefaultsType = UserDefaults.standard
+    var windowGeometry: any WindowGeometryType = WindowGeometry()
 }

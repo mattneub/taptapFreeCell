@@ -4,6 +4,7 @@ enum GameAction: Equatable {
     case autoplay
     case deal
     case didInitialLayout
+    case hideInterface
     case hint
     case longPress(Location, Int)
     case longPressEnded
@@ -20,6 +21,7 @@ enum GameAction: Equatable {
     case tapped(Location)
     case undo
     case undoAll
+    case updateInterface
 }
 
 /// Sneaky trick to allow a source item to be passed in a case's associated value while

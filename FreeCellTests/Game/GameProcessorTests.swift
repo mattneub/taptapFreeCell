@@ -391,6 +391,12 @@ private struct GameProcessorTests {
         #expect(stopwatch.resetTimeInterval == 3)
     }
 
+    @Test("receive hideInterface: sends hideInterface to presenter")
+    func hideInterface() async {
+        await subject.receive(.hideInterface)
+        #expect(presenter.thingsReceived == [.hideInterface])
+    }
+
     @Test("receive hint: enables freecells and columns that can move nontrivially")
     func hint() async {
         subject.state.gameProgress = .inProgress
@@ -1960,6 +1966,12 @@ private struct GameProcessorTests {
             #expect(animator.speed == subject.state.animationSpeed)
             #expect(stopwatch.methodsCalled == ["advance()"])
         }
+    }
+
+    @Test("receive updateInterface: sends updateInterface to presenter")
+    func updateInterface() async {
+        await subject.receive(.updateInterface)
+        #expect(presenter.thingsReceived == [.updateInterface])
     }
 
     @Test("receive autoplay or tapped: if the layout is empty of freecell / column cards, declares the game over")

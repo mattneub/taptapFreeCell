@@ -264,4 +264,21 @@ private struct RootCoordinatorTests {
         let presented = try #require(navigationController.presentedViewController as? UINavigationController)
         #expect(presented.viewControllers.first === viewController)
     }
+
+    @Test("hideInterface: sends game processor hideInterface")
+    func hideInterface() {
+        let processor = MockProcessor<GameAction, GameState, GameEffect>()
+        subject.gameProcessor = processor
+        subject.hideInterface()
+        #expect(processor.thingsReceived == [.hideInterface])
+    }
+
+    @Test("updateInterface: sends game processor updateInterface")
+    func updateInterface() {
+        let processor = MockProcessor<GameAction, GameState, GameEffect>()
+        subject.gameProcessor = processor
+        subject.updateInterface()
+        #expect(processor.thingsReceived == [.updateInterface])
+    }
+
 }

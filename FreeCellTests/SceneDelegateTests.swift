@@ -19,5 +19,19 @@ private struct SceneDelegateTests {
         #expect(mockRootCoordinator.methodsCalled == ["createInterface(window:)"])
         #expect(mockRootCoordinator.window === window)
     }
+
+    @Test("windowSceneDidUpdate: calls windowGeometry service with scene and coordinator")
+    func windowSceneDidUpdate() throws {
+        let windowGeometry = MockWindowGeometry()
+        services.windowGeometry = windowGeometry
+        let coordinator = MockRootCoordinator()
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let subject = SceneDelegate()
+        subject.coordinator = coordinator
+        subject.windowScene(scene, didUpdateEffectiveGeometry: scene.effectiveGeometry)
+        #expect(windowGeometry.methodsCalled == ["geometryUpdated(scene:coordinator:)"])
+        #expect(windowGeometry.scene === scene)
+        #expect(windowGeometry.coordinator === coordinator)
+    }
 }
 

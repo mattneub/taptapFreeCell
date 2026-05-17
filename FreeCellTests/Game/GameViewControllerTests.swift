@@ -9,14 +9,12 @@ private struct GameViewControllerTests {
     let constructor = MockGameViewInterfaceConstructor()
     let builder = MockGameViewMenuBuilder()
     let processor = MockReceiver<GameAction>()
-    let debouncer = MockDebouncer(interval: 0.2, delegate: nil)
 
     init() {
         subject.gameViewCardSizer = sizer
         subject.gameViewInterfaceConstructor = constructor
         subject.gameViewMenuBuilder = builder
         subject.processor = processor
-        subject.debouncer = debouncer
     }
 
     @Test("foundationTapper: is correctly configured")
@@ -204,23 +202,49 @@ private struct GameViewControllerTests {
     func viewIsAppearingNormal() throws {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
-        subject.viewWillLayoutSubviews()
+        let card1 = MockCardView(location: .init(category: .freeCell, index: 1))
+        let card2 = MockCardView(location: .init(category: .freeCell, index: 2))
+        subject.view.addSubview(card1)
+        subject.view.addSubview(card2)
+        subject.freeCells = [card1, card2]
         subject.viewIsAppearing(false)
-        let foundation = try #require(subject.foundations.first)
-        #expect(foundation.location.category == .foundation)
-        #expect(debouncer.methodsCalled.isEmpty)
+        #expect(subject.freeCells == [card1, card2])
+        #expect(card1.superview === subject.view)
+        #expect(card2.superview === subject.view)
+        #expect(constructor.methodsCalled.isEmpty)
+        #expect(processor.thingsReceived.isEmpty)
     }
 
-    @Test("viewIsAppearing: if stored width non-nil and different from view width, empties interface, calls debouncer")
-    func viewIsAppearingSizeChanmged() throws {
+    @Test("viewIsAppearing: if stored width non-nil and different from view width, like updateInterface")
+    func viewIsAppearingSizeChanged() throws {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
-        subject.viewWillLayoutSubviews()
         subject.lastWidth = 500
+        let card1 = MockCardView(location: .init(category: .freeCell, index: 1))
+        let card2 = MockCardView(location: .init(category: .freeCell, index: 2))
+        subject.view.addSubview(card1)
+        subject.view.addSubview(card2)
+        subject.freeCells = [card1, card2]
         subject.viewIsAppearing(false)
-        #expect(subject.foundations.isEmpty)
-        #expect(subject.view.subviews.count == 1) // image view
-        #expect(debouncer.methodsCalled == ["eventOccurred()"])
+        #expect(card1.superview == nil)
+        #expect(card2.superview == nil)
+        #expect(sizer.methodsCalled == ["cardSize(boardWidth:)"])
+        #expect(sizer.boardWidth == 400)
+        #expect(CardView.baseSize == CGSize(width: 50, height: 100))
+        #expect(constructor.methodsCalled == [
+            "constructInterface(in:)",
+            "configureFoundationTapperConstraints(in:foundationTapper:foundations:)",
+        ])
+        #expect(constructor.view === subject.view)
+        #expect(constructor.foundationTapper === subject.foundationTapper)
+        #expect(constructor.foundations == subject.foundations)
+        let foundation = try #require(subject.foundations.first)
+        #expect(foundation.location.category == .foundation)
+        let freeCell = try #require(subject.freeCells.first)
+        #expect(freeCell.location.category == .freeCell)
+        let column = try #require(subject.columns.first)
+        #expect(column.location.category == .column)
+        #expect(processor.thingsReceived == [.resized])
     }
 
     @Test("viewDidAppear: attaches long press gesture recognizer to left bar button item view")
@@ -644,6 +668,26 @@ private struct GameViewControllerTests {
         }
     }
 
+    @Test("receive hideInterface: strips away all card views, all subviews of view except image view")
+    func hideInterface() async {
+        subject.viewWillLayoutSubviews()
+        #expect(subject.foundations.count == 1)
+        #expect(subject.freeCells.count == 1)
+        #expect(subject.columns.count == 1)
+        subject.view.addSubview(subject.foundations[0])
+        subject.view.addSubview(subject.freeCells[0])
+        subject.view.addSubview(subject.columns[0])
+        let extra = UIView()
+        subject.view.addSubview(extra)
+        // that was prep, here comes the test
+        await subject.receive(.hideInterface)
+        #expect(subject.foundations.count == 0)
+        #expect(subject.freeCells.count == 0)
+        #expect(subject.columns.count == 0)
+        #expect(subject.view.subviews.count == 1)
+        #expect(subject.view.subviews[0] is UIImageView)
+    }
+
     @Test("receive removeConfetti: removes confetti if present")
     func removeConfetti() async {
         Task {
@@ -695,34 +739,17 @@ private struct GameViewControllerTests {
         #expect(subject.timerLabel.text == "00:00:01")
     }
 
-    @Test("viewWillTransition: removes all card views, calls debouncer")
-    func viewWillTransition() async {
-        subject.viewWillLayoutSubviews()
-        let cardView = subject.foundations[0]
-        subject.view.addSubview(cardView)
-        let viewController = UIViewController()
-        makeWindow(viewController: viewController)
-        let presentedViewController = MyViewController()
-        // sneaky trick to allow us to call `viewWillTransition`
-        presentedViewController.operation = { coordinator in
-            subject.viewWillTransition(to: CGSize(width: 400, height: 400), with: coordinator)
-        }
-        // okay, that was prep, this is the test!
-        viewController.present(presentedViewController, animated: false)
-        await #while(debouncer.methodsCalled.isEmpty)
-        // and our view controller calls `subject.viewWillTransition` which is what we want to test!
-        #expect(subject.foundations.isEmpty)
-        #expect(subject.freeCells.isEmpty)
-        #expect(subject.columns.isEmpty)
-        #expect(cardView.superview == nil)
-        #expect(debouncer.methodsCalled == ["eventOccurred()"])
-    }
-
-    @Test("debounced: basically just like viewDidLayoutSubviews, with resized action at end")
-    func debounced() async throws {
+    @Test("receive updateInterface: removes interface, then like viewDidLayoutSubviews plus resized action")
+    func updateInterface() async throws {
         sizer.sizeToReturn = CGSize(width: 50, height: 100)
         subject.view.bounds.size.width = 400
-        await subject.debounced()
+        let card1 = MockCardView(location: .init(category: .freeCell, index: 1))
+        let card2 = MockCardView(location: .init(category: .freeCell, index: 2))
+        subject.view.addSubview(card1)
+        subject.view.addSubview(card2)
+        await subject.receive(.updateInterface)
+        #expect(card1.superview == nil)
+        #expect(card2.superview == nil)
         #expect(sizer.methodsCalled == ["cardSize(boardWidth:)"])
         #expect(sizer.boardWidth == 400)
         #expect(CardView.baseSize == CGSize(width: 50, height: 100))
@@ -740,16 +767,5 @@ private struct GameViewControllerTests {
         let column = try #require(subject.columns.first)
         #expect(column.location.category == .column)
         #expect(processor.thingsReceived == [.resized])
-    }
-}
-
-/// Sneaky trick to give us a workable transition coordinator.
-private final class MyViewController: UIViewController {
-    var operation: ((any UIViewControllerTransitionCoordinator) -> Void)?
-    override func viewIsAppearing(_ animated: Bool) {
-        super.viewIsAppearing(animated)
-        if let operation, let transitionCoordinator {
-            operation(transitionCoordinator)
-        }
     }
 }

@@ -121,6 +121,8 @@ final class GameProcessor: Processor {
                     services.persistence.saveReserveLayout(state.reserveLayout)
                 }
             }
+        case .hideInterface:
+            await presenter?.receive(.hideInterface)
         case .hint:
             state.firstTapLocation = nil
             state.enablements = hintEnablements()
@@ -220,6 +222,8 @@ final class GameProcessor: Processor {
                 await animator.animate(oldLayout: oldLayout, newLayout: state.layout, speed: state.animationSpeed)
             }
             await checkStopwatch()
+        case .updateInterface:
+            await presenter?.receive(.updateInterface)
         }
     }
 

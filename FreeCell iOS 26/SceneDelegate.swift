@@ -29,4 +29,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // uncomment to draw icon in simulator (use iPad simulator)
         // window.rootViewController = UIStoryboard(name: "IconGenerator", bundle: nil).instantiateInitialViewController()
     }
+
+    func windowScene(
+        _ windowScene: UIWindowScene,
+        didUpdateEffectiveGeometry previousGeometry: UIWindowScene.Geometry
+    ) {
+        services.windowGeometry.geometryUpdated(scene: windowScene, coordinator: coordinator)
+    }
 }
