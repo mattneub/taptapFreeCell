@@ -55,9 +55,16 @@ private struct AppDelegateTests {
             #expect(item.action == #selector(GameViewController.doImportExport))
         }
         let viewMenu = try #require(builder.thingsInserted[.view])
-        #expect(viewMenu.count == 1)
+        #expect(viewMenu.count == 2)
         do {
-            let item = try #require(viewMenu[0] as? UICommand)
+            let item = try #require(viewMenu[0] as? UIKeyCommand)
+            #expect(item.title == "Hint")
+            #expect(item.image == UIImage(systemName: "sun.max"))
+            #expect(item.action == #selector(GameViewController.twoFingerTap))
+            #expect(item.input == "H")
+        }
+        do {
+            let item = try #require(viewMenu[1] as? UICommand)
             #expect(item.title == "Statistics")
             #expect(item.image == UIImage(systemName: "pencil.and.list.clipboard"))
             #expect(item.action == #selector(GameViewController.doStatistics))

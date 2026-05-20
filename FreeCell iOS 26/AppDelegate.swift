@@ -83,7 +83,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             image: UIImage(systemName: "pencil.and.list.clipboard"),
             action: #selector(GameViewController.doStatistics)
         )
-        builder.insertElements([statisticsItem], atStartOfMenu: .view)
+        let hintItem = UIKeyCommand(
+            title: "Hint",
+            image: UIImage(systemName: "sun.max"),
+            action: #selector(GameViewController.twoFingerTap),
+            input: "H",
+        )
+        builder.insertElements([hintItem, statisticsItem], atStartOfMenu: .view)
         let helpItem = UICommand(
             title: "Rules of FreeCell",
             image: UIImage(systemName: "lightbulb"),
