@@ -7,19 +7,19 @@ private struct WindowGeometryTests {
     let coordinator = MockRootCoordinator()
     let scene = MockHasGeometry()
 
-    @Test("geometryUpdated: if resizing, calls coordinator hideInterface")
+    @Test("geometryUpdated: if resizing, size changed, updates size, calls coordinator hideInterface")
     func geometryUpdatedInteractivelyResizing() {
         (scene.geometry as? MockIsGeometry)?.isInteractivelyResizing = true
         (scene.geometry as? MockIsGeometry)?.size = .init(width: 20, height: 20)
         subject.previousSceneSize = .init(width: 10, height: 10)
         subject.geometryUpdated(scene: scene, coordinator: coordinator)
-        #expect(subject.previousSceneSize == .init(width: 10, height: 10)) // did not set
+        #expect(subject.previousSceneSize == .init(width: 20, height: 20))
         #expect(coordinator.methodsCalled == ["hideInterface()"])
     }
 
-    @Test("geometryUpdated: if not resizing, size unchanged, does nothing")
-    func geometryUpdatedSizeUnchanged() {
-        (scene.geometry as? MockIsGeometry)?.isInteractivelyResizing = false
+    @Test("geometryUpdated: if resizing, size unchanged, does nothing")
+    func geometryUpdatedInteractivelyResizingSizeUnchanged() {
+        (scene.geometry as? MockIsGeometry)?.isInteractivelyResizing = true
         (scene.geometry as? MockIsGeometry)?.size = .init(width: 10, height: 10)
         subject.previousSceneSize = .init(width: 10, height: 10)
         subject.geometryUpdated(scene: scene, coordinator: coordinator)
@@ -27,7 +27,17 @@ private struct WindowGeometryTests {
         #expect(coordinator.methodsCalled.isEmpty)
     }
 
-    @Test("geometryUpdated: if not resizing, size changed, updates prev size, calls coordinator updateInterface")
+    @Test("geometryUpdated: if not resizing, old size zero, updates size, does nothing else")
+    func geometryUpdatedSizeUnchanged() {
+        (scene.geometry as? MockIsGeometry)?.isInteractivelyResizing = false
+        (scene.geometry as? MockIsGeometry)?.size = .init(width: 10, height: 10)
+        subject.previousSceneSize = .zero
+        subject.geometryUpdated(scene: scene, coordinator: coordinator)
+        #expect(subject.previousSceneSize == .init(width: 10, height: 10))
+        #expect(coordinator.methodsCalled.isEmpty)
+    }
+
+    @Test("geometryUpdated: if not resizing, old size not zero, updates size, calls coordinator updateInterface")
     func geometryUpdatedSizeChanged() {
         (scene.geometry as? MockIsGeometry)?.isInteractivelyResizing = false
         (scene.geometry as? MockIsGeometry)?.size = .init(width: 20, height: 20)

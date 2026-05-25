@@ -30,6 +30,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // window.rootViewController = UIStoryboard(name: "IconGenerator", bundle: nil).instantiateInitialViewController()
     }
 
+    /// See
+    /// https://developer.apple.com/documentation/technotes/tn3192-Migrating-your-app-from-the-deprecated-UIRequiresFullScreen-key
+    /// This is the official signal that we might need to revise our interface because the user
+    /// has resized the window.
     func windowScene(
         _ windowScene: UIWindowScene,
         didUpdateEffectiveGeometry previousGeometry: UIWindowScene.Geometry
